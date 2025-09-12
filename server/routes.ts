@@ -1778,6 +1778,33 @@ if __name__ == "__main__":
     }
   });
 
+  // Helper function to escape regex special characters
+  const escapeRegex = (string: string): string => {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  };
+
+  // Helper function to update offset in config file like Python copier does
+  const updateJSCopierOffset = (pairName: string, newOffset: number) => {
+    try {
+      const configDir = path.join(process.cwd(), 'tmp', 'config');
+      const configPath = path.join(configDir, 'js_copier_config.ini');
+      
+      if (fs.existsSync(configPath)) {
+        let configContent = fs.readFileSync(configPath, 'utf8');
+        
+        // Update the offset for the specific pair using regex with escaped pair name
+        const escapedPairName = escapeRegex(pairName);
+        const pairRegex = new RegExp(`(\\[${escapedPairName}\\][\\s\\S]*?offset\\s*=\\s*)\\d+`, 'i');
+        if (pairRegex.test(configContent)) {
+          configContent = configContent.replace(pairRegex, `$1${newOffset}`);
+          fs.writeFileSync(configPath, configContent, 'utf8');
+        }
+      }
+    } catch (error) {
+      console.error(`Error updating offset for ${pairName}:`, error);
+    }
+  };
+
   // Start JS forwarding process
   function startJSForwardingProcess(pairs: any[], sessionString: string, telegramConfig: any) {
     let shouldStop = false;
@@ -1821,44 +1848,81 @@ if __name__ == "__main__":
           try {
             const fromChatId = formatChatIdForGramJS(pair.fromChat);
             const toChatId = formatChatIdForGramJS(pair.toChat);
+            let currentOffset = pair.currentOffset || 0;
 
-            addJSCopierLog(`From: ${fromChatId}, To: ${toChatId}, Offset: ${pair.currentOffset || 0}`);
+            addJSCopierLog(`From: ${fromChatId}, To: ${toChatId}, Offset: ${currentOffset}`);
 
-            // Get messages from source chat
-            const messages = await client.getMessages(fromChatId, {
-              offsetId: pair.currentOffset || 0,
-              reverse: true,
-              limit: 10
-            });
+            let messagesForwarded = 0;
+            let batchStartOffset = currentOffset;
 
-            addJSCopierLog(`Found ${messages.length} messages to forward`);
+            // Continuous iteration like Python copier - keep going until no more messages
+            while (!shouldStop) {
+              // Get messages starting from currentOffset going forward (newer messages)
+              // Use minId instead of offsetId to get messages AFTER the saved offset
+              const messages = await client.getMessages(fromChatId, {
+                minId: currentOffset,
+                reverse: true,  // Still use reverse to get messages in chronological order
+                limit: 50  // Process in larger batches like Python
+              });
 
-            for (const message of messages) {
-              if (shouldStop) break;
+              addJSCopierLog(`Found ${messages.length} messages to forward (starting from offset ${currentOffset})`);
 
-              try {
-                // Skip service messages
-                if (message.className?.includes('MessageService')) {
-                  continue;
-                }
-
-                // Forward message
-                await client.sendMessage(toChatId, {
-                  message: message.message || '',
-                  file: message.media || undefined
-                });
-
-                jsCopierStatus.processedMessages++;
-                addJSCopierLog(`Forwarded message ID: ${message.id}`);
-
-                // Small delay to avoid rate limiting
-                await new Promise(resolve => setTimeout(resolve, 100));
-
-              } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                addJSCopierLog(`Error forwarding message ${message.id}: ${errorMessage}`);
+              if (messages.length === 0) {
+                addJSCopierLog(`✅ No more messages to process for ${pair.name}. Reached end of chat.`);
+                break; // No more messages, move to next pair
               }
+
+              let batchLastId = currentOffset;
+
+              for (const message of messages) {
+                if (shouldStop) break;
+
+                batchLastId = message.id;
+                currentOffset = message.id;
+
+                try {
+                  // Skip service messages like Python copier but still advance offset
+                  if (message.className?.includes('MessageService')) {
+                    continue;
+                  }
+
+                  // Use forwardMessages instead of sendMessage for better fidelity
+                  await client.forwardMessages(toChatId, {
+                    messages: [message.id],
+                    fromPeer: fromChatId
+                  });
+
+                  messagesForwarded++;
+                  jsCopierStatus.processedMessages++;
+                  
+                  addJSCopierLog(`Forwarded message with id = ${message.id} from ${pair.name}`);
+
+                  // Small delay to avoid rate limiting like Python
+                  await new Promise(resolve => setTimeout(resolve, 100));
+
+                } catch (error) {
+                  const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                  addJSCopierLog(`Error forwarding message ${message.id}: ${errorMessage}`);
+                  // Continue with next message even if one fails
+                }
+              }
+
+              // Update offset in config file after processing the batch (more efficient)
+              if (batchLastId > batchStartOffset) {
+                updateJSCopierOffset(pair.name, batchLastId);
+                addJSCopierLog(`Updated offset to ${batchLastId} for ${pair.name}`);
+              }
+
+              // If we got fewer messages than requested, we've likely reached the end
+              if (messages.length < 50) {
+                addJSCopierLog(`✅ Processed final batch of ${messages.length} messages for ${pair.name}`);
+                break;
+              }
+
+              batchStartOffset = currentOffset;
             }
+
+            addJSCopierLog(`Completed ${pair.name}: forwarded ${messagesForwarded} messages`);
 
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
