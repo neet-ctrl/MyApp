@@ -346,8 +346,8 @@ export function LiveCloning() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           sessionString: sessionString.trim(),
-          entityLinks: entityLinks.map(link => [link.fromEntity, link.toEntity]),
-          wordFilters: wordFilters.map(filter => [filter.fromWord, filter.toWord]),
+          entityLinks: (entityLinks || []).map(link => [link.fromEntity, link.toEntity]),
+          wordFilters: (wordFilters || []).map(filter => [filter.fromWord, filter.toWord]),
           settings: {
             botEnabled,
             filterWords,
@@ -740,13 +740,13 @@ export function LiveCloning() {
             <div className="grid grid-cols-2 gap-4 pt-4 border-t">
               <div className="text-center p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
                 <div className="text-lg font-semibold text-purple-600">
-                  {entityLinks.length}
+                  {entityLinks?.length || 0}
                 </div>
                 <div className="text-xs text-muted-foreground">Entity Links</div>
               </div>
               <div className="text-center p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
                 <div className="text-lg font-semibold text-blue-600">
-                  {wordFilters.length}
+                  {wordFilters?.length || 0}
                 </div>
                 <div className="text-xs text-muted-foreground">Word Filters</div>
               </div>
@@ -822,15 +822,15 @@ export function LiveCloning() {
                       <div className="space-y-1 text-sm">
                         <div className="flex justify-between">
                           <span>Total Processed:</span>
-                          <span className="font-mono">{status.statistics.totalProcessed}</span>
+                          <span className="font-mono">{status.statistics?.totalProcessed || 0}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Filtered:</span>
-                          <span className="font-mono">{status.statistics.totalFiltered}</span>
+                          <span className="font-mono">{status.statistics?.totalFiltered || 0}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Forwarded:</span>
-                          <span className="font-mono">{status.statistics.totalForwarded}</span>
+                          <span className="font-mono">{status.statistics?.totalForwarded || 0}</span>
                         </div>
                       </div>
                     </div>
@@ -839,15 +839,15 @@ export function LiveCloning() {
                       <div className="space-y-1 text-sm">
                         <div className="flex justify-between">
                           <span>Media Files:</span>
-                          <span className="font-mono">{status.statistics.mediaProcessed}</span>
+                          <span className="font-mono">{status.statistics?.mediaProcessed || 0}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Text Messages:</span>
-                          <span className="font-mono">{status.statistics.textProcessed}</span>
+                          <span className="font-mono">{status.statistics?.textProcessed || 0}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Errors:</span>
-                          <span className="font-mono text-red-600">{status.statistics.errorMessages}</span>
+                          <span className="font-mono text-red-600">{status.statistics?.errorMessages || 0}</span>
                         </div>
                       </div>
                     </div>
@@ -893,49 +893,49 @@ export function LiveCloning() {
                 <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-950 rounded">
                   <FileText className="w-4 h-4 text-blue-600" />
                   <div>
-                    <div className="text-sm font-medium">{status.messageTypes.text}</div>
+                    <div className="text-sm font-medium">{status.messageTypes?.text || 0}</div>
                     <div className="text-xs text-muted-foreground">Text</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-950 rounded">
                   <Image className="w-4 h-4 text-green-600" />
                   <div>
-                    <div className="text-sm font-medium">{status.messageTypes.photo}</div>
+                    <div className="text-sm font-medium">{status.messageTypes?.photo || 0}</div>
                     <div className="text-xs text-muted-foreground">Photos</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2 bg-purple-50 dark:bg-purple-950 rounded">
                   <Video className="w-4 h-4 text-purple-600" />
                   <div>
-                    <div className="text-sm font-medium">{status.messageTypes.video}</div>
+                    <div className="text-sm font-medium">{status.messageTypes?.video || 0}</div>
                     <div className="text-xs text-muted-foreground">Videos</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2 bg-orange-50 dark:bg-orange-950 rounded">
                   <AudioLines className="w-4 h-4 text-orange-600" />
                   <div>
-                    <div className="text-sm font-medium">{status.messageTypes.audio}</div>
+                    <div className="text-sm font-medium">{status.messageTypes?.audio || 0}</div>
                     <div className="text-xs text-muted-foreground">Audio</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2 bg-red-50 dark:bg-red-950 rounded">
                   <Archive className="w-4 h-4 text-red-600" />
                   <div>
-                    <div className="text-sm font-medium">{status.messageTypes.document}</div>
+                    <div className="text-sm font-medium">{status.messageTypes?.document || 0}</div>
                     <div className="text-xs text-muted-foreground">Documents</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2 bg-yellow-50 dark:bg-yellow-950 rounded">
                   <MessageCircle className="w-4 h-4 text-yellow-600" />
                   <div>
-                    <div className="text-sm font-medium">{status.messageTypes.sticker}</div>
+                    <div className="text-sm font-medium">{status.messageTypes?.sticker || 0}</div>
                     <div className="text-xs text-muted-foreground">Stickers</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2 bg-indigo-50 dark:bg-indigo-950 rounded">
                   <AudioLines className="w-4 h-4 text-indigo-600" />
                   <div>
-                    <div className="text-sm font-medium">{status.messageTypes.voice}</div>
+                    <div className="text-sm font-medium">{status.messageTypes?.voice || 0}</div>
                     <div className="text-xs text-muted-foreground">Voice</div>
                   </div>
                 </div>
@@ -948,7 +948,7 @@ export function LiveCloning() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                Active Users ({status.activeUsers.length})
+                Active Users ({status.activeUsers?.length || 0})
                 <Button
                   onClick={() => setShowActiveUsers(!showActiveUsers)}
                   variant="ghost"
@@ -959,9 +959,9 @@ export function LiveCloning() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {showActiveUsers && status.activeUsers.length > 0 ? (
+              {showActiveUsers && (status.activeUsers?.length || 0) > 0 ? (
                 <div className="space-y-2">
-                  {status.activeUsers.map((user, index) => (
+                  {(status.activeUsers || []).map((user, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
@@ -998,7 +998,7 @@ export function LiveCloning() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
-                Recent Activity ({status.recentActivity.length})
+                Recent Activity ({status.recentActivity?.length || 0})
                 <Button
                   onClick={() => setShowRecentActivity(!showRecentActivity)}
                   variant="ghost"
@@ -1009,9 +1009,9 @@ export function LiveCloning() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {showRecentActivity && status.recentActivity.length > 0 ? (
+              {showRecentActivity && (status.recentActivity?.length || 0) > 0 ? (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {status.recentActivity.slice(0, 20).map((activity, index) => (
+                  {(status.recentActivity || []).slice(0, 20).map((activity, index) => (
                     <div key={index} className="flex items-start gap-3 p-2 border-l-2 border-blue-200 dark:border-blue-800 pl-3">
                       <div className="flex-shrink-0 mt-1">
                         {activity.type === 'message' && <MessageSquare className="w-4 h-4 text-blue-600" />}
@@ -1189,7 +1189,7 @@ export function LiveCloning() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Link className="w-5 h-5" />
-            Entity Links ({entityLinks.length})
+            Entity Links ({entityLinks?.length || 0})
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -1250,7 +1250,7 @@ export function LiveCloning() {
 
           {/* Entity Links List */}
           <div className="space-y-2">
-            {entityLinks.length === 0 ? (
+            {(entityLinks?.length || 0) === 0 ? (
               <div className="text-center py-8 text-muted-foreground" data-testid="no-entity-links">
                 <Link className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>No entity links configured</p>
@@ -1306,7 +1306,7 @@ export function LiveCloning() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="w-5 h-5" />
-            Word Filters ({wordFilters.length})
+            Word Filters ({wordFilters?.length || 0})
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -1349,7 +1349,7 @@ export function LiveCloning() {
 
           {/* Word Filters List */}
           <div className="space-y-2">
-            {wordFilters.length === 0 ? (
+            {(wordFilters?.length || 0) === 0 ? (
               <div className="text-center py-8 text-muted-foreground" data-testid="no-word-filters">
                 <Filter className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>No word filters configured</p>
