@@ -17,6 +17,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { storage } from '@/lib/storage';
+import { formatChatToTelegramEntity, parseEntityInput, validateTelegramEntity, getSuggestedEntityFormat, createEntityDisplayName } from '@/lib/telegram-entity-formatter';
 import type { Chat, EntityLink, WordFilter } from '@shared/schema';
 
 interface LiveCloningStatus {
@@ -86,6 +87,9 @@ export function LiveCloning() {
   // Entity Link Form
   const [newFromEntity, setNewFromEntity] = useState('');
   const [newToEntity, setNewToEntity] = useState('');
+  const [manualFromEntity, setManualFromEntity] = useState('');
+  const [manualToEntity, setManualToEntity] = useState('');
+  const [useManualInput, setUseManualInput] = useState(false);
   
   // Word Filter Form
   const [newFromWord, setNewFromWord] = useState('');
@@ -332,6 +336,35 @@ export function LiveCloning() {
         throw new Error('Both source and target entities are required');
       }
 
+      // Format entity IDs to proper Telegram format
+      let formattedFromEntity, formattedToEntity;
+      
+      if (useManualInput) {
+        // Handle manual input - parse and validate the entered entities
+        formattedFromEntity = parseEntityInput(manualFromEntity);
+        formattedToEntity = parseEntityInput(manualToEntity);
+      } else {
+        // Handle dropdown selection - find and format chats
+        const fromChat = chats.find(c => c.id === newFromEntity);
+        const toChat = chats.find(c => c.id === newToEntity);
+        
+        if (!fromChat || !toChat) {
+          throw new Error('Selected chats not found');
+        }
+        
+        formattedFromEntity = formatChatToTelegramEntity(fromChat);
+        formattedToEntity = formatChatToTelegramEntity(toChat);
+      }
+      
+      // Validate the formatted entity IDs
+      if (!validateTelegramEntity(formattedFromEntity.id)) {
+        throw new Error(`Invalid source entity format: ${formattedFromEntity.id}. ${getSuggestedEntityFormat(formattedFromEntity.id)}`);
+      }
+      
+      if (!validateTelegramEntity(formattedToEntity.id)) {
+        throw new Error(`Invalid target entity format: ${formattedToEntity.id}. ${getSuggestedEntityFormat(formattedToEntity.id)}`);
+      }
+
       const instanceId = status.instanceId || `live_cloning_${Date.now()}`;
       
       const response = await fetch('/api/live-cloning/entity-links', {
@@ -339,8 +372,8 @@ export function LiveCloning() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           instanceId,
-          fromEntity: newFromEntity,
-          toEntity: newToEntity
+          fromEntity: formattedFromEntity.id,
+          toEntity: formattedToEntity.id
         }),
       });
       
@@ -700,15 +733,26 @@ export function LiveCloning() {
     setEditingWordFilter(null);
   };
 
-  // Get chat name helper
+  // Get chat name helper with proper Telegram entity formatting
   const getChatName = (chatId: string) => {
     const chat = chats.find(c => c.id === chatId);
-    if (!chat) return chatId;
-    
-    if (chat.username) {
-      return `@${chat.username} (${chat.title})`;
+    if (!chat) {
+      // If not found in chats, try to parse as entity format
+      const entityInfo = parseEntityInput(chatId);
+      return entityInfo.isValid ? createEntityDisplayName(entityInfo) : `Unknown (${chatId})`;
     }
-    return `${chat.title} (${chat.id})`;
+    
+    const entityInfo = formatChatToTelegramEntity(chat);
+    return createEntityDisplayName(entityInfo, chat);
+  };
+  
+  // Get properly formatted entity ID for a chat
+  const getFormattedEntityId = (chatId: string) => {
+    const chat = chats.find(c => c.id === chatId);
+    if (!chat) {
+      return parseEntityInput(chatId).id;
+    }
+    return formatChatToTelegramEntity(chat).id;
   };
 
   // Generate Telegram link from chat ID or username
