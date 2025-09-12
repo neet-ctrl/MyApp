@@ -27,9 +27,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [credentials, setCredentials] = useState({
-    apiId: import.meta.env.VITE_TELEGRAM_API_ID || '',
-    apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '',
-    phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '',
+    apiId: import.meta.env.VITE_TELEGRAM_API_ID || '28403662',
+    apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '079509d4ac7f209a1a58facd00d6ff5a',
+    phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '+917352013479',
     code: '',
     password: '',
   });
@@ -73,18 +73,12 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     });
 
     try {
-      const predefinedSessionString = import.meta.env.VITE_DEFAULT_SESSION_STRING;
-      
-      if (!predefinedSessionString) {
-        setError('No default session configured. Please use custom session or full authentication.');
-        setLoading(false);
-        return;
-      }
+      const predefinedSessionString = import.meta.env.VITE_DEFAULT_SESSION_STRING || "1BQAWZmxvcmEud2ViLnRlbGVncmFtLm9yZwG7IS3tNY2BsIDLeDQnewXF0dZ7iEc231dYk/8TDX83hkgf7EwJ8HvdsqxWr/Dyb8oeEIe6+H9MAgI4yPaGs0IgIsdLQozbCnlNF7NDC+q5iC+JlpLbAF2PIiZ3nHvetmRyadZpTsVSLFgSG1BdvVUx2J65VHdkbJTk9V0hj2Wq3ucMrBNGJB6oCSrnSqWCD5mmtxKdFDV6p+6Fj1d0gbnmBOkhV0Ud+V6NRHDup/j6rREt/lJTO8gXowmd2dLt1piiQrmD3fU+zKEFf4Mv0GllJYYKY9aVxQjjhowXM8GdKnX0DLxOFVcqSk7sOkCn14ocdtYK4ffhRgJdgu241XriLA==";
       const sessionData: TelegramSession = {
         sessionString: predefinedSessionString,
-        apiId: parseInt(import.meta.env.VITE_TELEGRAM_API_ID || '0'),
-        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '',
-        phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '',
+        apiId: parseInt(import.meta.env.VITE_TELEGRAM_API_ID || '28403662'),
+        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '079509d4ac7f209a1a58facd00d6ff5a',
+        phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '+917352013479',
         userId: 'default-user',
         firstName: 'Default',
         lastName: 'User',
@@ -115,7 +109,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   // Handler for using custom session string
   const handleSessionHistoryClick = () => {
     const password = prompt('Enter password for session history:');
-    if (password === import.meta.env.VITE_SESSION_HISTORY_PASSWORD) {
+    if (password === (import.meta.env.VITE_SESSION_HISTORY_PASSWORD || 'Sh@090609')) {
       setShowSessionHistory(true);
     } else if (password !== null) {
       setError('Incorrect password');
@@ -144,8 +138,8 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     try {
       const sessionData: TelegramSession = {
         sessionString: customSessionString.trim(),
-        apiId: parseInt(import.meta.env.VITE_TELEGRAM_API_ID || '0'),
-        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '',
+        apiId: parseInt(import.meta.env.VITE_TELEGRAM_API_ID || '28403662'),
+        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '079509d4ac7f209a1a58facd00d6ff5a',
         phoneNumber: "custom-session",
         userId: 'custom-user',
         firstName: 'Custom',
@@ -258,9 +252,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         detail: { code: credentials.code }
       }));
 
-      // Improved session polling with longer timeout and progressive intervals
+      // Faster and more reliable session polling
       let attempts = 0;
-      const maxAttempts = 80; // 30 seconds max with progressive intervals
+      const maxAttempts = 60; // 20 seconds max
       
       const pollSession = async () => {
         try {
@@ -279,17 +273,19 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
             
             onSuccess(session);
             setLoading(false);
-          } else if (attempts < maxAttempts) {
-            attempts++;
-            // Progressive polling: start fast, then slow down to reduce server load
-            const interval = attempts < 20 ? 200 : attempts < 40 ? 500 : 1000;
-            setTimeout(pollSession, interval);
-          } else {
-            throw new Error('Session not created after authentication - please try again. Check your network connection and try again.');
+            return; // Exit immediately on success
+          } 
+          
+          attempts++;
+          if (attempts >= maxAttempts) {
+            throw new Error('OTP verification took too long. Please try again.');
           }
+          
+          // Simple fixed interval for consistent performance
+          setTimeout(pollSession, 300);
         } catch (err) {
-          console.error('Post-authentication error:', err);
-          setError(err instanceof Error ? err.message : 'Authentication failed');
+          console.error('OTP verification error:', err);
+          setError(err instanceof Error ? err.message : 'OTP verification failed');
           setLoading(false);
         }
       };
@@ -317,9 +313,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         detail: { password: credentials.password }
       }));
 
-      // Improved session polling for 2FA with longer timeout
+      // Faster 2FA session polling
       let attempts = 0;
-      const maxAttempts = 80; // 30 seconds max with progressive intervals
+      const maxAttempts = 60; // 20 seconds max
       
       const pollSession = async () => {
         try {
@@ -338,17 +334,19 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
             
             onSuccess(session);
             setLoading(false);
-          } else if (attempts < maxAttempts) {
-            attempts++;
-            // Progressive polling: start fast, then slow down
-            const interval = attempts < 20 ? 200 : attempts < 40 ? 500 : 1000;
-            setTimeout(pollSession, interval);
-          } else {
-            throw new Error('Session not created after 2FA authentication - please try again. This may take longer for some accounts.');
+            return; // Exit immediately on success
           }
+          
+          attempts++;
+          if (attempts >= maxAttempts) {
+            throw new Error('2FA verification took too long. Please try again.');
+          }
+          
+          // Simple fixed interval for consistent performance
+          setTimeout(pollSession, 300);
         } catch (err) {
-          console.error('Post-2FA authentication error:', err);
-          setError(err instanceof Error ? err.message : 'Authentication failed');
+          console.error('2FA verification error:', err);
+          setError(err instanceof Error ? err.message : '2FA verification failed');
           setLoading(false);
         }
       };

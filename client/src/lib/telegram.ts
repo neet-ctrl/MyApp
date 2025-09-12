@@ -43,11 +43,12 @@ export class TelegramManager {
     try {
       const stringSession = new StringSession(sessionString || '');
       this.client = new TelegramClient(stringSession, apiId, apiHash, {
-        connectionRetries: 3, // Increased retries for better reliability
+        connectionRetries: 1, // Reduce retries to prevent loops
         useWSS: true, // Use WebSocket Secure for browser
-        timeout: 15000, // Increased timeout for slower connections
-        retryDelay: 2000, // Longer delay between retries
-        maxConcurrentDownloads: 2, // Limit concurrent operations
+        timeout: 8000, // Shorter timeout to fail fast
+        retryDelay: 3000, // Longer delay between retries
+        autoReconnect: false, // Disable auto reconnect to prevent loops
+        requestRetries: 1, // Limit request retries
       });
 
       return this.client;
@@ -145,7 +146,13 @@ export class TelegramManager {
         throw new Error('Failed to initialize client');
       }
 
+      // Add connection delay to prevent immediate reconnects
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       await this.client.connect();
+      
+      // Add delay before authorization check
+      await new Promise(resolve => setTimeout(resolve, 500));
       const isAuthorized = await this.client.checkAuthorization();
       
       if (!isAuthorized) {
@@ -415,12 +422,16 @@ export class TelegramManager {
   async disconnect() {
     try {
       if (this.client) {
-        await this.client.disconnect();
+        // Force destroy connection to prevent reconnect loops
+        await this.client.destroy();
         this.client = null;
       }
       this.session = null;
     } catch (error) {
       console.error('Failed to disconnect:', error);
+      // Even if disconnect fails, clear the client
+      this.client = null;
+      this.session = null;
     }
   }
 }
