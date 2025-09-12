@@ -1,5 +1,4 @@
-
-// Telegram API integration using gramjs
+// Telegram API integration using gramjs - Completely rewritten for stability
 
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
@@ -34,6 +33,8 @@ type TelegramEntity = TelegramUser | TelegramChannel | TelegramChat;
 export class TelegramManager {
   private client: TelegramClient | null = null;
   private session: TelegramSession | null = null;
+  private isConnecting = false;
+  private isAuthenticating = false;
 
   constructor() {
     // Initialize with empty session
@@ -41,14 +42,18 @@ export class TelegramManager {
 
   async initialize(apiId: number, apiHash: string, sessionString?: string) {
     try {
+      if (this.client) {
+        await this.cleanup();
+      }
+      
       const stringSession = new StringSession(sessionString || '');
       this.client = new TelegramClient(stringSession, apiId, apiHash, {
-        connectionRetries: 1, // Reduce retries to prevent loops
-        useWSS: true, // Use WebSocket Secure for browser
-        timeout: 8000, // Shorter timeout to fail fast
-        retryDelay: 3000, // Longer delay between retries
-        autoReconnect: false, // Disable auto reconnect to prevent loops
-        requestRetries: 1, // Limit request retries
+        connectionRetries: 5,
+        useWSS: true,
+        timeout: 30000,
+        retryDelay: 3000,
+        autoReconnect: true,
+        requestRetries: 3,
       });
 
       return this.client;
@@ -59,7 +64,13 @@ export class TelegramManager {
   }
 
   async authenticate(phoneNumber: string, apiId: number, apiHash: string) {
+    if (this.isAuthenticating) {
+      throw new Error('Authentication already in progress');
+    }
+
     try {
+      this.isAuthenticating = true;
+      
       if (!this.client) {
         await this.initialize(apiId, apiHash);
       }
@@ -68,46 +79,46 @@ export class TelegramManager {
         throw new Error('Failed to initialize Telegram client');
       }
 
+      console.log('Starting authentication process...');
+
       await this.client.start({
         phoneNumber: async () => phoneNumber,
         password: async () => {
           return new Promise((resolve, reject) => {
-            // Send event to request password
+            console.log('Password required for 2FA');
             window.dispatchEvent(new CustomEvent('telegram:password-required'));
             
-            // Listen for password response
             const handlePasswordResponse = (event: CustomEvent) => {
               window.removeEventListener('telegram:password-response', handlePasswordResponse as EventListener);
+              console.log('Password received');
               resolve(event.detail.password);
             };
             
             window.addEventListener('telegram:password-response', handlePasswordResponse as EventListener);
             
-            // Timeout after 60 seconds
             setTimeout(() => {
               window.removeEventListener('telegram:password-response', handlePasswordResponse as EventListener);
-              reject(new Error('Password input timeout. Please try authenticating again.'));
-            }, 60000);
+              reject(new Error('Password input timeout'));
+            }, 120000); // 2 minutes
           });
         },
         phoneCode: async () => {
           return new Promise((resolve, reject) => {
-            // Send event to request code
+            console.log('Code required for authentication');
             window.dispatchEvent(new CustomEvent('telegram:code-required'));
             
-            // Listen for code response  
             const handleCodeResponse = (event: CustomEvent) => {
               window.removeEventListener('telegram:code-response', handleCodeResponse as EventListener);
+              console.log('Code received');
               resolve(event.detail.code);
             };
             
             window.addEventListener('telegram:code-response', handleCodeResponse as EventListener);
             
-            // Timeout after 60 seconds
             setTimeout(() => {
               window.removeEventListener('telegram:code-response', handleCodeResponse as EventListener);
-              reject(new Error('Code input timeout. Please check if you received the verification code and try again.'));
-            }, 60000);
+              reject(new Error('Code input timeout'));
+            }, 120000); // 2 minutes
           });
         },
         onError: (err) => {
@@ -116,7 +127,7 @@ export class TelegramManager {
         },
       });
 
-      // Save session
+      // Save session after successful authentication
       const sessionString = String(this.client.session.save());
       const me = await this.client.getMe() as TelegramUser;
       
@@ -130,39 +141,48 @@ export class TelegramManager {
         lastName: me.lastName || '',
       };
 
+      console.log('Authentication successful!');
       return this.session;
     } catch (error) {
       console.error('Authentication failed:', error);
       throw new Error(`Authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      this.isAuthenticating = false;
     }
   }
 
   async loadSession(session: TelegramSession) {
+    if (this.isConnecting) {
+      throw new Error('Connection already in progress');
+    }
+
     try {
+      this.isConnecting = true;
       this.session = session;
+      
       await this.initialize(session.apiId, session.apiHash, session.sessionString);
       
       if (!this.client) {
         throw new Error('Failed to initialize client');
       }
 
-      // Add connection delay to prevent immediate reconnects
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      console.log('Connecting to Telegram...');
       await this.client.connect();
       
-      // Add delay before authorization check
-      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('Checking authorization...');
       const isAuthorized = await this.client.checkAuthorization();
       
       if (!isAuthorized) {
         throw new Error('Session is no longer valid');
       }
       
-      return isAuthorized;
+      console.log('Session loaded successfully!');
+      return true;
     } catch (error) {
       console.error('Failed to load session:', error);
       throw new Error(`Session loading failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      this.isConnecting = false;
     }
   }
 
@@ -416,23 +436,31 @@ export class TelegramManager {
   }
 
   isConnected(): boolean {
-    return this.client !== null;
+    return this.client !== null && !this.isConnecting;
   }
 
-  async disconnect() {
+  async cleanup() {
     try {
       if (this.client) {
-        // Force destroy connection to prevent reconnect loops
+        console.log('Cleaning up Telegram client...');
         await this.client.destroy();
         this.client = null;
       }
       this.session = null;
+      this.isConnecting = false;
+      this.isAuthenticating = false;
     } catch (error) {
-      console.error('Failed to disconnect:', error);
-      // Even if disconnect fails, clear the client
+      console.error('Failed to cleanup:', error);
+      // Force cleanup even if it fails
       this.client = null;
       this.session = null;
+      this.isConnecting = false;
+      this.isAuthenticating = false;
     }
+  }
+
+  async disconnect() {
+    await this.cleanup();
   }
 }
 

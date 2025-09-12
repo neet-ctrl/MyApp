@@ -120,62 +120,52 @@ export default function Home() {
   };
 
   const handleLogout = async () => {
-    // Immediately update UI state to prevent hanging appearance
+    console.log('Starting logout process...');
+    
+    // Immediately update UI state - no hanging
     setCurrentSession(null);
     setIsAuthModalOpen(true);
-    
-    // Clear localStorage immediately
     localStorage.removeItem('telegram_session');
     
-    try {
-      // Create promises for async operations with timeouts
-      const operations = [];
-      
-      // Add session deletion if session exists
-      if (currentSession) {
-        const deleteSessionPromise = Promise.race([
-          storage.deleteSession(currentSession.phoneNumber),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Delete session timeout')), 5000)
-          )
-        ]);
-        operations.push(deleteSessionPromise);
-      }
-      
-      // Add telegram disconnect with timeout
-      const disconnectPromise = Promise.race([
-        telegramManager.disconnect(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Disconnect timeout')), 3000)
-        )
-      ]);
-      operations.push(disconnectPromise);
-      
-      // Run operations in parallel with individual error handling
-      const results = await Promise.allSettled(operations);
-      
-      // Log any failures but don't let them block logout
-      results.forEach((result, index) => {
-        if (result.status === 'rejected') {
-          console.warn(`Logout operation ${index} failed:`, result.reason);
+    // Show immediate feedback
+    toast({
+      title: 'Logging out...',
+      description: 'Disconnecting from Telegram',
+    });
+    
+    // Background cleanup - don't wait for it
+    setTimeout(async () => {
+      try {
+        // Clean up session storage
+        if (currentSession) {
+          try {
+            await storage.deleteSession(currentSession.phoneNumber);
+            console.log('Session deleted from storage');
+          } catch (error) {
+            console.warn('Failed to delete session from storage:', error);
+          }
         }
-      });
-      
-      // Invalidate session queries to refresh
-      queryClient.invalidateQueries({ queryKey: ['sessions'] });
-      
-      toast({
-        title: 'Logged out',
-        description: 'You have been disconnected from Telegram',
-      });
-    } catch (error) {
-      // Even if cleanup fails, user is still logged out from UI perspective
-      console.error('Logout cleanup error:', error);
-      toast({
-        title: 'Logged out',
-        description: 'Disconnected from Telegram (some cleanup operations may have failed)',
-      });
-    }
+        
+        // Disconnect from Telegram
+        try {
+          await telegramManager.disconnect();
+          console.log('Telegram client disconnected');
+        } catch (error) {
+          console.warn('Failed to disconnect Telegram client:', error);
+        }
+        
+        // Refresh queries
+        queryClient.invalidateQueries({ queryKey: ['sessions'] });
+        
+        // Final success message
+        toast({
+          title: 'Logged out',
+          description: 'Successfully disconnected from Telegram',
+        });
+      } catch (error) {
+        console.error('Background logout cleanup error:', error);
+      }
+    }, 100); // Small delay to ensure UI updates first
   };
 
   const handleSelectFolder = async () => {

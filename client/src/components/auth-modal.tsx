@@ -23,9 +23,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [step, setStep] = useState<AuthStep>('login-options');
   const [customSessionString, setCustomSessionString] = useState('');
   const [showSessionHistory, setShowSessionHistory] = useState(false);
-  const [sessionHistoryPassword, setSessionHistoryPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [sessionCheckInterval, setSessionCheckInterval] = useState<NodeJS.Timeout | null>(null);
   const [credentials, setCredentials] = useState({
     apiId: import.meta.env.VITE_TELEGRAM_API_ID || '28403662',
     apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '079509d4ac7f209a1a58facd00d6ff5a',
@@ -36,26 +36,96 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
 
   const { toast } = useToast();
 
+  // Clean up interval on unmount
+  useEffect(() => {
+    return () => {
+      if (sessionCheckInterval) {
+        clearInterval(sessionCheckInterval);
+      }
+    };
+  }, [sessionCheckInterval]);
+
   useEffect(() => {
     // Listen for Telegram events
-    const handleCodeRequired = (event: CustomEvent) => {
+    const handleCodeRequired = () => {
+      console.log('Code required event received');
       setStep('code');
       setLoading(false);
     };
 
-    const handlePasswordRequired = (event: CustomEvent) => {
+    const handlePasswordRequired = () => {
+      console.log('Password required event received');
       setStep('password');
       setLoading(false);
     };
 
-    window.addEventListener('telegram:code-required', handleCodeRequired as EventListener);
-    window.addEventListener('telegram:password-required', handlePasswordRequired as EventListener);
+    window.addEventListener('telegram:code-required', handleCodeRequired);
+    window.addEventListener('telegram:password-required', handlePasswordRequired);
 
     return () => {
-      window.removeEventListener('telegram:code-required', handleCodeRequired as EventListener);
-      window.removeEventListener('telegram:password-required', handlePasswordRequired as EventListener);
+      window.removeEventListener('telegram:code-required', handleCodeRequired);
+      window.removeEventListener('telegram:password-required', handlePasswordRequired);
     };
   }, []);
+
+  const clearSessionCheck = () => {
+    if (sessionCheckInterval) {
+      clearInterval(sessionCheckInterval);
+      setSessionCheckInterval(null);
+    }
+  };
+
+  const startSessionCheck = () => {
+    clearSessionCheck();
+    
+    let checkCount = 0;
+    const maxChecks = 50; // 25 seconds max
+    
+    const interval = setInterval(() => {
+      checkCount++;
+      console.log(`Checking for session... attempt ${checkCount}`);
+      
+      const session = telegramManager.getSession();
+      if (session) {
+        console.log('Session found!', session);
+        clearInterval(interval);
+        setSessionCheckInterval(null);
+        handleSessionSuccess(session);
+      } else if (checkCount >= maxChecks) {
+        console.log('Session check timeout');
+        clearInterval(interval);
+        setSessionCheckInterval(null);
+        setLoading(false);
+        setError('Session creation timed out. Please try again.');
+      }
+    }, 500);
+    
+    setSessionCheckInterval(interval);
+  };
+
+  const handleSessionSuccess = async (session: TelegramSession) => {
+    try {
+      console.log('Processing successful session');
+      setLoading(false);
+      
+      // Save session to storage
+      await storage.saveSession(session);
+      
+      // Set localStorage flag
+      localStorage.setItem('telegram_session', 'active');
+      
+      toast({
+        title: 'Welcome!',
+        description: `Successfully logged in as ${session.firstName || session.phoneNumber}`,
+      });
+      
+      onSuccess(session);
+    } catch (error) {
+      console.error('Error handling session success:', error);
+      setError('Failed to save session. Please try again.');
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (field: keyof typeof credentials, value: string) => {
     setCredentials(prev => ({ ...prev, [field]: value }));
@@ -66,14 +136,11 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const handleUseDefaultSession = async () => {
     setLoading(true);
     setError('');
-
-    // Add timeout to prevent hanging - increased timeout for slower connections
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Login timeout - please try again. Check your connection and try again.')), 30000);
-    });
+    clearSessionCheck();
 
     try {
       const predefinedSessionString = import.meta.env.VITE_DEFAULT_SESSION_STRING || "1BQAWZmxvcmEud2ViLnRlbGVncmFtLm9yZwG7IS3tNY2BsIDLeDQnewXF0dZ7iEc231dYk/8TDX83hkgf7EwJ8HvdsqxWr/Dyb8oeEIe6+H9MAgI4yPaGs0IgIsdLQozbCnlNF7NDC+q5iC+JlpLbAF2PIiZ3nHvetmRyadZpTsVSLFgSG1BdvVUx2J65VHdkbJTk9V0hj2Wq3ucMrBNGJB6oCSrnSqWCD5mmtxKdFDV6p+6Fj1d0gbnmBOkhV0Ud+V6NRHDup/j6rREt/lJTO8gXowmd2dLt1piiQrmD3fU+zKEFf4Mv0GllJYYKY9aVxQjjhowXM8GdKnX0DLxOFVcqSk7sOkCn14ocdtYK4ffhRgJdgu241XriLA==";
+      
       const sessionData: TelegramSession = {
         sessionString: predefinedSessionString,
         apiId: parseInt(import.meta.env.VITE_TELEGRAM_API_ID || '28403662'),
@@ -84,23 +151,11 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         lastName: 'User',
       };
 
-      const loginPromise = async () => {
-        await telegramManager.loadSession(sessionData);
-        await storage.saveSession(sessionData);
-        
-        // Set localStorage flag to prevent modal from showing again
-        localStorage.setItem('telegram_session', 'active');
-
-        toast({
-          title: 'Default Session Loaded!',
-          description: 'Successfully logged in with default session',
-        });
-
-        onSuccess(sessionData);
-      };
-
-      await Promise.race([loginPromise(), timeoutPromise]);
+      console.log('Loading default session...');
+      await telegramManager.loadSession(sessionData);
+      await handleSessionSuccess(sessionData);
     } catch (err) {
+      console.error('Default session error:', err);
       setLoading(false);
       setError(err instanceof Error ? err.message : 'Failed to load default session');
     }
@@ -129,11 +184,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
 
     setLoading(true);
     setError('');
-
-    // Add timeout to prevent hanging - increased timeout for custom sessions
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Login timeout - please try again. Check your session string and connection.')), 30000);
-    });
+    clearSessionCheck();
 
     try {
       const sessionData: TelegramSession = {
@@ -146,30 +197,19 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         lastName: 'User',
       };
 
-      const loginPromise = async () => {
-        await telegramManager.loadSession(sessionData);
-        await storage.saveSession(sessionData);
-        
-        // Set localStorage flag to prevent modal from showing again
-        localStorage.setItem('telegram_session', 'active');
+      console.log('Loading custom session...');
+      await telegramManager.loadSession(sessionData);
+      
+      // Save custom session for history
+      const customSessions = JSON.parse(localStorage.getItem('custom_sessions') || '[]');
+      if (!customSessions.includes(customSessionString.trim())) {
+        customSessions.push(customSessionString.trim());
+        localStorage.setItem('custom_sessions', JSON.stringify(customSessions));
+      }
 
-        // Save custom session for history
-        const customSessions = JSON.parse(localStorage.getItem('custom_sessions') || '[]');
-        if (!customSessions.includes(customSessionString.trim())) {
-          customSessions.push(customSessionString.trim());
-          localStorage.setItem('custom_sessions', JSON.stringify(customSessions));
-        }
-
-        toast({
-          title: 'Custom Session Loaded!',
-          description: 'Successfully logged in with custom session',
-        });
-
-        onSuccess(sessionData);
-      };
-
-      await Promise.race([loginPromise(), timeoutPromise]);
+      await handleSessionSuccess(sessionData);
     } catch (err) {
+      console.error('Custom session error:', err);
       setLoading(false);
       setError(err instanceof Error ? err.message : 'Failed to load custom session');
     }
@@ -199,40 +239,26 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
 
     setLoading(true);
     setError('');
+    clearSessionCheck();
 
-    // Add retry mechanism for phone authentication
-    let attempts = 0;
-    const maxRetries = 2;
-    
-    while (attempts <= maxRetries) {
-      try {
-        await telegramManager.authenticate(
-          credentials.phoneNumber,
-          parseInt(credentials.apiId),
-          credentials.apiHash
-        );
-        break; // Success, exit loop
-      } catch (err) {
-        attempts++;
-        console.error(`Phone authentication attempt ${attempts} failed:`, err);
-        
-        if (attempts > maxRetries) {
-          setLoading(false);
-          const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
-          if (errorMessage.includes('PHONE_NUMBER_INVALID')) {
-            setError('Invalid phone number format. Please include country code (e.g., +1234567890)');
-          } else if (errorMessage.includes('FLOOD_WAIT')) {
-            setError('Too many requests. Please wait a few minutes before trying again.');
-          } else if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
-            setError('Network timeout. Please check your connection and try again.');
-          } else {
-            setError(`${errorMessage}. Please try again.`);
-          }
-          return;
-        }
-        
-        // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      console.log('Starting phone authentication...');
+      await telegramManager.authenticate(
+        credentials.phoneNumber,
+        parseInt(credentials.apiId),
+        credentials.apiHash
+      );
+      // Authentication process will trigger code-required event
+    } catch (err) {
+      console.error('Phone authentication error:', err);
+      setLoading(false);
+      const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
+      if (errorMessage.includes('PHONE_NUMBER_INVALID')) {
+        setError('Invalid phone number format. Please include country code (e.g., +1234567890)');
+      } else if (errorMessage.includes('FLOOD_WAIT')) {
+        setError('Too many requests. Please wait a few minutes before trying again.');
+      } else {
+        setError(errorMessage);
       }
     }
   };
@@ -247,52 +273,16 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     setError('');
 
     try {
+      console.log('Sending verification code...');
       // Send the code response
       window.dispatchEvent(new CustomEvent('telegram:code-response', {
         detail: { code: credentials.code }
       }));
 
-      // Faster and more reliable session polling
-      let attempts = 0;
-      const maxAttempts = 60; // 20 seconds max
-      
-      const pollSession = async () => {
-        try {
-          const session = telegramManager.getSession();
-          if (session) {
-            // Save session to storage for persistence
-            await storage.saveSession(session);
-            
-            // Set localStorage flag to prevent modal from showing again
-            localStorage.setItem('telegram_session', 'active');
-            
-            toast({
-              title: 'Welcome!',
-              description: `Successfully logged in as ${session.firstName || session.phoneNumber}`,
-            });
-            
-            onSuccess(session);
-            setLoading(false);
-            return; // Exit immediately on success
-          } 
-          
-          attempts++;
-          if (attempts >= maxAttempts) {
-            throw new Error('OTP verification took too long. Please try again.');
-          }
-          
-          // Simple fixed interval for consistent performance
-          setTimeout(pollSession, 300);
-        } catch (err) {
-          console.error('OTP verification error:', err);
-          setError(err instanceof Error ? err.message : 'OTP verification failed');
-          setLoading(false);
-        }
-      };
-      
-      // Start polling immediately
-      setTimeout(pollSession, 100);
+      // Start checking for session
+      startSessionCheck();
     } catch (err) {
+      console.error('Code submission error:', err);
       setLoading(false);
       setError(err instanceof Error ? err.message : 'Code verification failed');
     }
@@ -308,52 +298,16 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     setError('');
 
     try {
+      console.log('Sending 2FA password...');
       // Send the password response
       window.dispatchEvent(new CustomEvent('telegram:password-response', {
         detail: { password: credentials.password }
       }));
 
-      // Faster 2FA session polling
-      let attempts = 0;
-      const maxAttempts = 60; // 20 seconds max
-      
-      const pollSession = async () => {
-        try {
-          const session = telegramManager.getSession();
-          if (session) {
-            // Save session to storage for persistence
-            await storage.saveSession(session);
-            
-            // Set localStorage flag to prevent modal from showing again
-            localStorage.setItem('telegram_session', 'active');
-            
-            toast({
-              title: 'Welcome!',
-              description: `Successfully logged in as ${session.firstName || session.phoneNumber}`,
-            });
-            
-            onSuccess(session);
-            setLoading(false);
-            return; // Exit immediately on success
-          }
-          
-          attempts++;
-          if (attempts >= maxAttempts) {
-            throw new Error('2FA verification took too long. Please try again.');
-          }
-          
-          // Simple fixed interval for consistent performance
-          setTimeout(pollSession, 300);
-        } catch (err) {
-          console.error('2FA verification error:', err);
-          setError(err instanceof Error ? err.message : '2FA verification failed');
-          setLoading(false);
-        }
-      };
-      
-      // Start polling immediately
-      setTimeout(pollSession, 100);
+      // Start checking for session
+      startSessionCheck();
     } catch (err) {
+      console.error('Password submission error:', err);
       setLoading(false);
       setError(err instanceof Error ? err.message : 'Password verification failed');
     }
@@ -361,11 +315,12 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
 
   const handleClose = () => {
     if (!loading) {
+      clearSessionCheck();
       setStep('login-options');
       setCredentials({
-        apiId: import.meta.env.VITE_TELEGRAM_API_ID || '',
-        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '',
-        phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '',
+        apiId: import.meta.env.VITE_TELEGRAM_API_ID || '28403662',
+        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '079509d4ac7f209a1a58facd00d6ff5a',
+        phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '+917352013479',
         code: '',
         password: '',
       });
@@ -644,30 +599,39 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="+1 234 567 8900"
+                  placeholder="+1234567890"
                   value={credentials.phoneNumber}
                   onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                   data-testid="input-phone"
                 />
               </div>
 
-              <Button 
-                onClick={handlePhoneSubmit} 
-                className="w-full"
-                disabled={loading}
-                data-testid="button-send-code"
-              >
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Send Code
-              </Button>
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={() => setStep('credentials')} 
+                  variant="outline"
+                  className="flex-1"
+                  data-testid="button-back-to-credentials"
+                >
+                  Back
+                </Button>
+                <Button 
+                  onClick={handlePhoneSubmit} 
+                  className="flex-1"
+                  disabled={loading}
+                  data-testid="button-phone-submit"
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Send Code
+                </Button>
+              </div>
             </div>
           )}
 
           {step === 'code' && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Enter the verification code sent to{' '}
-                <span className="font-medium">{credentials.phoneNumber}</span>
+                Enter the verification code sent to {credentials.phoneNumber}
               </p>
 
               <div className="space-y-2">
@@ -678,27 +642,37 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   placeholder="12345"
                   value={credentials.code}
                   onChange={(e) => handleInputChange('code', e.target.value)}
-                  className="text-center text-lg tracking-wider"
-                  data-testid="input-verification-code"
+                  data-testid="input-code"
+                  autoFocus
                 />
               </div>
 
-              <Button 
-                onClick={handleCodeSubmit} 
-                className="w-full"
-                disabled={loading}
-                data-testid="button-verify-code"
-              >
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Verify Code
-              </Button>
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={() => setStep('phone')} 
+                  variant="outline"
+                  className="flex-1"
+                  data-testid="button-back-to-phone"
+                >
+                  Back
+                </Button>
+                <Button 
+                  onClick={handleCodeSubmit} 
+                  className="flex-1"
+                  disabled={loading}
+                  data-testid="button-code-submit"
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Verify
+                </Button>
+              </div>
             </div>
           )}
 
           {step === 'password' && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Your account has two-factor authentication enabled. Please enter your password.
+                Enter your two-factor authentication password
               </p>
 
               <div className="space-y-2">
@@ -706,22 +680,33 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder="••••••••"
                   value={credentials.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
                   data-testid="input-password"
+                  autoFocus
                 />
               </div>
 
-              <Button 
-                onClick={handlePasswordSubmit} 
-                className="w-full"
-                disabled={loading}
-                data-testid="button-verify-password"
-              >
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Verify Password
-              </Button>
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={() => setStep('code')} 
+                  variant="outline"
+                  className="flex-1"
+                  data-testid="button-back-to-code"
+                >
+                  Back
+                </Button>
+                <Button 
+                  onClick={handlePasswordSubmit} 
+                  className="flex-1"
+                  disabled={loading}
+                  data-testid="button-password-submit"
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Login
+                </Button>
+              </div>
             </div>
           )}
         </div>
