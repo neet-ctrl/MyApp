@@ -498,6 +498,7 @@ export function JSCopier() {
     onSuccess: () => {
       toast({ title: 'JS Copier Stopped', description: 'Message forwarding has been stopped.' });
       queryClient.invalidateQueries({ queryKey: ['js-copier-status'] });
+      refetchLastLog(); // Refresh the last log when stopped
     },
     onError: (error: Error) => {
       toast({ 
