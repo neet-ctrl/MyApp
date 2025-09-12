@@ -71,13 +71,63 @@ class ForwardJobManager {
         updatedAt: new Date().toISOString(),
       });
 
-      // Use chat IDs directly like Python script (no getEntity calls)
-      const fromChatId = this.intify(this.config.fromChatId);
-      const toChatId = this.intify(this.config.toChatId);
+      // Properly resolve entities like Python copier does - this is critical for GramJS
+      let fromChatId = this.config.fromChatId;
+      let toChatId = this.config.toChatId;
+      
+      // Convert to proper format if needed (add -100 prefix for groups like Python)
+      if (typeof fromChatId === 'string' && fromChatId.match(/^\d+$/)) {
+        // If it's a bare number, add -100 prefix for groups
+        fromChatId = `-100${fromChatId}`;
+      }
       
       this.addLog(`From chat ID: ${fromChatId}`);
       this.addLog(`To chat ID: ${toChatId}`);
       this.addLog(`Starting from offset: ${this.config.offsetFrom}, ending at: ${this.config.offsetTo || 'latest'}`);
+
+      // Resolve entities first - this is what Python does automatically
+      this.addLog(`Resolving entities...`);
+      let fromEntity, toEntity;
+      
+      try {
+        this.addLog(`Getting entity for source chat: ${fromChatId}`);
+        fromEntity = await this.client.getEntity(fromChatId);
+        this.addLog(`✅ Source entity resolved: ${fromEntity.id}`);
+        
+        this.addLog(`Getting entity for destination chat: ${toChatId}`);
+        toEntity = await this.client.getEntity(toChatId);
+        this.addLog(`✅ Destination entity resolved: ${toEntity.id}`);
+      } catch (entityError: any) {
+        this.addLog(`❌ Entity resolution failed: ${entityError.message}`);
+        this.addLog(`Trying alternative entity resolution methods...`);
+        
+        // Try alternative methods like dialogs
+        try {
+          this.addLog(`Getting dialogs to find entities...`);
+          const dialogs = await this.client.getDialogs();
+          this.addLog(`Found ${dialogs.length} dialogs, searching for matching entities...`);
+          
+          for (const dialog of dialogs) {
+            if (dialog.entity && dialog.entity.id.toString() === fromChatId.toString().replace('-100', '') || 
+                dialog.entity && dialog.entity.id.toString() === fromChatId.toString()) {
+              fromEntity = dialog.entity;
+              this.addLog(`✅ Found source entity in dialogs: ${fromEntity.id}`);
+            }
+            if (dialog.entity && (dialog.entity.id.toString() === toChatId.toString() || 
+                dialog.title === toChatId || 
+                ('username' in dialog.entity && dialog.entity.username === toChatId.replace('@', '')))) {
+              toEntity = dialog.entity;
+              this.addLog(`✅ Found destination entity in dialogs: ${toEntity.id}`);
+            }
+          }
+          
+          if (!fromEntity || !toEntity) {
+            throw new Error(`Could not resolve entities. From: ${!!fromEntity}, To: ${!!toEntity}`);
+          }
+        } catch (dialogError: any) {
+          throw new Error(`Failed to resolve entities: ${entityError.message}. Dialog fallback: ${dialogError.message}`);
+        }
+      }
 
       let messagesProcessed = 0;
       let lastId = 0;
@@ -85,12 +135,9 @@ class ForwardJobManager {
       this.addLog(`Starting message iteration from offset ${this.config.offsetFrom}...`);
       
       try {
-        this.addLog(`Starting iteration from chat ${fromChatId}`);
+        this.addLog(`Starting iteration from entity ${fromEntity.id}`);
         
-        // Skip entity check, go directly to getting messages like Python script
-        this.addLog(`Attempting to get messages directly (Python approach)...`);
-        
-        this.addLog(`Getting messages from chat ${fromChatId}...`);
+        this.addLog(`Getting messages from resolved entity...`);
         
         let messages;
         try {
@@ -99,7 +146,7 @@ class ForwardJobManager {
             setTimeout(() => reject(new Error('getMessages timeout after 15 seconds')), 15000)
           );
           
-          const getMessagesPromise = this.client.getMessages(fromChatId, {
+          const getMessagesPromise = this.client.getMessages(fromEntity!, {
             offsetId: this.config.offsetFrom,
             reverse: true,
             limit: 10
@@ -116,7 +163,7 @@ class ForwardJobManager {
           this.addLog(`❌ Error getting messages: ${msgError.message}`);
           // Try alternative approach - use iter_messages like Python
           this.addLog(`Trying iter_messages approach...`);
-          const iterator = this.client.iterMessages(fromChatId, {
+          const iterator = this.client.iterMessages(fromEntity!, {
             reverse: true,
             offsetId: this.config.offsetFrom,
             limit: 5
@@ -143,9 +190,9 @@ class ForwardJobManager {
 
           try {
             // Use proper forwardMessages to preserve metadata and attribution
-            await this.client.forwardMessages(toChatId, {
+            await this.client.forwardMessages(toEntity!, {
               messages: [message.id],
-              fromPeer: fromChatId
+              fromPeer: fromEntity!
             });
             
             lastId = message.id;
@@ -169,9 +216,9 @@ class ForwardJobManager {
               await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
               
               // Retry with proper forwardMessages
-              await this.client!.forwardMessages(toChatId, {
+              await this.client!.forwardMessages(toEntity!, {
                 messages: [message.id],
-                fromPeer: fromChatId
+                fromPeer: fromEntity!
               });
               lastId = message.id;
               messagesProcessed++;
