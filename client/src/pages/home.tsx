@@ -120,36 +120,60 @@ export default function Home() {
   };
 
   const handleLogout = async () => {
+    // Immediately update UI state to prevent hanging appearance
+    setCurrentSession(null);
+    setIsAuthModalOpen(true);
+    
+    // Clear localStorage immediately
+    localStorage.removeItem('telegram_session');
+    
     try {
-      // Clear all session data
+      // Create promises for async operations with timeouts
+      const operations = [];
+      
+      // Add session deletion if session exists
       if (currentSession) {
-        await storage.deleteSession(currentSession.phoneNumber);
+        const deleteSessionPromise = Promise.race([
+          storage.deleteSession(currentSession.phoneNumber),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Delete session timeout')), 5000)
+          )
+        ]);
+        operations.push(deleteSessionPromise);
       }
       
-      // Clear localStorage backup
-      localStorage.removeItem('telegram_session');
+      // Add telegram disconnect with timeout
+      const disconnectPromise = Promise.race([
+        telegramManager.disconnect(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Disconnect timeout')), 3000)
+        )
+      ]);
+      operations.push(disconnectPromise);
       
-      // Disconnect from Telegram
-      await telegramManager.disconnect();
+      // Run operations in parallel with individual error handling
+      const results = await Promise.allSettled(operations);
       
-      // Reset state
-      setCurrentSession(null);
+      // Log any failures but don't let them block logout
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.warn(`Logout operation ${index} failed:`, result.reason);
+        }
+      });
       
       // Invalidate session queries to refresh
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
-      
-      // Show login options
-      setIsAuthModalOpen(true);
       
       toast({
         title: 'Logged out',
         description: 'You have been disconnected from Telegram',
       });
     } catch (error) {
+      // Even if cleanup fails, user is still logged out from UI perspective
+      console.error('Logout cleanup error:', error);
       toast({
-        variant: 'destructive',
-        title: 'Logout failed',
-        description: error instanceof Error ? error.message : 'Unknown error',
+        title: 'Logged out',
+        description: 'Disconnected from Telegram (some cleanup operations may have failed)',
       });
     }
   };

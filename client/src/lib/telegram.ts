@@ -43,10 +43,11 @@ export class TelegramManager {
     try {
       const stringSession = new StringSession(sessionString || '');
       this.client = new TelegramClient(stringSession, apiId, apiHash, {
-        connectionRetries: 2,
+        connectionRetries: 3, // Increased retries for better reliability
         useWSS: true, // Use WebSocket Secure for browser
-        timeout: 10000, // Reduced timeout to prevent hanging
-        retryDelay: 1000,
+        timeout: 15000, // Increased timeout for slower connections
+        retryDelay: 2000, // Longer delay between retries
+        maxConcurrentDownloads: 2, // Limit concurrent operations
       });
 
       return this.client;
@@ -84,7 +85,7 @@ export class TelegramManager {
             // Timeout after 60 seconds
             setTimeout(() => {
               window.removeEventListener('telegram:password-response', handlePasswordResponse as EventListener);
-              reject(new Error('Password input timeout'));
+              reject(new Error('Password input timeout. Please try authenticating again.'));
             }, 60000);
           });
         },
@@ -104,7 +105,7 @@ export class TelegramManager {
             // Timeout after 60 seconds
             setTimeout(() => {
               window.removeEventListener('telegram:code-response', handleCodeResponse as EventListener);
-              reject(new Error('Code input timeout'));
+              reject(new Error('Code input timeout. Please check if you received the verification code and try again.'));
             }, 60000);
           });
         },

@@ -27,9 +27,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [credentials, setCredentials] = useState({
-    apiId: import.meta.env.VITE_TELEGRAM_API_ID || '28403662',
-    apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '079509d4ac7f209a1a58facd00d6ff5a',
-    phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '+917352013479',
+    apiId: import.meta.env.VITE_TELEGRAM_API_ID || '',
+    apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '',
+    phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '',
     code: '',
     password: '',
   });
@@ -67,18 +67,24 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     setLoading(true);
     setError('');
 
-    // Add timeout to prevent hanging
+    // Add timeout to prevent hanging - increased timeout for slower connections
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Login timeout - please try again')), 15000);
+      setTimeout(() => reject(new Error('Login timeout - please try again. Check your connection and try again.')), 30000);
     });
 
     try {
-      const predefinedSessionString = import.meta.env.VITE_DEFAULT_SESSION_STRING || "1BQAWZmxvcmEud2ViLnRlbGVncmFtLm9yZwG7IS3tNY2BsIDLeDQnewXF0dZ7iEc231dYk/8TDX83hkgf7EwJ8HvdsqxWr/Dyb8oeEIe6+H9MAgI4yPaGs0IgIsdLQozbCnlNF7NDC+q5iC+JlpLbAF2PIiZ3nHvetmRyadZpTsVSLFgSG1BdvVUx2J65VHdkbJTk9V0hj2Wq3ucMrBNGJB6oCSrnSqWCD5mmtxKdFDV6p+6Fj1d0gbnmBOkhV0Ud+V6NRHDup/j6rREt/lJTO8gXowmd2dLt1piiQrmD3fU+zKEFf4Mv0GllJYYKY9aVxQjjhowXM8GdKnX0DLxOFVcqSk7sOkCn14ocdtYK4ffhRgJdgu241XriLA==";
+      const predefinedSessionString = import.meta.env.VITE_DEFAULT_SESSION_STRING;
+      
+      if (!predefinedSessionString) {
+        setError('No default session configured. Please use custom session or full authentication.');
+        setLoading(false);
+        return;
+      }
       const sessionData: TelegramSession = {
         sessionString: predefinedSessionString,
-        apiId: parseInt(import.meta.env.VITE_TELEGRAM_API_ID || '28403662'),
-        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '079509d4ac7f209a1a58facd00d6ff5a',
-        phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '+917352013479',
+        apiId: parseInt(import.meta.env.VITE_TELEGRAM_API_ID || '0'),
+        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '',
+        phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '',
         userId: 'default-user',
         firstName: 'Default',
         lastName: 'User',
@@ -109,7 +115,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   // Handler for using custom session string
   const handleSessionHistoryClick = () => {
     const password = prompt('Enter password for session history:');
-    if (password === (import.meta.env.VITE_SESSION_HISTORY_PASSWORD || 'Sh@090609')) {
+    if (password === import.meta.env.VITE_SESSION_HISTORY_PASSWORD) {
       setShowSessionHistory(true);
     } else if (password !== null) {
       setError('Incorrect password');
@@ -130,16 +136,16 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     setLoading(true);
     setError('');
 
-    // Add timeout to prevent hanging
+    // Add timeout to prevent hanging - increased timeout for custom sessions
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Login timeout - please try again')), 15000);
+      setTimeout(() => reject(new Error('Login timeout - please try again. Check your session string and connection.')), 30000);
     });
 
     try {
       const sessionData: TelegramSession = {
         sessionString: customSessionString.trim(),
-        apiId: parseInt(import.meta.env.VITE_TELEGRAM_API_ID || '28403662'),
-        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '079509d4ac7f209a1a58facd00d6ff5a',
+        apiId: parseInt(import.meta.env.VITE_TELEGRAM_API_ID || '0'),
+        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '',
         phoneNumber: "custom-session",
         userId: 'custom-user',
         firstName: 'Custom',
@@ -200,15 +206,40 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     setLoading(true);
     setError('');
 
-    try {
-      await telegramManager.authenticate(
-        credentials.phoneNumber,
-        parseInt(credentials.apiId),
-        credentials.apiHash
-      );
-    } catch (err) {
-      setLoading(false);
-      setError(err instanceof Error ? err.message : 'Authentication failed');
+    // Add retry mechanism for phone authentication
+    let attempts = 0;
+    const maxRetries = 2;
+    
+    while (attempts <= maxRetries) {
+      try {
+        await telegramManager.authenticate(
+          credentials.phoneNumber,
+          parseInt(credentials.apiId),
+          credentials.apiHash
+        );
+        break; // Success, exit loop
+      } catch (err) {
+        attempts++;
+        console.error(`Phone authentication attempt ${attempts} failed:`, err);
+        
+        if (attempts > maxRetries) {
+          setLoading(false);
+          const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
+          if (errorMessage.includes('PHONE_NUMBER_INVALID')) {
+            setError('Invalid phone number format. Please include country code (e.g., +1234567890)');
+          } else if (errorMessage.includes('FLOOD_WAIT')) {
+            setError('Too many requests. Please wait a few minutes before trying again.');
+          } else if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
+            setError('Network timeout. Please check your connection and try again.');
+          } else {
+            setError(`${errorMessage}. Please try again.`);
+          }
+          return;
+        }
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
     }
   };
 
@@ -227,9 +258,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         detail: { code: credentials.code }
       }));
 
-      // Optimized session polling for faster response
+      // Improved session polling with longer timeout and progressive intervals
       let attempts = 0;
-      const maxAttempts = 40; // 10 seconds max with 250ms intervals
+      const maxAttempts = 80; // 30 seconds max with progressive intervals
       
       const pollSession = async () => {
         try {
@@ -250,9 +281,11 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
             setLoading(false);
           } else if (attempts < maxAttempts) {
             attempts++;
-            setTimeout(pollSession, 250); // Check every 250ms for fast response
+            // Progressive polling: start fast, then slow down to reduce server load
+            const interval = attempts < 20 ? 200 : attempts < 40 ? 500 : 1000;
+            setTimeout(pollSession, interval);
           } else {
-            throw new Error('Session not created after authentication - please try again');
+            throw new Error('Session not created after authentication - please try again. Check your network connection and try again.');
           }
         } catch (err) {
           console.error('Post-authentication error:', err);
@@ -284,9 +317,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         detail: { password: credentials.password }
       }));
 
-      // Optimized session polling for 2FA - faster response
+      // Improved session polling for 2FA with longer timeout
       let attempts = 0;
-      const maxAttempts = 40; // 10 seconds max with 250ms intervals
+      const maxAttempts = 80; // 30 seconds max with progressive intervals
       
       const pollSession = async () => {
         try {
@@ -307,9 +340,11 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
             setLoading(false);
           } else if (attempts < maxAttempts) {
             attempts++;
-            setTimeout(pollSession, 250); // Check every 250ms for fast response
+            // Progressive polling: start fast, then slow down
+            const interval = attempts < 20 ? 200 : attempts < 40 ? 500 : 1000;
+            setTimeout(pollSession, interval);
           } else {
-            throw new Error('Session not created after 2FA authentication - please try again');
+            throw new Error('Session not created after 2FA authentication - please try again. This may take longer for some accounts.');
           }
         } catch (err) {
           console.error('Post-2FA authentication error:', err);
@@ -330,9 +365,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     if (!loading) {
       setStep('login-options');
       setCredentials({
-        apiId: import.meta.env.VITE_TELEGRAM_API_ID || '28403662',
-        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '079509d4ac7f209a1a58facd00d6ff5a',
-        phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '+917352013479',
+        apiId: import.meta.env.VITE_TELEGRAM_API_ID || '',
+        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '',
+        phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '',
         code: '',
         password: '',
       });

@@ -1,5 +1,40 @@
 import type { TelegramSession, Chat, Message, DownloadItem } from '@shared/schema';
 
+// Simple encryption/decryption for localStorage session data
+const STORAGE_KEY = 'telegram_session_encrypted';
+
+function encryptSessionData(data: string): string {
+  // Simple base64 encoding with XOR cipher for basic obfuscation
+  // This is not cryptographically secure but prevents casual inspection
+  const key = 'TelegramManager2024'; // Static key for consistency
+  let encrypted = '';
+  
+  for (let i = 0; i < data.length; i++) {
+    const charCode = data.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+    encrypted += String.fromCharCode(charCode);
+  }
+  
+  return btoa(encrypted); // Base64 encode the result
+}
+
+function decryptSessionData(encryptedData: string): string | null {
+  try {
+    const key = 'TelegramManager2024';
+    const data = atob(encryptedData); // Base64 decode
+    let decrypted = '';
+    
+    for (let i = 0; i < data.length; i++) {
+      const charCode = data.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+      decrypted += String.fromCharCode(charCode);
+    }
+    
+    return decrypted;
+  } catch (error) {
+    console.error('Failed to decrypt session data:', error);
+    return null;
+  }
+}
+
 const DB_NAME = 'TelegramManager';
 const DB_VERSION = 1;
 
