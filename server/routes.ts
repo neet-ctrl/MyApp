@@ -2669,8 +2669,35 @@ if __name__ == "__main__":
         // Store in a persistent config that survives restarts
         const persistentConfigPath = path.join(process.cwd(), 'tmp', 'live_cloning_persistent_settings.json');
         fs.writeFileSync(persistentConfigPath, JSON.stringify(settingsToStore, null, 2));
+        
+        // Also update the actual bot config file that the Python bot reads
+        const botConfigPath = path.resolve(process.cwd(), 'bot_source', 'live-cloning', 'plugins', 'jsons', 'config.json');
+        console.log('🔍 Checking bot config path:', botConfigPath, 'exists:', fs.existsSync(botConfigPath));
+        
+        if (fs.existsSync(botConfigPath)) {
+          try {
+            let botConfig = {};
+            const botConfigData = fs.readFileSync(botConfigPath, 'utf8');
+            botConfig = JSON.parse(botConfigData);
+            
+            // Update bot config with new settings
+            Object.assign(botConfig, {
+              bot_enabled: liveCloningStatus.botEnabled,
+              filter_words: liveCloningStatus.filterWords,
+              add_signature: liveCloningStatus.addSignature,
+              signature: liveCloningStatus.signature || ""
+            });
+            
+            fs.writeFileSync(botConfigPath, JSON.stringify(botConfig, null, 2));
+            console.log('✅ Updated bot config file:', botConfigPath);
+          } catch (botConfigError) {
+            console.error('❌ Error updating bot config:', botConfigError);
+          }
+        } else {
+          console.error('❌ Bot config file not found at:', botConfigPath);
+        }
       } catch (error) {
-        console.error('Error persisting settings:', error);
+        console.error('❌ Error persisting settings:', error);
       }
 
       // If bot is running, update the config file and notify the bot process

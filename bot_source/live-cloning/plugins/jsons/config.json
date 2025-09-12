@@ -1,9 +1,9 @@
 {
   "api_id": "",
   "api_hash": "",
-  "bot_enabled": true,
+  "bot_enabled": false,
   "sudo": [],
   "filter_words": true,
   "add_signature": false,
-  "signature": ""
+  "signature": "Final test"
 }
