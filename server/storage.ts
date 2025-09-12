@@ -340,4 +340,8 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { DatabaseLiveCloningStorage } from './DatabaseLiveCloningStorage';
+
+// Use database storage for full persistence across server restarts
+// This ensures entity links survive restarts like the Python copier
+export const storage = new DatabaseLiveCloningStorage();
