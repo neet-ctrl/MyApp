@@ -51,7 +51,7 @@ export function JSCopier() {
   const [newToOffset, setNewToOffset] = useState<number>(0);
   const [showLogs, setShowLogs] = useState(false);
   const [configContent, setConfigContent] = useState('');
-  const [sessionString, setSessionString] = useState('');
+  const [sessionString, setSessionString] = useState('1BQAWZmxvcmEud2ViLnRlbGVncmFtLm9yZwG7IS3tNY2BsIDLeDQnewXF0dZ7iEc231dYk/8TDX83hkgf7EwJ8HvdsqxWr/Dyb8oeEIe6+H9MAgI4yPaGs0IgIsdLQozbCnlNF7NDC+q5iC+JlpLbAF2PIiZ3nHvetmRyadZpTsVSLFgSG1BdvVUx2J65VHdkbJTk9V0hj2Wq3ucMrBNGJB6oCSrnSqWCD5mmtxKdFDV6p+6Fj1d0gbnmBOkhV0Ud+V6NRHDup/j6rREt/lJTO8gXowmd2dLt1piiQrmD3fU+zKEFf4Mv0GllJYYKY9aVxQjjhowXM8GdKnX0DLxOFVcqSk7sOkCn14ocdtYK4ffhRgJdgu241XriLA==');
   const [editingPair, setEditingPair] = useState<ForwardPair | null>(null);
   const [loginStatus, setLoginStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [isEditingConfig, setIsEditingConfig] = useState(false);
