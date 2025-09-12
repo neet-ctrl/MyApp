@@ -1,0 +1,52 @@
+[vite] connecting...
+[vite] connected.
+Loading default session...
+[2025-09-13T01:15:02.349] [INFO] - [Running gramJS version 2.26.21]
+Connecting to Telegram...
+[2025-09-13T01:15:02.378] [INFO] - [Connecting to flora.web.telegram.org:443/TCPObfuscated...]
+[2025-09-13T01:15:02.933] [INFO] - [Connection to flora.web.telegram.org:443/TCPObfuscated complete!]
+[2025-09-13T01:15:02.935] [INFO] - [Using LAYER 198 for initial connect]
+Checking authorization...
+Session loaded successfully!
+Processing successful session
+Cannot read properties of undefined (reading 'messagesPerMinute')
+at LiveCloning (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/src/components/live-cloning.tsx:1134:127)
+at renderWithHooks (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:18426:26)
+at updateFunctionComponent (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:21460:28)
+at beginWork (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:22802:22)
+at HTMLUnknownElement.callCallback2 (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:10552:22)
+at Object.invokeGuardedCallbackDev (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:10577:24)
+at invokeGuardedCallback (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:10611:39)
+at beginWork$1 (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:26643:15)
+at performUnitOfWork (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:26076:20)
+at workLoopSync (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:26015:13)
+Cannot read properties of undefined (reading 'messagesPerMinute')
+at LiveCloning (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/src/components/live-cloning.tsx:1134:127)
+at renderWithHooks (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:18426:26)
+at updateFunctionComponent (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:21460:28)
+at beginWork (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:22802:22)
+at HTMLUnknownElement.callCallback2 (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:10552:22)
+at Object.invokeGuardedCallbackDev (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:10577:24)
+at invokeGuardedCallback (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:10611:39)
+at beginWork$1 (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:26643:15)
+at performUnitOfWork (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:26076:20)
+at workLoopSync (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KKOCL73S.js?v=08b85da0:26015:13)
+The above error occurred in the <LiveCloning> component:
+
+    at LiveCloning (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/src/components/live-cloning.tsx:70:45)
+    at main
+    at div
+    at Home (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/src/pages/home.tsx:54:41)
+    at Route (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=08b85da0:386:16)
+    at Switch (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=08b85da0:442:17)
+    at Router
+    at Provider (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UDDXXZQ2.js?v=08b85da0:51:15)
+    at TooltipProvider (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=08b85da0:75:5)
+    at div
+    at UILayoutProvider (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/src/contexts/ui-layout-context.tsx:36:36)
+    at QueryClientProvider (https://e1fdf196-1c35-4b1c-a3cc-12116fddb739-00-2fj2g50dubtx1.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=08b85da0:2845:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+Cannot read properties of undefined (reading 'messagesPerMinute')

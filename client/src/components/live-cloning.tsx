@@ -790,25 +790,25 @@ export function LiveCloning() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-3 bg-green-50 dark:bg-green-950 rounded-lg">
                   <div className="text-lg font-semibold text-green-600">
-                    {status.performance.messagesPerMinute.toFixed(1)}
+                    {status.performance?.messagesPerMinute?.toFixed(1) || '0.0'}
                   </div>
                   <div className="text-xs text-muted-foreground">Messages/Min</div>
                 </div>
                 <div className="text-center p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
                   <div className="text-lg font-semibold text-blue-600">
-                    {status.performance.averageProcessingTime.toFixed(2)}ms
+                    {status.performance?.averageProcessingTime?.toFixed(2) || '0.00'}ms
                   </div>
                   <div className="text-xs text-muted-foreground">Avg Processing</div>
                 </div>
                 <div className="text-center p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
                   <div className="text-lg font-semibold text-purple-600">
-                    {status.performance.successRate.toFixed(1)}%
+                    {status.performance?.successRate?.toFixed(1) || '0.0'}%
                   </div>
                   <div className="text-xs text-muted-foreground">Success Rate</div>
                 </div>
                 <div className="text-center p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
                   <div className="text-lg font-semibold text-orange-600">
-                    {Math.floor(status.performance.uptime / 3600)}h {Math.floor((status.performance.uptime % 3600) / 60)}m
+                    {Math.floor((status.performance?.uptime || 0) / 3600)}h {Math.floor(((status.performance?.uptime || 0) % 3600) / 60)}m
                   </div>
                   <div className="text-xs text-muted-foreground">Uptime</div>
                 </div>
@@ -854,19 +854,19 @@ export function LiveCloning() {
                     <div>
                       <div className="text-sm font-medium mb-2">Performance Alerts</div>
                       <div className="space-y-1">
-                        {status.performance.successRate < performanceThreshold && (
+                        {(status.performance?.successRate || 0) < performanceThreshold && (
                           <div className="flex items-center gap-2 text-sm text-red-600">
                             <AlertCircle className="w-4 h-4" />
                             Low success rate
                           </div>
                         )}
-                        {status.performance.errorCount > 10 && (
+                        {(status.performance?.errorCount || 0) > 10 && (
                           <div className="flex items-center gap-2 text-sm text-yellow-600">
                             <AlertTriangle className="w-4 h-4" />
                             High error count
                           </div>
                         )}
-                        {status.performance.messagesPerMinute > 100 && (
+                        {(status.performance?.messagesPerMinute || 0) > 100 && (
                           <div className="flex items-center gap-2 text-sm text-green-600">
                             <CheckCircle className="w-4 h-4" />
                             High throughput
