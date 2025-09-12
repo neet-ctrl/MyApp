@@ -17,6 +17,7 @@ function Router() {
       <Route path="/downloads" component={DownloadsPage} />
       <Route path="/git-control" component={GitControl} />
       <Route path="/settings" component={SettingsPage} />
+      <Route path="/configuration" component={SettingsPage} />
       <Route component={NotFound} />
     </Switch>
   );

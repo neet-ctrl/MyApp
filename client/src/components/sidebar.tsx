@@ -47,6 +47,7 @@ const navigationItems = [
   { id: 'github-sync', label: '🐙 GitHub Sync', icon: Github },
   { id: 'git-control', label: '⚡ Git Control', icon: Github },
   { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'configuration', label: 'Configuration', icon: Settings },
 ];
 
 export function Sidebar({
