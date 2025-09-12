@@ -356,6 +356,18 @@ export default function SettingsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                window.history.back();
+                const event = new CustomEvent('navigate-back-to-settings');
+                window.dispatchEvent(event);
+              }}
+              className="mr-2"
+              data-testid="button-back-to-settings"
+            >
+              ← Back
+            </Button>
             <Settings className="w-8 h-8 text-blue-600" />
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">

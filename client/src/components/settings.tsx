@@ -852,8 +852,11 @@ export function Settings() {
       <div className="mt-8 p-4 border-t border-border">
         <Button
           onClick={() => {
-            // Open comprehensive settings page in new tab
-            window.open('/settings', '_blank');
+            // Navigate to comprehensive settings view within the same app
+            window.location.hash = '#comprehensive-settings';
+            // Trigger a custom event to notify the parent component
+            const event = new CustomEvent('navigate-to-comprehensive-settings');
+            window.dispatchEvent(event);
           }}
           className="w-full"
           size="lg"

@@ -5,6 +5,7 @@ import { ChatSelection } from '@/components/chat-selection';
 import { MessageSearch } from '@/components/message-search';
 import { DateRange } from '@/components/date-range';
 import { VideoDownloads } from '@/components/video-downloads';
+import { Settings } from '@/components/settings';
 import SettingsPage from '@/pages/settings';
 import { PythonScriptMain } from '@/components/python-script-main';
 import { BotManagement } from '@/components/bot-management';
@@ -31,6 +32,7 @@ export default function Home() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentSession, setCurrentSession] = useState<TelegramSession | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showComprehensiveSettings, setShowComprehensiveSettings] = useState(false);
 
   const { toast } = useToast();
 
@@ -46,6 +48,25 @@ export default function Home() {
     } else {
       document.documentElement.classList.remove('dark');
     }
+
+    // Listen for comprehensive settings navigation
+    const handleComprehensiveSettings = () => {
+      setShowComprehensiveSettings(true);
+      setCurrentView('comprehensive-settings');
+    };
+
+    const handleBackToSettings = () => {
+      setShowComprehensiveSettings(false);
+      setCurrentView('settings');
+    };
+
+    window.addEventListener('navigate-to-comprehensive-settings', handleComprehensiveSettings);
+    window.addEventListener('navigate-back-to-settings', handleBackToSettings);
+    
+    return () => {
+      window.removeEventListener('navigate-to-comprehensive-settings', handleComprehensiveSettings);
+      window.removeEventListener('navigate-back-to-settings', handleBackToSettings);
+    };
   }, []);
 
   const toggleDarkMode = () => {
@@ -235,6 +256,8 @@ export default function Home() {
       case 'git-control':
         return <GitControl />;
       case 'settings':
+        return showComprehensiveSettings ? <SettingsPage /> : <Settings />; // Use the original Settings component or comprehensive settings
+      case 'comprehensive-settings':
         return <SettingsPage />;
       default:
         return <PythonScriptMain />; // Default to Python script mode
