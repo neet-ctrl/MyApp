@@ -2801,14 +2801,35 @@ if __name__ == "__main__":
         isActive: true
       });
 
-      // Sync with running bot if active - make entity links immediately functional
-      if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
-        try {
+      // CRITICAL: Save entity links to Python bot's config.json file exactly like original
+      try {
+        const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
+        const entitiesJsonPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'plugins', 'jsons', 'entities.json');
+        
+        // Get all entity links for this instance
+        const allLinks = await storage.getEntityLinks(instanceId);
+        const entityPairs = allLinks.map(link => [parseInt(link.fromEntity) || link.fromEntity, parseInt(link.toEntity) || link.toEntity]);
+        
+        // Update the original Python config.json file
+        if (fs.existsSync(originalConfigPath)) {
+          const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
+          originalConfig.entities = entityPairs;
+          fs.writeFileSync(originalConfigPath, JSON.stringify(originalConfig, null, 2));
+          console.log(`✅ Updated Python bot config.json with ${entityPairs.length} entity links`);
+        }
+        
+        // Update entities.json file
+        const entitiesData = { entities: entityPairs };
+        fs.writeFileSync(entitiesJsonPath, JSON.stringify(entitiesData, null, 2));
+        console.log(`✅ Updated entities.json with persistent entity links`);
+        
+        // Sync with running bot if active
+        if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
           await syncEntityLinksWithBot();
           console.log(`✅ Synced new entity link with running bot: ${fromEntity} → ${toEntity}`);
-        } catch (syncError) {
-          console.error('⚠️ Error syncing with running bot:', syncError);
         }
+      } catch (syncError) {
+        console.error('⚠️ Error persisting entity links to Python config:', syncError);
       }
 
       res.json({ success: true, link });
@@ -2871,14 +2892,37 @@ if __name__ == "__main__":
       const deleted = await storage.deleteEntityLink(parseInt(id));
       
       if (deleted) {
-        // Sync with running bot if active
-        if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
-          try {
+        // CRITICAL: Update Python config files after deletion
+        try {
+          const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
+          const entitiesJsonPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'plugins', 'jsons', 'entities.json');
+          
+          // Get remaining entity links after deletion
+          if (liveCloningStatus.instanceId) {
+            const allLinks = await storage.getEntityLinks(liveCloningStatus.instanceId);
+            const entityPairs = allLinks.map(link => [parseInt(link.fromEntity) || link.fromEntity, parseInt(link.toEntity) || link.toEntity]);
+            
+            // Update Python config.json
+            if (fs.existsSync(originalConfigPath)) {
+              const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
+              originalConfig.entities = entityPairs;
+              fs.writeFileSync(originalConfigPath, JSON.stringify(originalConfig, null, 2));
+              console.log(`✅ Updated Python config.json after deletion: ${entityPairs.length} entity links remaining`);
+            }
+            
+            // Update entities.json
+            const entitiesData = { entities: entityPairs };
+            fs.writeFileSync(entitiesJsonPath, JSON.stringify(entitiesData, null, 2));
+            console.log(`✅ Updated entities.json after deletion`);
+          }
+          
+          // Sync with running bot if active
+          if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
             await syncEntityLinksWithBot();
             console.log('✅ Synced entity link deletion with running bot');
-          } catch (syncError) {
-            console.error('⚠️ Error syncing deletion with running bot:', syncError);
           }
+        } catch (syncError) {
+          console.error('⚠️ Error updating Python config after deletion:', syncError);
         }
         
         res.json({ success: true, message: 'Entity link deleted' });
@@ -5454,8 +5498,8 @@ export async function startLiveCloningService(): Promise<void> {
     const persistentSettings = JSON.parse(fs.readFileSync(persistentConfigPath, 'utf8'));
     console.log('📋 Loaded persistent settings for auto-start:', persistentSettings);
     
-    // Check if we have a valid session string from environment or config
-    const sessionString = process.env.LIVE_CLONING_SESSION || persistentSettings.sessionString || "1BVtsOIkBu4-8RCm7BzVgqe7Hxz6RLLa7KkTDqTmwBnmZJvxJJnFOZDKGCNFGUUg2tgKMpkFhxMNIKoJFCrJqvQ7RJJnFNJYMdKkMZLMpWo6OgMCOqPGKjzLTGLAELCLkGpKOoEJMzEAKrGqECE7CJkNZpCtBGpTFLRGmxlOdKoHGBvOlnGRGBLINGIAoGJKrJLEOLLnJMqzDhKxHqJEOKJEMIIIxrJCILKdKRAKqFGNKKJKJSQLLLLAKqJJFOqLHRGLqRJJqHKOOnJFdONKtEMqJKELsOKJKEOAJLKQnGzLKqOJJEOOOJFKqJHFLFKFSKJAJKEOJJEOAOqOJJEKOAJLKQnGzLKqOJJEOOOJFKqJHFLFKFSKJAJKEOJJEOAOqOJJE=";
+    // Check if we have a valid session string from environment or config - HARDCODED DEFAULT
+    const sessionString = process.env.LIVE_CLONING_SESSION || persistentSettings.sessionString || "1BVtsOLABux3cdf9iA7_7csD0HjZ-vqy3pQUfbynyLah5ZQQNGCTgc6ao1FOFHur4mvJkRsrzS3KKi65RNXczTxtlxpNIkqoIQvN0ILt2kPp9dUcCuIn8ZlFftx63derTrb_LS6TdeZ4Ly3cI26C_E14TUvhlWNHwB_zDZ1mvpvluQb9EhodVRsWSAQimUWNIrKp9stJum7amnoLzCSdqAydjsfTXej1KZQ1TfxX79yAb-DPIw2kzFWf6Mk9ScDlTeGJg6qRQkiDOHiRrUnrzle1REurAN_4h9qWahhR1ffbreGvOYVDip35Uya4Kn4YGmJM0vtGLq3HoEico3umwBrO6GOc0oxU=";
     if (!sessionString) {
       console.log('⚠️ No session string found for auto-start. Using hardcoded session.');
       return;
