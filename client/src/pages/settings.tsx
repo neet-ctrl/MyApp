@@ -79,133 +79,32 @@ export default function SettingsPage() {
   
   const { toast } = useToast();
 
-  // Initialize hardcoded values from the codebase
+  // Load hardcoded values from backend API
   useEffect(() => {
-    const initializeHardcodedValues = () => {
-      const values: HardcodedValue[] = [
-        {
-          id: 'telegram_api_id',
-          title: 'Telegram API ID',
-          value: '28403662',
-          category: 'Telegram',
-          description: 'Telegram API ID for client authentication. Used to connect to Telegram servers.',
-          locations: [
-            'client/src/components/auth-modal.tsx:30',
-            'attached_assets/*.txt (multiple files)',
-            'standalone.html:265'
-          ],
-          type: 'api_key',
-          sensitive: true
-        },
-        {
-          id: 'telegram_api_hash',
-          title: 'Telegram API Hash',
-          value: '079509d4ac7f209a1a58facd00d6ff5a',
-          category: 'Telegram',
-          description: 'Telegram API Hash for client authentication. Must match the API ID.',
-          locations: [
-            'client/src/components/auth-modal.tsx:31',
-            'attached_assets/*.txt (multiple files)',
-            'standalone.html:270'
-          ],
-          type: 'api_key',
-          sensitive: true
-        },
-        {
-          id: 'telegram_phone',
-          title: 'Default Phone Number',
-          value: '+917352013479',
-          category: 'Telegram',
-          description: 'Default phone number for Telegram authentication.',
-          locations: [
-            'client/src/components/auth-modal.tsx:32',
-            'standalone.html:275'
-          ],
-          type: 'phone',
-          sensitive: true
-        },
-        {
-          id: 'github_pat',
-          title: 'GitHub Personal Access Token',
-          value: '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',
-          category: 'GitHub',
-          description: 'Default GitHub Personal Access Token for repository access.',
-          locations: [
-            'server/storage.ts:40'
-          ],
-          type: 'token',
-          sensitive: true
-        },
-        {
-          id: 'telegram_session_python',
-          title: 'Python Bot Session String',
-          value: '1BVtsOLMBu3q1...(truncated for security)',
-          category: 'Telegram',
-          description: 'Session string for Python Telegram bot authentication.',
-          locations: [
-            'bot_source/python-copier/settings.py',
-            'server/telegram-bot/SimpleTelegramBot.ts'
-          ],
-          type: 'session_string',
-          sensitive: true
-        },
-        {
-          id: 'bot_token',
-          title: 'Telegram Bot Token',
-          value: '7360513999:AAFaT...(truncated for security)',
-          category: 'Telegram',
-          description: 'Bot token for Telegram bot operations.',
-          locations: [
-            'client/src/pages/not-found.tsx',
-            'server/bot/bottorrent.py'
-          ],
-          type: 'token',
-          sensitive: true
-        },
-        {
-          id: 'telegram_user_id',
-          title: 'Authorized User ID',
-          value: '7352013479',
-          category: 'Telegram',
-          description: 'Telegram User ID for authorized access.',
-          locations: [
-            'railway.toml',
-            'client/src/components/sidebar.tsx'
-          ],
-          type: 'config',
-          sensitive: false
-        },
-        {
-          id: 'botfather_url',
-          title: 'BotFather URL',
-          value: 't.me/BotFather',
-          category: 'URLs',
-          description: 'URL for Telegram BotFather to create bots.',
-          locations: [
-            'Multiple README files'
-          ],
-          type: 'url',
-          sensitive: false
-        },
-        {
-          id: 'telegram_api_url',
-          title: 'Telegram API URL',
-          value: 'my.telegram.org',
-          category: 'URLs',
-          description: 'URL for Telegram API key generation.',
-          locations: [
-            'Multiple README files',
-            'Documentation files'
-          ],
-          type: 'url',
-          sensitive: false
+    const fetchHardcodedValues = async () => {
+      try {
+        const response = await fetch('/api/settings/hardcoded-values');
+        if (response.ok) {
+          const values = await response.json();
+          setHardcodedValues(values);
+        } else {
+          toast({
+            title: 'Failed to Load Values',
+            description: 'Could not fetch hardcoded values from server',
+            variant: 'destructive'
+          });
         }
-      ];
-      
-      setHardcodedValues(values);
+      } catch (error) {
+        console.error('Error fetching hardcoded values:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to connect to server',
+          variant: 'destructive'
+        });
+      }
     };
 
-    initializeHardcodedValues();
+    fetchHardcodedValues();
     loadCustomValues();
     loadValueHistory();
   }, []);
@@ -291,44 +190,56 @@ export default function SettingsPage() {
     const value = hardcodedValues.find(v => v.id === id);
     if (!value) return;
 
-    // Add to history
-    const historyEntry: ValueHistory = {
-      id: Date.now().toString(),
-      title: value.title,
-      oldValue: value.value,
-      newValue: newValue,
-      changed: new Date(),
-      location: value.locations.join(', ')
-    };
+    try {
+      // Call backend API to update the value
+      const response = await fetch('/api/settings/update-value', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id, newValue }),
+      });
 
-    const newHistory = [historyEntry, ...valueHistory];
-    setValueHistory(newHistory);
-    saveValueHistory(newHistory);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update value');
+      }
 
-    // Update the value
-    const updatedValues = hardcodedValues.map(v => 
-      v.id === id ? { ...v, value: newValue } : v
-    );
-    setHardcodedValues(updatedValues);
+      // Add to history
+      const historyEntry: ValueHistory = {
+        id: Date.now().toString(),
+        title: value.title,
+        oldValue: value.value,
+        newValue: newValue,
+        changed: new Date(),
+        location: value.locations.join(', ')
+      };
 
-    // Here you would also update the actual files
-    await updateValueInFiles(value, newValue);
+      const newHistory = [historyEntry, ...valueHistory];
+      setValueHistory(newHistory);
+      saveValueHistory(newHistory);
 
-    setEditingValue(null);
-    toast({
-      title: 'Value Updated',
-      description: `${value.title} has been updated across all locations`
-    });
+      // Update the value in frontend state
+      const updatedValues = hardcodedValues.map(v => 
+        v.id === id ? { ...v, value: newValue } : v
+      );
+      setHardcodedValues(updatedValues);
+
+      setEditingValue(null);
+      toast({
+        title: 'Value Updated',
+        description: `${value.title} has been updated across all locations`
+      });
+    } catch (error) {
+      console.error('Error updating value:', error);
+      toast({
+        title: 'Update Failed',
+        description: error instanceof Error ? error.message : 'Failed to update value',
+        variant: 'destructive'
+      });
+    }
   };
 
-  // Simulate updating value in files (in reality, this would make API calls)
-  const updateValueInFiles = async (value: HardcodedValue, newValue: string) => {
-    // This would make API calls to update the actual files
-    console.log(`Updating ${value.title} from ${value.value} to ${newValue} in:`, value.locations);
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  };
 
   // Add custom value
   const addCustomValue = () => {

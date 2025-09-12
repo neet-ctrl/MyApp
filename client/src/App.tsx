@@ -7,6 +7,7 @@ import { UILayoutProvider } from "@/contexts/ui-layout-context";
 import Home from "@/pages/home";
 import DownloadsPage from "@/pages/DownloadsPage";
 import GitControl from "@/components/git-control";
+import SettingsPage from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/downloads" component={DownloadsPage} />
       <Route path="/git-control" component={GitControl} />
+      <Route path="/settings" component={SettingsPage} />
       <Route component={NotFound} />
     </Switch>
   );
