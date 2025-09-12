@@ -5,7 +5,7 @@ import { ChatSelection } from '@/components/chat-selection';
 import { MessageSearch } from '@/components/message-search';
 import { DateRange } from '@/components/date-range';
 import { VideoDownloads } from '@/components/video-downloads';
-import { Settings } from '@/components/settings';
+import SettingsPage from '@/pages/settings';
 import { PythonScriptMain } from '@/components/python-script-main';
 import { BotManagement } from '@/components/bot-management';
 import { PythonBot } from '@/components/python-bot';
@@ -31,7 +31,7 @@ export default function Home() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentSession, setCurrentSession] = useState<TelegramSession | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  
+
   const { toast } = useToast();
 
   // Initialize dark mode from localStorage and system preference
@@ -39,7 +39,7 @@ export default function Home() {
     const savedMode = localStorage.getItem('darkMode');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const shouldUseDark = savedMode ? savedMode === 'true' : systemPrefersDark;
-    
+
     setIsDarkMode(shouldUseDark);
     if (shouldUseDark) {
       document.documentElement.classList.add('dark');
@@ -52,7 +52,7 @@ export default function Home() {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
     localStorage.setItem('darkMode', newMode.toString());
-    
+
     if (newMode) {
       document.documentElement.classList.add('dark');
     } else {
@@ -73,14 +73,14 @@ export default function Home() {
     const checkExistingSession = async () => {
       // Check if there's an active session
       const existingSession = localStorage.getItem('telegram_session');
-      
+
       if (existingSession && sessions.length > 0) {
         // User is already logged in, don't show auth modal
         const latestSession = sessions[0];
         try {
           await telegramManager.loadSession(latestSession);
           setCurrentSession(latestSession);
-          
+
           // Load chats in background
           setTimeout(async () => {
             try {
@@ -109,10 +109,10 @@ export default function Home() {
   const handleAuthSuccess = (session: TelegramSession) => {
     setCurrentSession(session);
     setIsAuthModalOpen(false);
-    
+
     // Set localStorage flag to prevent modal from showing again
     localStorage.setItem('telegram_session', 'active');
-    
+
     toast({
       title: 'Welcome!',
       description: 'Successfully connected to Telegram',
@@ -121,18 +121,18 @@ export default function Home() {
 
   const handleLogout = async () => {
     console.log('Starting logout process...');
-    
+
     // Immediately update UI state - no hanging
     setCurrentSession(null);
     setIsAuthModalOpen(true);
     localStorage.removeItem('telegram_session');
-    
+
     // Show immediate feedback
     toast({
       title: 'Logging out...',
       description: 'Disconnecting from Telegram',
     });
-    
+
     // Background cleanup - don't wait for it
     setTimeout(async () => {
       try {
@@ -145,7 +145,7 @@ export default function Home() {
             console.warn('Failed to delete session from storage:', error);
           }
         }
-        
+
         // Disconnect from Telegram
         try {
           await telegramManager.disconnect();
@@ -153,10 +153,10 @@ export default function Home() {
         } catch (error) {
           console.warn('Failed to disconnect Telegram client:', error);
         }
-        
+
         // Refresh queries
         queryClient.invalidateQueries({ queryKey: ['sessions'] });
-        
+
         // Final success message
         toast({
           title: 'Logged out',
@@ -235,7 +235,7 @@ export default function Home() {
       case 'git-control':
         return <GitControl />;
       case 'settings':
-        return <Settings />;
+        return <SettingsPage />;
       default:
         return <PythonScriptMain />; // Default to Python script mode
     }
@@ -251,10 +251,10 @@ export default function Home() {
         onLogout={handleLogout}
         isDownloadDirectorySelected={downloadManager.isDownloadDirectorySelected()}
       />
-      
+
       <main className="flex-1 overflow-hidden relative">
         {renderCurrentView()}
-        
+
         {/* Floating Dark/Light Mode Toggle */}
         <Button
           variant="outline"
