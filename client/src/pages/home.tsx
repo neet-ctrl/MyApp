@@ -11,6 +11,7 @@ import { BotManagement } from '@/components/bot-management';
 import { PythonBot } from '@/components/python-bot';
 import { PythonCopier } from '@/components/python-copier';
 import { JSCopier } from '@/components/js-copier';
+import { LiveCloning } from '@/components/live-cloning';
 import { Forwarder } from '@/components/forwarder';
 import { GitHubSync } from '@/components/github-sync';
 import GitControl from '@/components/git-control';
@@ -197,6 +198,8 @@ export default function Home() {
         return <PythonCopier />;
       case 'js-copier':
         return <JSCopier />;
+      case 'live-cloning':
+        return <LiveCloning />;
       case 'dashboard':
         return <Dashboard onViewChange={setCurrentView} />;
       case 'chats':

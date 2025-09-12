@@ -70,6 +70,51 @@ export const gitRepositories = pgTable("git_repositories", {
   cachedAt: timestamp("cached_at").defaultNow(),
 });
 
+// Live Cloning tables
+export const liveCloningInstances = pgTable("live_cloning_instances", {
+  id: serial("id").primaryKey(),
+  instanceId: varchar("instance_id").notNull().unique(),
+  sessionString: text("session_string").notNull(),
+  config: jsonb("config").notNull(),
+  status: varchar("status").notNull().default("inactive"), // active, inactive, error
+  botEnabled: boolean("bot_enabled").default(true),
+  filterWords: boolean("filter_words").default(true),
+  addSignature: boolean("add_signature").default(false),
+  signature: text("signature"),
+  lastError: text("last_error"),
+  processedMessages: integer("processed_messages").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const entityLinks = pgTable("entity_links", {
+  id: serial("id").primaryKey(),
+  instanceId: varchar("instance_id").notNull(),
+  fromEntity: text("from_entity").notNull(), // Chat ID or username
+  toEntity: text("to_entity").notNull(), // Chat ID or username
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const wordFilters = pgTable("word_filters", {
+  id: serial("id").primaryKey(),
+  instanceId: varchar("instance_id").notNull(),
+  fromWord: text("from_word").notNull(),
+  toWord: text("to_word").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const liveCloningMessages = pgTable("live_cloning_messages", {
+  id: serial("id").primaryKey(),
+  instanceId: varchar("instance_id").notNull(),
+  baseEntity: text("base_entity").notNull(),
+  baseMessageId: integer("base_message_id").notNull(),
+  targetEntity: text("target_entity").notNull(),
+  targetMessageId: integer("target_message_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Zod schemas for validation
 export const telegramSessionSchema = z.object({
   sessionString: z.string(),
@@ -236,6 +281,69 @@ export const repoSettingsSchema = z.object({
   hasPages: z.boolean().optional(),
 });
 
+// Live Cloning schemas
+export const liveCloningInstanceSchema = z.object({
+  id: z.number().optional(),
+  instanceId: z.string(),
+  sessionString: z.string().min(1, "Session string is required"),
+  config: z.record(z.any()),
+  status: z.enum(['active', 'inactive', 'error']),
+  botEnabled: z.boolean().default(true),
+  filterWords: z.boolean().default(true),
+  addSignature: z.boolean().default(false),
+  signature: z.string().optional(),
+  lastError: z.string().optional(),
+  processedMessages: z.number().default(0),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+
+export const entityLinkSchema = z.object({
+  id: z.number().optional(),
+  instanceId: z.string(),
+  fromEntity: z.string().min(1, "Source entity is required"),
+  toEntity: z.string().min(1, "Target entity is required"),
+  isActive: z.boolean().default(true),
+  createdAt: z.string().optional(),
+});
+
+export const wordFilterSchema = z.object({
+  id: z.number().optional(),
+  instanceId: z.string(),
+  fromWord: z.string().min(1, "Source word is required"),
+  toWord: z.string().min(1, "Target word is required"),
+  isActive: z.boolean().default(true),
+  createdAt: z.string().optional(),
+});
+
+export const liveCloningMessageSchema = z.object({
+  id: z.number().optional(),
+  instanceId: z.string(),
+  baseEntity: z.string(),
+  baseMessageId: z.number(),
+  targetEntity: z.string(),
+  targetMessageId: z.number(),
+  createdAt: z.string().optional(),
+});
+
+export const liveCloningStatusSchema = z.object({
+  running: z.boolean(),
+  instanceId: z.string().optional(),
+  lastActivity: z.string().nullable(),
+  processedMessages: z.number(),
+  totalLinks: z.number(),
+  currentUserInfo: z.object({
+    id: z.number(),
+    username: z.string(),
+    firstName: z.string(),
+  }).optional(),
+  sessionValid: z.boolean(),
+  botEnabled: z.boolean(),
+  filterWords: z.boolean(),
+  addSignature: z.boolean(),
+  signature: z.string().optional(),
+});
+
 // Create insert schemas
 export const insertDownloadSchema = createInsertSchema(downloads);
 export const insertPendingMessageSchema = createInsertSchema(pendingMessages);
@@ -243,6 +351,12 @@ export const insertBotSessionSchema = createInsertSchema(botSessions);
 export const insertGithubSettingsSchema = createInsertSchema(githubSettings).omit({ id: true, updatedAt: true });
 export const insertGitTokenConfigSchema = createInsertSchema(gitTokenConfigs).omit({ id: true, createdAt: true, lastUsed: true });
 export const insertGitRepositorySchema = createInsertSchema(gitRepositories).omit({ id: true, cachedAt: true });
+
+// Live Cloning insert schemas
+export const insertLiveCloningInstanceSchema = createInsertSchema(liveCloningInstances).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertEntityLinkSchema = createInsertSchema(entityLinks).omit({ id: true, createdAt: true });
+export const insertWordFilterSchema = createInsertSchema(wordFilters).omit({ id: true, createdAt: true });
+export const insertLiveCloningMessageSchema = createInsertSchema(liveCloningMessages).omit({ id: true, createdAt: true });
 
 // Git Control insert schemas
 export const secureTokenSchema = z.object({
@@ -258,12 +372,24 @@ export type GitHubSettings = typeof githubSettings.$inferSelect;
 export type GitTokenConfig = typeof gitTokenConfigs.$inferSelect;
 export type GitRepository = typeof gitRepositories.$inferSelect;
 
+// Live Cloning types
+export type LiveCloningInstance = typeof liveCloningInstances.$inferSelect;
+export type EntityLink = typeof entityLinks.$inferSelect;
+export type WordFilter = typeof wordFilters.$inferSelect;
+export type LiveCloningMessage = typeof liveCloningMessages.$inferSelect;
+
 export type InsertDownload = z.infer<typeof insertDownloadSchema>;
 export type InsertPendingMessage = z.infer<typeof insertPendingMessageSchema>;
 export type InsertBotSession = z.infer<typeof insertBotSessionSchema>;
 export type InsertGitHubSettings = z.infer<typeof insertGithubSettingsSchema>;
 export type InsertGitTokenConfig = z.infer<typeof insertGitTokenConfigSchema>;
 export type InsertGitRepository = z.infer<typeof insertGitRepositorySchema>;
+
+// Live Cloning insert types
+export type InsertLiveCloningInstance = z.infer<typeof insertLiveCloningInstanceSchema>;
+export type InsertEntityLink = z.infer<typeof insertEntityLinkSchema>;
+export type InsertWordFilter = z.infer<typeof insertWordFilterSchema>;
+export type InsertLiveCloningMessage = z.infer<typeof insertLiveCloningMessageSchema>;
 
 export type TelegramSession = z.infer<typeof telegramSessionSchema>;
 export type Chat = z.infer<typeof chatSchema>;
@@ -284,3 +410,10 @@ export type PullRequest = z.infer<typeof pullRequestSchema>;
 export type Commit = z.infer<typeof commitSchema>;
 export type RepoSettings = z.infer<typeof repoSettingsSchema>;
 export type SecureToken = z.infer<typeof secureTokenSchema>;
+
+// Live Cloning schema types
+export type LiveCloningInstanceType = z.infer<typeof liveCloningInstanceSchema>;
+export type EntityLinkType = z.infer<typeof entityLinkSchema>;
+export type WordFilterType = z.infer<typeof wordFilterSchema>;
+export type LiveCloningMessageType = z.infer<typeof liveCloningMessageSchema>;
+export type LiveCloningStatus = z.infer<typeof liveCloningStatusSchema>;

@@ -18,6 +18,7 @@ import {
   Files,
   Forward,
   Github,
+  Zap,
 } from 'lucide-react';
 import type { TelegramSession } from '@shared/schema';
 
@@ -35,6 +36,7 @@ const navigationItems = [
   { id: 'python-bot', label: '🐍 Python Telethon Bot', icon: Bot },
   { id: 'python-copier', label: '🐍 Python Copier', icon: Forward },
   { id: 'js-copier', label: '⚡ JS Copier', icon: Forward },
+  { id: 'live-cloning', label: '⚡ Live Cloning', icon: Zap },
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'chats', label: 'Chat Selection', icon: MessageSquare },
   { id: 'messages', label: 'Message Search', icon: Search },

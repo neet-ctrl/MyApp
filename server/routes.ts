@@ -125,6 +125,23 @@ let jsCopierStatus = {
   logs: [] as string[]
 };
 
+// Live Cloning Management
+let liveCloningProcess: ChildProcess | null = null;
+let liveCloningStatus = {
+  running: false,
+  instanceId: undefined as string | undefined,
+  lastActivity: null as string | null,
+  processedMessages: 0,
+  totalLinks: 0,
+  sessionValid: false,
+  currentUserInfo: undefined as { id: number; username: string; firstName: string; } | undefined,
+  botEnabled: true,
+  filterWords: true,
+  addSignature: false,
+  signature: undefined as string | undefined,
+  logs: [] as string[]
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
   // prefix all routes with /api
@@ -2380,6 +2397,426 @@ if __name__ == "__main__":
 
   // =====================================================
   // End of JS Copier Management API
+  // =====================================================
+
+  // =====================================================
+  // Live Cloning Management API (Telegram Live Sender)
+  // =====================================================
+
+  // Test session string for live cloning
+  app.post('/api/live-cloning/test-session', async (req, res) => {
+    try {
+      const { sessionString } = req.body;
+      
+      if (!sessionString) {
+        return res.status(400).json({ error: 'Session string is required' });
+      }
+
+      const telegramConfig = configReader.getTelegramConfig();
+      const liveClonerPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'live_cloner.py');
+      
+      // Test session using the live cloner script
+      const testProcess = spawn('python3', [liveClonerPath, '--session', sessionString, '--test-session'], {
+        env: {
+          ...process.env,
+          TG_API_ID: telegramConfig.api_id,
+          TG_API_HASH: telegramConfig.api_hash,
+        },
+        cwd: path.dirname(liveClonerPath)
+      });
+
+      let output = '';
+      let errorOutput = '';
+      
+      testProcess.stdout?.on('data', (data) => {
+        output += data.toString();
+      });
+      
+      testProcess.stderr?.on('data', (data) => {
+        errorOutput += data.toString();
+      });
+      
+      testProcess.on('close', (code) => {
+        try {
+          if (code === 0 && output) {
+            const result = JSON.parse(output.trim());
+            if (result.success) {
+              liveCloningStatus.sessionValid = true;
+              liveCloningStatus.currentUserInfo = result.userInfo;
+              res.json(result);
+            } else {
+              res.status(400).json(result);
+            }
+          } else {
+            res.status(500).json({ 
+              success: false, 
+              error: errorOutput || 'Session test failed' 
+            });
+          }
+        } catch (parseError) {
+          res.status(500).json({ 
+            success: false, 
+            error: 'Failed to parse session test result' 
+          });
+        }
+      });
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ success: false, error: errorMessage });
+    }
+  });
+
+  // Start live cloning bot
+  app.post('/api/live-cloning/start', async (req, res) => {
+    try {
+      const { sessionString, entityLinks, wordFilters, settings } = req.body;
+      
+      if (!sessionString) {
+        return res.status(400).json({ error: 'Session string is required' });
+      }
+
+      // Stop existing process if running
+      if (liveCloningProcess) {
+        liveCloningProcess.kill('SIGTERM');
+        liveCloningProcess = null;
+      }
+
+      const telegramConfig = configReader.getTelegramConfig();
+      const liveClonerPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'live_cloner.py');
+      const configDir = path.join(process.cwd(), 'tmp', 'config');
+      const configPath = path.join(configDir, 'live_cloning_config.json');
+      
+      // Ensure config directory exists
+      if (!fs.existsSync(configDir)) {
+        fs.mkdirSync(configDir, { recursive: true });
+      }
+
+      // Generate unique instance ID
+      const instanceId = `live_cloning_${Date.now()}`;
+      
+      // Prepare configuration
+      const config = {
+        api_id: parseInt(telegramConfig.api_id),
+        api_hash: telegramConfig.api_hash,
+        bot_enabled: settings?.botEnabled ?? true,
+        filter_words: settings?.filterWords ?? true,
+        add_signature: settings?.addSignature ?? false,
+        signature: settings?.signature || "",
+        entities: entityLinks || [],
+        filters: wordFilters || []
+      };
+      
+      // Write config file
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+      // Start live cloning process
+      liveCloningProcess = spawn('python3', [liveClonerPath, '--session', sessionString, '--config', configPath], {
+        env: {
+          ...process.env,
+          TG_API_ID: telegramConfig.api_id,
+          TG_API_HASH: telegramConfig.api_hash,
+        },
+        cwd: path.dirname(liveClonerPath)
+      });
+
+      // Update status
+      liveCloningStatus = {
+        running: true,
+        instanceId: instanceId,
+        lastActivity: new Date().toISOString(),
+        processedMessages: 0,
+        totalLinks: entityLinks?.length || 0,
+        sessionValid: true,
+        currentUserInfo: liveCloningStatus.currentUserInfo,
+        botEnabled: settings?.botEnabled ?? true,
+        filterWords: settings?.filterWords ?? true,
+        addSignature: settings?.addSignature ?? false,
+        signature: settings?.signature,
+        logs: []
+      };
+
+      // Handle process output
+      liveCloningProcess.stdout?.on('data', (data) => {
+        const log = data.toString();
+        const timestampedLog = `[STDOUT] ${new Date().toISOString()}: ${log}`;
+        
+        liveCloningStatus.logs.push(timestampedLog);
+        if (liveCloningStatus.logs.length > 100) {
+          liveCloningStatus.logs = liveCloningStatus.logs.slice(-50);
+        }
+        
+        console.log('Live Cloning STDOUT:', log);
+        
+        // Parse logs for progress info
+        if (log.includes('message forwarded') || log.includes('Message sent')) {
+          liveCloningStatus.processedMessages++;
+        }
+        
+        liveCloningStatus.lastActivity = new Date().toISOString();
+      });
+      
+      liveCloningProcess.stderr?.on('data', (data) => {
+        const log = data.toString();
+        const timestampedLog = `[STDERR] ${new Date().toISOString()}: ${log}`;
+        
+        liveCloningStatus.logs.push(timestampedLog);
+        if (liveCloningStatus.logs.length > 100) {
+          liveCloningStatus.logs = liveCloningStatus.logs.slice(-50);
+        }
+        
+        console.error('Live Cloning STDERR:', log);
+        liveCloningStatus.lastActivity = new Date().toISOString();
+      });
+      
+      liveCloningProcess.on('close', (code) => {
+        console.log(`Live cloning process exited with code ${code}`);
+        liveCloningStatus.running = false;
+        liveCloningStatus.lastActivity = new Date().toISOString();
+        liveCloningProcess = null;
+      });
+
+      res.json({ 
+        success: true, 
+        message: 'Live cloning started successfully',
+        instanceId: instanceId,
+        status: liveCloningStatus 
+      });
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Failed to start live cloning:', errorMessage);
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  // Stop live cloning bot
+  app.post('/api/live-cloning/stop', async (req, res) => {
+    try {
+      if (liveCloningProcess) {
+        liveCloningProcess.kill('SIGTERM');
+        liveCloningProcess = null;
+        
+        setTimeout(() => {
+          if (liveCloningProcess && !liveCloningProcess.killed) {
+            liveCloningProcess.kill('SIGKILL');
+            liveCloningProcess = null;
+          }
+        }, 5000);
+      }
+
+      liveCloningStatus.running = false;
+      liveCloningStatus.lastActivity = new Date().toISOString();
+      
+      res.json({ 
+        success: true, 
+        message: 'Live cloning stopped successfully',
+        status: liveCloningStatus 
+      });
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Failed to stop live cloning:', errorMessage);
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  // Get live cloning status
+  app.get('/api/live-cloning/status', (req, res) => {
+    res.json({ status: liveCloningStatus });
+  });
+
+  // Get live cloning logs
+  app.get('/api/live-cloning/logs', (req, res) => {
+    res.json({ logs: liveCloningStatus.logs });
+  });
+
+  // Clear live cloning logs
+  app.post('/api/live-cloning/clear-logs', (req, res) => {
+    try {
+      liveCloningStatus.logs = [];
+      res.json({ success: true, message: 'Logs cleared successfully' });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  // Entity Links Management
+  app.post('/api/live-cloning/entity-links', async (req, res) => {
+    try {
+      const { instanceId, fromEntity, toEntity } = req.body;
+      
+      if (!instanceId || !fromEntity || !toEntity) {
+        return res.status(400).json({ error: 'Instance ID, from entity, and to entity are required' });
+      }
+
+      const link = await storage.saveEntityLink({
+        instanceId,
+        fromEntity,
+        toEntity,
+        isActive: true
+      });
+
+      res.json({ success: true, link });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  app.get('/api/live-cloning/entity-links/:instanceId', async (req, res) => {
+    try {
+      const { instanceId } = req.params;
+      const links = await storage.getEntityLinks(instanceId);
+      res.json({ links });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  app.delete('/api/live-cloning/entity-links/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteEntityLink(parseInt(id));
+      
+      if (deleted) {
+        res.json({ success: true, message: 'Entity link deleted' });
+      } else {
+        res.status(404).json({ error: 'Entity link not found' });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  // Word Filters Management
+  app.post('/api/live-cloning/word-filters', async (req, res) => {
+    try {
+      const { instanceId, fromWord, toWord } = req.body;
+      
+      if (!instanceId || !fromWord || !toWord) {
+        return res.status(400).json({ error: 'Instance ID, from word, and to word are required' });
+      }
+
+      const filter = await storage.saveWordFilter({
+        instanceId,
+        fromWord,
+        toWord,
+        isActive: true
+      });
+
+      res.json({ success: true, filter });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  app.get('/api/live-cloning/word-filters/:instanceId', async (req, res) => {
+    try {
+      const { instanceId } = req.params;
+      const filters = await storage.getWordFilters(instanceId);
+      res.json({ filters });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  app.delete('/api/live-cloning/word-filters/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteWordFilter(parseInt(id));
+      
+      if (deleted) {
+        res.json({ success: true, message: 'Word filter deleted' });
+      } else {
+        res.status(404).json({ error: 'Word filter not found' });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  // Live Cloning Instance Management
+  app.post('/api/live-cloning/instances', async (req, res) => {
+    try {
+      const { instanceId, sessionString, config } = req.body;
+      
+      if (!instanceId || !sessionString || !config) {
+        return res.status(400).json({ error: 'Instance ID, session string, and config are required' });
+      }
+
+      const instance = await storage.saveLiveCloningInstance({
+        instanceId,
+        sessionString,
+        config,
+        status: 'inactive'
+      });
+
+      res.json({ success: true, instance });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  app.get('/api/live-cloning/instances', async (req, res) => {
+    try {
+      const instances = await storage.getAllLiveCloningInstances();
+      res.json({ instances });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  app.get('/api/live-cloning/instances/:instanceId', async (req, res) => {
+    try {
+      const { instanceId } = req.params;
+      const instance = await storage.getLiveCloningInstance(instanceId);
+      
+      if (instance) {
+        res.json({ instance });
+      } else {
+        res.status(404).json({ error: 'Instance not found' });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  app.delete('/api/live-cloning/instances/:instanceId', async (req, res) => {
+    try {
+      const { instanceId } = req.params;
+      
+      // Stop process if running for this instance
+      if (liveCloningStatus.instanceId === instanceId && liveCloningProcess) {
+        liveCloningProcess.kill('SIGTERM');
+        liveCloningProcess = null;
+        liveCloningStatus.running = false;
+      }
+      
+      const deleted = await storage.deleteLiveCloningInstance(instanceId);
+      
+      if (deleted) {
+        res.json({ success: true, message: 'Instance deleted' });
+      } else {
+        res.status(404).json({ error: 'Instance not found' });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  // =====================================================
+  // End of Live Cloning Management API
   // =====================================================
 
   // Node.js Telegram Bot API (New Implementation)
