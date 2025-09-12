@@ -15,6 +15,23 @@ export interface TelegramEntityInfo {
 }
 
 /**
+ * Normalize channel ID to Python copier's canonical 100... format
+ * Handles: -100123456 -> 100123456, 100123456 -> 100123456, 123456 -> 100123456
+ */
+function normalizeChannelId(id: string): string {
+  if (id.startsWith('-100')) {
+    return id.slice(1); // Remove minus sign: -100123456 -> 100123456
+  }
+  if (id.startsWith('100')) {
+    return id; // Already normalized: 100123456 -> 100123456
+  }
+  if (/^\d+$/.test(id)) {
+    return `100${id}`; // Add 100 prefix: 123456 -> 100123456
+  }
+  return id; // Invalid format, return as-is
+}
+
+/**
  * Detect if a chat is a bot based on username patterns
  * Bots typically end with 'bot' and have specific patterns
  */
@@ -59,18 +76,12 @@ export function formatChatToTelegramEntity(chat: Chat): TelegramEntityInfo {
     };
   }
   
-  // For channels/supergroups without username, use proper ID format
+  // For channels/supergroups without username, use canonical 100... format
   if (chat.type === 'channel') {
-    let formattedId = chat.id;
-    const numericId = parseInt(chat.id);
-    
-    if (!isNaN(numericId) && numericId > 0) {
-      // Add -100 prefix for supergroups/channels (Python copier format: 1002251706886)
-      formattedId = `100${numericId}`; // Remove -100 prefix, just use 10... format
-    }
+    const normalizedId = normalizeChannelId(chat.id);
     
     return {
-      id: formattedId,
+      id: normalizedId,
       displayName: chat.title,
       username: chat.username,
       type: chat.type,
@@ -151,7 +162,7 @@ export function parseEntityInput(input: string): TelegramEntityInfo {
       id: canonicalId,
       displayName: canonicalId,
       username: cleanInput,
-      type: isBot ? 'private' : 'channel', // Bots are 'private', channels/groups with usernames are 'channel'
+      type: 'private', // All @usernames are treated as private (users or bots)
       isValid: isValidUsername,
       originalInput: input
     };
@@ -170,13 +181,12 @@ export function parseEntityInput(input: string): TelegramEntityInfo {
     };
   }
   
-  // Handle supergroup/channel ID format (-100...) - also accept this format
+  // Handle supergroup/channel ID format (-100...) - convert to canonical format
   if (/^-100\d{5,}$/.test(trimmed)) {
-    // Convert to Python copier format (remove minus, keep 100...)
-    const pythonFormat = trimmed.substring(1); // Remove the minus sign
+    const normalizedId = normalizeChannelId(trimmed);
     return {
-      id: pythonFormat,
-      displayName: pythonFormat,
+      id: normalizedId,
+      displayName: normalizedId,
       username: '',
       type: 'channel',
       isValid: true,
@@ -253,10 +263,10 @@ export function validateTelegramEntity(entityId: string): boolean {
     return true;
   }
   
-  // User ID: positive integer not starting with 100 (like 4971189003)
+  // User ID: positive integer not starting with 100 (like 4971189003)  
   if (/^\d+$/.test(trimmed) && !trimmed.startsWith('100')) {
     const num = parseInt(trimmed);
-    return num > 0 && num < 100000000000; // Reasonable user ID range
+    return num > 0; // Remove arbitrary upper limit - Telegram IDs can be very large
   }
   
   return false;
