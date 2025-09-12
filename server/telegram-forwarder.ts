@@ -4,6 +4,7 @@ import { Api } from 'telegram/tl';
 import { FloodWaitError } from 'telegram/errors';
 import { logger } from './telegram-bot/logger';
 import type { ForwardConfig, ForwardJob } from '@shared/schema';
+import { createTelegramClient } from './telegram-client-factory';
 
 // Map to store active forwarding jobs
 const activeJobs = new Map<string, ForwardJobManager>();
@@ -55,11 +56,11 @@ class ForwardJobManager {
     this.addLog('Starting forwarding job...');
 
     try {
-      // Initialize Telegram client
-      const session = new StringSession(this.sessionString);
-      this.client = new TelegramClient(session, this.apiId, this.apiHash, {
-        connectionRetries: 5,
-        retryDelay: 2000,
+      // Initialize Telegram client using factory with proper connection options
+      this.client = createTelegramClient({
+        apiId: this.apiId,
+        apiHash: this.apiHash,
+        sessionString: this.sessionString
       });
 
       await this.client.connect();
@@ -141,16 +142,16 @@ class ForwardJobManager {
           }
 
           try {
-            // Python: await client.send_message(intify(to_chat), message)
-            await this.client.sendMessage(toChatId, {
-              message: message.message || '',
-              file: message.media || undefined
+            // Use proper forwardMessages to preserve metadata and attribution
+            await this.client.forwardMessages(toChatId, {
+              messages: [message.id],
+              fromPeer: fromChatId
             });
             
             lastId = message.id;
             messagesProcessed++;
             
-            this.addLog(`forwarding message with id = ${lastId}`);
+            this.addLog(`forwarded message with id = ${lastId}`);
 
             this.onUpdate({
               currentOffset: message.id,
@@ -167,10 +168,10 @@ class ForwardJobManager {
               this.addLog(`Rate limited, waiting ${waitTime} seconds...`);
               await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
               
-              // Retry  
-              await this.client!.sendMessage(toChatId, {
-                message: message.message || '',
-                file: message.media || undefined
+              // Retry with proper forwardMessages
+              await this.client!.forwardMessages(toChatId, {
+                messages: [message.id],
+                fromPeer: fromChatId
               });
               lastId = message.id;
               messagesProcessed++;

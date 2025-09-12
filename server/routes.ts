@@ -24,6 +24,7 @@ import { MTProtoClient } from './telegram-bot/MTProtoClient';
 import { TelegramForwarder } from './telegram-forwarder';
 import { forwardConfigSchema, type ForwardJob } from '@shared/schema';
 import { z } from 'zod';
+import { createTelegramClient, testTelegramSession } from './telegram-client-factory';
 
 let bot: TelegramBot | null = null;
 let mtprotoClient: MTProtoClient | null = null;
@@ -1681,37 +1682,27 @@ if __name__ == "__main__":
 
       addJSCopierLog('Testing session string...');
 
-      // Initialize Telegram client with session string
-      const session = new StringSession(sessionString.trim());
-      const client = new TelegramClient(session, apiId, apiHash, {
-        connectionRetries: 3,
-        retryDelay: 1000,
+      // Use centralized factory to test session with proper connection options
+      const result = await testTelegramSession({
+        apiId,
+        apiHash,
+        sessionString: sessionString.trim()
       });
 
-      try {
-        await client.connect();
-        const me = await client.getMe();
-        
+      if (result.success && result.userInfo) {
         jsCopierStatus.sessionValid = true;
-        jsCopierStatus.currentUserInfo = {
-          id: parseInt(me.id.toString()),
-          username: me.username || '',
-          firstName: me.firstName || ''
-        };
+        jsCopierStatus.currentUserInfo = result.userInfo;
 
-        await client.disconnect();
-
-        addJSCopierLog(`Session valid for user: ${me.firstName} (@${me.username})`);
+        addJSCopierLog(`Session valid for user: ${result.userInfo.firstName} (@${result.userInfo.username})`);
         
         res.json({ 
           success: true, 
-          userInfo: jsCopierStatus.currentUserInfo,
+          userInfo: result.userInfo,
           message: 'Session string is valid' 
         });
-      } catch (clientError) {
-        const errorMessage = clientError instanceof Error ? clientError.message : 'Unknown error';
-        addJSCopierLog(`Session validation failed: ${errorMessage}`);
-        res.status(400).json({ error: `Invalid session: ${errorMessage}` });
+      } else {
+        addJSCopierLog(`Session validation failed: ${result.error}`);
+        res.status(400).json({ error: `Invalid session: ${result.error}` });
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -1811,11 +1802,11 @@ if __name__ == "__main__":
         const apiId = parseInt(telegramConfig.api_id);
         const apiHash = telegramConfig.api_hash;
 
-        // Initialize client
-        const session = new StringSession(sessionString);
-        client = new TelegramClient(session, apiId, apiHash, {
-          connectionRetries: 5,
-          retryDelay: 2000,
+        // Initialize client using factory with proper connection options
+        client = createTelegramClient({
+          apiId,
+          apiHash,
+          sessionString
         });
 
         await client.connect();
