@@ -130,61 +130,66 @@ class ForwardJobManager {
       }
 
       let messagesProcessed = 0;
-      let lastId = 0;
-
-      this.addLog(`Starting message iteration from offset ${this.config.offsetFrom}...`);
+      let lastId = this.config.offsetFrom;
+      let currentOffset = this.config.offsetFrom;
       
-      try {
-        this.addLog(`Starting iteration from entity ${fromEntity.id}`);
-        
-        this.addLog(`Getting messages from resolved entity...`);
+      this.addLog(`Starting continuous iteration from offset ${this.config.offsetFrom}...`);
+      this.addLog(`Will process until offset ${this.config.offsetTo || 'latest'}`);
+      
+      // Continuous iteration like Python copier - keep going until we reach offsetTo or no more messages
+      while (!this.shouldStop) {
+        this.addLog(`Fetching batch starting from offset ${currentOffset}...`);
         
         let messages;
         try {
-          // Add timeout to prevent hanging
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('getMessages timeout after 15 seconds')), 15000)
-          );
-          
-          const getMessagesPromise = this.client.getMessages(fromEntity!, {
-            offsetId: this.config.offsetFrom,
-            reverse: true,
-            limit: 10
-          });
-          
-          messages = await Promise.race([getMessagesPromise, timeoutPromise]) as any;
-          this.addLog(`✅ Found ${messages.length} messages to process`);
-          
-          if (messages.length === 0) {
-            this.addLog(`⚠️ No messages found. Chat might be empty or offset too high.`);
-            return;
-          }
-        } catch (msgError: any) {
-          this.addLog(`❌ Error getting messages: ${msgError.message}`);
-          // Try alternative approach - use iter_messages like Python
-          this.addLog(`Trying iter_messages approach...`);
+          // Use iterMessages for continuous pagination like Python
           const iterator = this.client.iterMessages(fromEntity!, {
             reverse: true,
-            offsetId: this.config.offsetFrom,
-            limit: 5
+            offsetId: currentOffset,
+            limit: 50 // Process in larger batches like Python
           });
           
           messages = [];
           for await (const msg of iterator) {
+            if (this.shouldStop) break;
+            
+            // Check if we've reached the offsetTo limit
+            if (this.config.offsetTo && msg.id >= this.config.offsetTo) {
+              this.addLog(`Reached offset limit: ${this.config.offsetTo}`);
+              break;
+            }
+            
             messages.push(msg);
-            if (messages.length >= 5) break; // Just get first 5
+            if (messages.length >= 50) break; // Process in batches
           }
-          this.addLog(`Found ${messages.length} messages via iterator`);
+          
+          this.addLog(`Found ${messages.length} messages in this batch`);
+          
+          if (messages.length === 0) {
+            this.addLog(`✅ No more messages to process. Reached end of chat.`);
+            break;
+          }
+        } catch (msgError: any) {
+          this.addLog(`❌ Error getting messages: ${msgError.message}`);
+          break;
         }
         
+        // Process each message in the batch
         for (const message of messages) {
           if (this.shouldStop) {
             this.addLog('Stopping due to user request');
             break;
           }
 
+          // Check offset limit again
+          if (this.config.offsetTo && message.id >= this.config.offsetTo) {
+            this.addLog(`Reached offset limit: ${this.config.offsetTo}, stopping`);
+            break;
+          }
+
           // Python: if isinstance(message, MessageService): continue
           if (message.className?.includes('MessageService')) {
+            currentOffset = message.id;
             continue;
           }
 
@@ -196,18 +201,21 @@ class ForwardJobManager {
             });
             
             lastId = message.id;
+            currentOffset = message.id;
             messagesProcessed++;
             
-            this.addLog(`forwarded message with id = ${lastId}`);
+            this.addLog(`Forwarded message ID: ${lastId}`);
 
             this.onUpdate({
               currentOffset: message.id,
-              progress: Math.round((messagesProcessed / messages.length) * 100),
+              progress: this.config.offsetTo ? 
+                Math.round(((message.id - this.config.offsetFrom) / (this.config.offsetTo - this.config.offsetFrom)) * 100) :
+                undefined,
               updatedAt: new Date().toISOString(),
             });
 
-            // Small delay
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Small delay between messages
+            await new Promise(resolve => setTimeout(resolve, 150));
 
           } catch (error) {
             if (error instanceof FloodWaitError) {
@@ -221,18 +229,22 @@ class ForwardJobManager {
                 fromPeer: fromEntity!
               });
               lastId = message.id;
+              currentOffset = message.id;
               messagesProcessed++;
               this.addLog(`Forwarded message ${message.id} after wait`);
             } else {
               const errorMessage = error instanceof Error ? error.message : 'Unknown error';
               this.addLog(`Error forwarding message ${message.id}: ${errorMessage}`);
+              currentOffset = message.id; // Continue with next message
             }
           }
         }
         
-      } catch (iterError) {
-        const errorMessage = iterError instanceof Error ? iterError.message : 'Unknown error';
-        this.addLog(`Error getting messages: ${errorMessage}`);
+        // If we processed fewer messages than requested, we've likely reached the end
+        if (messages.length < 50) {
+          this.addLog(`✅ Processed final batch of ${messages.length} messages`);
+          break;
+        }
       }
 
       if (this.shouldStop) {

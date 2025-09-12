@@ -995,10 +995,25 @@ export function JSCopier() {
       {showLogs && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Terminal className="w-5 h-5" />
-              Copier Logs
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Terminal className="w-5 h-5" />
+                Copier Logs
+              </CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  const logText = logsData?.logs?.slice(-30).join('\n') || 'No logs available...';
+                  navigator.clipboard.writeText(logText);
+                  toast({ title: "Copied to clipboard!", description: "Live logs copied successfully" });
+                }}
+                data-testid="button-copy-logs"
+              >
+                <Copy className="h-4 w-4 mr-1" />
+                Copy Logs
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <Textarea
@@ -1048,14 +1063,31 @@ export function JSCopier() {
           <div className="bg-background p-6 rounded-lg w-full max-w-4xl mx-4 border max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Complete Last Forwarding Log</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowLastLog(false)}
-                data-testid="button-close-last-log"
-              >
-                <X className="w-4 h-4" />
-              </Button>
+              <div className="flex gap-2">
+                {lastLogData?.hasLog && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      const logText = lastLogData.log.logs.join('\n') || 'No logs available...';
+                      navigator.clipboard.writeText(logText);
+                      toast({ title: "Copied to clipboard!", description: "Complete log copied successfully" });
+                    }}
+                    data-testid="button-copy-last-log"
+                  >
+                    <Copy className="h-4 w-4 mr-1" />
+                    Copy Log
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowLastLog(false)}
+                  data-testid="button-close-last-log"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
             
             <div className="flex-1 overflow-hidden">
