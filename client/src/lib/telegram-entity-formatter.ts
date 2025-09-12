@@ -15,36 +15,97 @@ export interface TelegramEntityInfo {
 }
 
 /**
- * Format a chat object to proper Telegram entity format
- * This ensures the entity ID will work 100% with Telegram forwarding
+ * Detect if a chat is a bot based on username patterns
+ * Bots typically end with 'bot' and have specific patterns
+ */
+function isBotEntity(chat: Chat): boolean {
+  if (!chat.username) return false;
+  
+  // Bot usernames typically end with 'bot' (case insensitive)
+  const username = chat.username.toLowerCase();
+  return username.endsWith('bot');
+}
+
+/**
+ * Format a chat object using Python copier's exact logic
+ * Based on successful examples:
+ * - Bots: Always use @username (like @Bashhwhahbot)
+ * - Channels/Supergroups: Use -100 prefix or 10... format 
+ * - Basic groups: Use negative ID (like -4899269710)
+ * - Users: Use positive ID (like 4971189003)
  */
 export function formatChatToTelegramEntity(chat: Chat): TelegramEntityInfo {
-  let formattedId = chat.id;
+  // CRITICAL: Bots always use @username format (never numeric ID)
+  if (isBotEntity(chat)) {
+    return {
+      id: `@${chat.username}`,
+      displayName: `@${chat.username}`,
+      username: chat.username,
+      type: 'private', // Bots are private chats
+      isValid: true,
+      originalInput: chat.id
+    };
+  }
   
-  // For channels and supergroups, handle ID formatting carefully
-  if (chat.type === 'channel' && !chat.username) {
-    // Only add -100 prefix if it's a positive number (likely a supergroup)
+  // For channels with username, prefer @username format (like Python copier)
+  if (chat.type === 'channel' && chat.username) {
+    return {
+      id: `@${chat.username}`,
+      displayName: `${chat.title} (@${chat.username})`,
+      username: chat.username,
+      type: chat.type,
+      isValid: true,
+      originalInput: chat.id
+    };
+  }
+  
+  // For channels/supergroups without username, use proper ID format
+  if (chat.type === 'channel') {
+    let formattedId = chat.id;
     const numericId = parseInt(chat.id);
+    
     if (!isNaN(numericId) && numericId > 0) {
-      // Add -100 prefix for supergroups/channels (Telegram requirement)
-      formattedId = `-100${Math.abs(numericId)}`;
+      // Add -100 prefix for supergroups/channels (Python copier format: 1002251706886)
+      formattedId = `100${numericId}`; // Remove -100 prefix, just use 10... format
     }
-    // If it already starts with negative sign, leave it unchanged (basic groups or proper IDs)
+    
+    return {
+      id: formattedId,
+      displayName: chat.title,
+      username: chat.username,
+      type: chat.type,
+      isValid: true,
+      originalInput: chat.id
+    };
   }
   
-  // For basic groups, preserve the original ID format
+  // For basic groups, use negative ID format (like -4899269710)
   if (chat.type === 'group') {
-    // Basic groups have their own ID format, don't modify
-    formattedId = chat.id;
+    return {
+      id: chat.id, // Keep original format
+      displayName: chat.title,
+      username: chat.username,
+      type: chat.type,
+      isValid: true,
+      originalInput: chat.id
+    };
   }
   
-  // For private chats, use the raw ID (can be positive for users)
+  // For private chats (users), use positive ID (like 4971189003)
   if (chat.type === 'private') {
-    formattedId = chat.id;
+    return {
+      id: chat.id, // Keep original format
+      displayName: chat.title,
+      username: chat.username,
+      type: chat.type,
+      isValid: true,
+      originalInput: chat.id
+    };
   }
   
+  // Fallback: return as-is
   return {
-    id: formattedId,
+    id: chat.id,
     displayName: chat.title,
     username: chat.username,
     type: chat.type,
@@ -54,8 +115,12 @@ export function formatChatToTelegramEntity(chat: Chat): TelegramEntityInfo {
 }
 
 /**
- * Parse user input to proper Telegram entity format
- * Handles: @username, -100123456, 123456, username
+ * Parse user input using Python copier's exact logic
+ * Based on successful examples:
+ * - @Bashhwhahbot (bot username) → @Bashhwhahbot
+ * - 4971189003 (user ID) → 4971189003  
+ * - 1002251706886 (channel with 100... format) → 1002251706886
+ * - -4899269710 (basic group) → -4899269710
  */
 export function parseEntityInput(input: string): TelegramEntityInfo {
   const trimmed = input.trim();
@@ -74,24 +139,27 @@ export function parseEntityInput(input: string): TelegramEntityInfo {
   // Handle username format (@username or username) - STRICT Telegram rules 5-32 chars
   if (trimmed.startsWith('@') || /^[a-zA-Z]/.test(trimmed)) {
     const cleanInput = trimmed.startsWith('@') ? trimmed.slice(1) : trimmed;
-    const isValidUsername = /^[a-zA-Z][a-zA-Z0-9_]{4,31}$/.test(cleanInput); // 5-32 characters (4,31 = 5-32)
+    const isValidUsername = /^[a-zA-Z][a-zA-Z0-9_]{4,31}$/.test(cleanInput); // 5-32 characters total
     
     // Store canonical format with @ for consistency with Python copier
     const canonicalId = `@${cleanInput}`;
+    
+    // Detect if it's a bot (ends with 'bot')
+    const isBot = cleanInput.toLowerCase().endsWith('bot');
     
     return {
       id: canonicalId,
       displayName: canonicalId,
       username: cleanInput,
-      type: 'channel', // Channels/groups with usernames
+      type: isBot ? 'private' : 'channel', // Bots are 'private', channels/groups with usernames are 'channel'
       isValid: isValidUsername,
       originalInput: input
     };
   }
   
-  // Handle supergroup/channel ID format (-100...)
-  if (/^-100\d{5,}$/.test(trimmed)) {
-    // Valid supergroup/channel ID
+  // Handle channel/supergroup ID format (100... - Python copier format)
+  if (/^100\d{7,}$/.test(trimmed)) {
+    // Python copier uses 100... format (not -100...)
     return {
       id: trimmed,
       displayName: trimmed,
@@ -102,9 +170,23 @@ export function parseEntityInput(input: string): TelegramEntityInfo {
     };
   }
   
+  // Handle supergroup/channel ID format (-100...) - also accept this format
+  if (/^-100\d{5,}$/.test(trimmed)) {
+    // Convert to Python copier format (remove minus, keep 100...)
+    const pythonFormat = trimmed.substring(1); // Remove the minus sign
+    return {
+      id: pythonFormat,
+      displayName: pythonFormat,
+      username: '',
+      type: 'channel',
+      isValid: true,
+      originalInput: input
+    };
+  }
+  
   // Handle basic group ID format (-123456, not starting with -100)
   if (/^-(?!100)\d+$/.test(trimmed)) {
-    // Valid basic group ID
+    // Valid basic group ID (like -4899269710)
     return {
       id: trimmed,
       displayName: trimmed,
@@ -115,8 +197,9 @@ export function parseEntityInput(input: string): TelegramEntityInfo {
     };
   }
   
-  if (/^\d+$/.test(trimmed)) {
-    // Valid user ID (positive integer)
+  // Handle user ID format (positive integer like 4971189003)
+  if (/^\d+$/.test(trimmed) && !trimmed.startsWith('100')) {
+    // Valid user ID (positive integer, not starting with 100)
     return {
       id: trimmed,
       displayName: trimmed,
@@ -139,8 +222,8 @@ export function parseEntityInput(input: string): TelegramEntityInfo {
 }
 
 /**
- * Validate if an entity format is compatible with Telegram
- * STRICT validation matching Python copier and Telegram requirements
+ * Validate if an entity format matches Python copier's successful patterns
+ * Based on working examples: @Bashhwhahbot, 4971189003, 1002251706886, -4899269710
  */
 export function validateTelegramEntity(entityId: string): boolean {
   if (!entityId || entityId.trim() === '') {
@@ -155,19 +238,25 @@ export function validateTelegramEntity(entityId: string): boolean {
     return /^[a-zA-Z][a-zA-Z0-9_]{4,31}$/.test(username); // 5-32 characters total
   }
   
-  // Supergroup/channel ID: -100xxxxxxxxx (at least 10 digits after -100)
+  // Channel/supergroup ID: 100xxxxxxxxx (Python copier format)
+  if (/^100\d{7,}$/.test(trimmed)) {
+    return true;
+  }
+  
+  // Also accept -100 format (convert to Python format internally)
   if (trimmed.startsWith('-100')) {
     return /^-100\d{5,}$/.test(trimmed);
   }
   
-  // Basic group ID: negative number not starting with -100
+  // Basic group ID: negative number not starting with -100 (like -4899269710)
   if (/^-(?!100)\d+$/.test(trimmed)) {
     return true;
   }
   
-  // User ID: positive integer
-  if (/^\d+$/.test(trimmed)) {
-    return true;
+  // User ID: positive integer not starting with 100 (like 4971189003)
+  if (/^\d+$/.test(trimmed) && !trimmed.startsWith('100')) {
+    const num = parseInt(trimmed);
+    return num > 0 && num < 100000000000; // Reasonable user ID range
   }
   
   return false;
