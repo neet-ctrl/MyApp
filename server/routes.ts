@@ -7,7 +7,7 @@ declare module 'express-session' {
     githubOAuthState?: string;
   }
 }
-import { createServer, type Server } from "http";
+// HTTP server is created in server/index.ts, no need to create another one here
 import { storage } from "./storage";
 import TelegramBot from 'node-telegram-bot-api';
 import { logger } from './telegram-bot/logger';
@@ -155,7 +155,7 @@ let liveCloningStatus = {
   logs: [] as string[]
 };
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express): Promise<Express> {
   // put application routes here
   // prefix all routes with /api
 
@@ -2801,6 +2801,16 @@ if __name__ == "__main__":
         isActive: true
       });
 
+      // Sync with running bot if active - make entity links immediately functional
+      if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
+        try {
+          await syncEntityLinksWithBot();
+          console.log(`✅ Synced new entity link with running bot: ${fromEntity} → ${toEntity}`);
+        } catch (syncError) {
+          console.error('⚠️ Error syncing with running bot:', syncError);
+        }
+      }
+
       res.json({ success: true, link });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -2835,6 +2845,16 @@ if __name__ == "__main__":
       });
       
       if (updated) {
+        // Sync with running bot if active
+        if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
+          try {
+            await syncEntityLinksWithBot();
+            console.log(`✅ Synced updated entity link with running bot: ${updated.fromEntity} → ${updated.toEntity}`);
+          } catch (syncError) {
+            console.error('⚠️ Error syncing update with running bot:', syncError);
+          }
+        }
+        
         res.json({ success: true, link: updated });
       } else {
         res.status(404).json({ error: 'Entity link not found' });
@@ -2851,6 +2871,16 @@ if __name__ == "__main__":
       const deleted = await storage.deleteEntityLink(parseInt(id));
       
       if (deleted) {
+        // Sync with running bot if active
+        if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
+          try {
+            await syncEntityLinksWithBot();
+            console.log('✅ Synced entity link deletion with running bot');
+          } catch (syncError) {
+            console.error('⚠️ Error syncing deletion with running bot:', syncError);
+          }
+        }
+        
         res.json({ success: true, message: 'Entity link deleted' });
       } else {
         res.status(404).json({ error: 'Entity link not found' });
@@ -2952,6 +2982,27 @@ if __name__ == "__main__":
         config,
         status: 'inactive'
       });
+
+      // Persist session string for 24/7 auto-start functionality
+      const persistentConfigPath = path.join(process.cwd(), 'tmp', 'live_cloning_persistent_settings.json');
+      try {
+        let existingSettings = {};
+        if (fs.existsSync(persistentConfigPath)) {
+          existingSettings = JSON.parse(fs.readFileSync(persistentConfigPath, 'utf8'));
+        }
+        
+        // Update with new session string for auto-start
+        const updatedSettings = {
+          ...existingSettings,
+          sessionString: sessionString, // Store for auto-start capability
+          lastSessionSaved: new Date().toISOString()
+        };
+        
+        fs.writeFileSync(persistentConfigPath, JSON.stringify(updatedSettings, null, 2));
+        console.log('✅ Session string persisted for 24/7 auto-start functionality');
+      } catch (error) {
+        console.error('❌ Error persisting session string:', error);
+      }
 
       res.json({ success: true, instance });
     } catch (error) {
@@ -5384,15 +5435,13 @@ if __name__ == '__main__':
 `;
   }
 
-  const httpServer = createServer(app);
-
-  return httpServer;
+  return app;
 }
 
 // Always-running Live Cloning Service - Auto-start functionality
 export async function startLiveCloningService(): Promise<void> {
   try {
-    console.log('🚀 Starting Live Cloning service for always-running architecture...');
+    console.log('🚀 Starting Live Cloning service for 24/7 always-running architecture...');
     
     // Check if we have a valid session and persistent settings
     const persistentConfigPath = path.join(process.cwd(), 'tmp', 'live_cloning_persistent_settings.json');
@@ -5405,18 +5454,286 @@ export async function startLiveCloningService(): Promise<void> {
     const persistentSettings = JSON.parse(fs.readFileSync(persistentConfigPath, 'utf8'));
     console.log('📋 Loaded persistent settings for auto-start:', persistentSettings);
     
-    // Check if bot is enabled
-    if (!persistentSettings.botEnabled) {
-      console.log('🔕 Bot is disabled in settings, service available but not processing messages');
+    // Check if we have a valid session string from environment or config
+    const sessionString = process.env.LIVE_CLONING_SESSION || persistentSettings.sessionString;
+    if (!sessionString) {
+      console.log('⚠️ No session string found for auto-start. Save a session in web interface first.');
       return;
     }
     
-    // For now, we'll implement this as settings-controlled behavior
-    // The bot can be started manually when needed, but settings will control processing
-    console.log('✅ Live Cloning service configured for always-running architecture');
-    console.log('💡 Bot behavior controlled by settings - use web interface to manage');
+    // Stop existing process if running
+    if (liveCloningProcess) {
+      console.log('🔄 Stopping existing Live Cloning process for restart...');
+      liveCloningProcess.kill('SIGTERM');
+      liveCloningProcess = null;
+    }
+    
+    try {
+      // Get existing entity links from database
+      const allInstances = await storage.getAllLiveCloningInstances();
+      let entityLinks: any[] = [];
+      let wordFilters: any[] = [];
+      
+      if (allInstances.length > 0) {
+        // Use the most recent instance
+        const latestInstance = allInstances[0];
+        const links = await storage.getEntityLinks(latestInstance.instanceId);
+        const filters = await storage.getWordFilters(latestInstance.instanceId);
+        
+        entityLinks = links.map(link => [link.fromEntity, link.toEntity]);
+        wordFilters = filters.map(filter => [filter.fromWord, filter.toWord]);
+        
+        console.log(`📎 Loaded ${entityLinks.length} entity links and ${wordFilters.length} word filters for auto-start`);
+      }
+      
+      // Auto-start the Live Cloning bot with existing configuration
+      const telegramConfig = configReader.getTelegramConfig();
+      const liveClonerPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'live_cloner.py');
+      const configDir = path.join(process.cwd(), 'tmp', 'config');
+      const configPath = path.join(configDir, 'live_cloning_config.json');
+      
+      // Ensure config directory exists
+      if (!fs.existsSync(configDir)) {
+        fs.mkdirSync(configDir, { recursive: true });
+      }
+      
+      // Generate unique instance ID for this auto-start session
+      const instanceId = `live_cloning_auto_${Date.now()}`;
+      
+      // Prepare configuration with database entity links
+      const config = {
+        api_id: parseInt(telegramConfig.api_id),
+        api_hash: telegramConfig.api_hash,
+        bot_enabled: persistentSettings.botEnabled ?? true,
+        filter_words: persistentSettings.filterWords ?? true,
+        add_signature: persistentSettings.addSignature ?? false,
+        signature: persistentSettings.signature || "",
+        entities: entityLinks,
+        filters: wordFilters,
+        auto_started: true,
+        instance_id: instanceId
+      };
+      
+      // Write config file
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+      
+      // Save this instance to database for tracking
+      await storage.saveLiveCloningInstance({
+        instanceId: instanceId,
+        sessionString: sessionString.substring(0, 50) + '...', // Truncated for security
+        config: config,
+        status: 'active'
+      });
+      
+      console.log('🔄 Starting Live Cloning Python process for 24/7 operation...');
+      
+      // Start live cloning process
+      liveCloningProcess = spawn('python3', [liveClonerPath, '--session', sessionString, '--config', configPath, '--auto-start'], {
+        env: {
+          ...process.env,
+          TG_API_ID: telegramConfig.api_id,
+          TG_API_HASH: telegramConfig.api_hash,
+          LIVE_CLONING_INSTANCE_ID: instanceId
+        },
+        cwd: path.dirname(liveClonerPath)
+      });
+      
+      // Update status
+      liveCloningStatus = {
+        ...liveCloningStatus,
+        running: true,
+        instanceId: instanceId,
+        lastActivity: new Date().toISOString(),
+        processedMessages: 0,
+        totalLinks: entityLinks.length,
+        sessionValid: true,
+        botEnabled: persistentSettings.botEnabled ?? true,
+        filterWords: persistentSettings.filterWords ?? true,
+        addSignature: persistentSettings.addSignature ?? false,
+        signature: persistentSettings.signature,
+        logs: [`✅ Auto-started at ${new Date().toISOString()} with ${entityLinks.length} entity links`]
+      };
+      
+      // Handle process output for logging and status updates
+      liveCloningProcess.stdout?.on('data', (data) => {
+        const log = data.toString();
+        const timestampedLog = `[AUTO-STDOUT] ${new Date().toISOString()}: ${log}`;
+        
+        liveCloningStatus.logs.push(timestampedLog);
+        if (liveCloningStatus.logs.length > 100) {
+          liveCloningStatus.logs = liveCloningStatus.logs.slice(-50);
+        }
+        
+        console.log('🔄 Live Cloning (24/7):', log);
+        
+        // Parse logs for progress info
+        if (log.includes('message forwarded') || log.includes('Message sent') || log.includes('Forwarded message')) {
+          liveCloningStatus.processedMessages++;
+        }
+        
+        // Handle sync commands that update database
+        if (log.includes('SYNC_ENTITY_LINK_ADD:')) {
+          handleEntityLinkSync(log);
+        } else if (log.includes('SYNC_ENTITY_LINK_REMOVE:')) {
+          handleEntityLinkRemove(log);
+        }
+        
+        liveCloningStatus.lastActivity = new Date().toISOString();
+      });
+      
+      liveCloningProcess.stderr?.on('data', (data) => {
+        const log = data.toString();
+        const timestampedLog = `[AUTO-STDERR] ${new Date().toISOString()}: ${log}`;
+        
+        liveCloningStatus.logs.push(timestampedLog);
+        if (liveCloningStatus.logs.length > 100) {
+          liveCloningStatus.logs = liveCloningStatus.logs.slice(-50);
+        }
+        
+        console.error('🔄 Live Cloning Error (24/7):', log);
+        liveCloningStatus.lastActivity = new Date().toISOString();
+      });
+      
+      liveCloningProcess.on('close', (code) => {
+        console.log(`🔄 Live Cloning 24/7 process exited with code ${code}`);
+        liveCloningStatus.running = false;
+        liveCloningStatus.lastActivity = new Date().toISOString();
+        
+        // Auto-restart after 30 seconds if it crashes
+        if (code !== 0) {
+          console.log('🔄 Auto-restarting Live Cloning in 30 seconds...');
+          setTimeout(async () => {
+            await startLiveCloningService();
+          }, 30000);
+        }
+        
+        liveCloningProcess = null;
+      });
+      
+      liveCloningProcess.on('error', (error) => {
+        console.error('🔄 Live Cloning 24/7 process error:', error);
+        // Auto-restart on error after 30 seconds
+        setTimeout(async () => {
+          await startLiveCloningService();
+        }, 30000);
+      });
+      
+      console.log('✅ Live Cloning 24/7 service started successfully!');
+      console.log(`📊 Running with ${entityLinks.length} entity links and bot enabled: ${persistentSettings.botEnabled}`);
+      console.log('🌟 Service will run continuously until server shutdown');
+      
+    } catch (error) {
+      console.error('❌ Error auto-starting Live Cloning bot:', error);
+      // Retry after 60 seconds
+      setTimeout(async () => {
+        await startLiveCloningService();
+      }, 60000);
+    }
     
   } catch (error) {
     console.error('❌ Error starting Live Cloning service:', error);
+  }
+}
+
+// Handle entity link sync from bot commands
+async function handleEntityLinkSync(logLine: string) {
+  try {
+    // Parse log format: SYNC_ENTITY_LINK_ADD:fromEntity|toEntity|instanceId
+    const match = logLine.match(/SYNC_ENTITY_LINK_ADD:(.+)\|(.+)\|(.+)/);
+    if (match) {
+      const [, fromEntity, toEntity, instanceId] = match;
+      
+      // Add to database
+      await storage.saveEntityLink({
+        instanceId,
+        fromEntity,
+        toEntity,
+        isActive: true
+      });
+      
+      console.log(`✅ Synced entity link from bot: ${fromEntity} → ${toEntity}`);
+    }
+  } catch (error) {
+    console.error('❌ Error syncing entity link from bot:', error);
+  }
+}
+
+// Handle entity link removal from bot commands
+async function handleEntityLinkRemove(logLine: string) {
+  try {
+    // Parse log format: SYNC_ENTITY_LINK_REMOVE:fromEntity|instanceId
+    const match = logLine.match(/SYNC_ENTITY_LINK_REMOVE:(.+)\|(.+)/);
+    if (match) {
+      const [, fromEntity, instanceId] = match;
+      
+      // Find and remove from database
+      const links = await storage.getEntityLinks(instanceId);
+      for (const link of links) {
+        if (link.fromEntity === fromEntity) {
+          await storage.deleteEntityLink(link.id!);
+          console.log(`✅ Removed entity link from bot command: ${link.fromEntity} → ${link.toEntity}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error removing entity link from bot command:', error);
+  }
+}
+
+// Sync entity links with running bot - makes web changes immediately functional
+async function syncEntityLinksWithBot(): Promise<void> {
+  try {
+    if (!liveCloningStatus.running || !liveCloningProcess || !liveCloningStatus.instanceId) {
+      return; // No running bot to sync with
+    }
+
+    // Get current entity links from database
+    const links = await storage.getEntityLinks(liveCloningStatus.instanceId);
+    const entityLinks = links
+      .filter(link => link.isActive)
+      .map(link => [link.fromEntity, link.toEntity]);
+
+    // Get current word filters from database
+    const filters = await storage.getWordFilters(liveCloningStatus.instanceId);
+    const wordFilters = filters
+      .filter(filter => filter.isActive)
+      .map(filter => [filter.fromWord, filter.toWord]);
+
+    // Update the config file that the Python bot is reading
+    const configDir = path.join(process.cwd(), 'tmp', 'config');
+    const configPath = path.join(configDir, 'live_cloning_config.json');
+    
+    if (fs.existsSync(configPath)) {
+      // Read current config
+      const configData = fs.readFileSync(configPath, 'utf8');
+      const config = JSON.parse(configData);
+      
+      // Update with latest entity links and filters
+      config.entities = entityLinks;
+      config.filters = wordFilters;
+      config.last_sync = new Date().toISOString();
+      
+      // Write updated config
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+      
+      // Update status
+      liveCloningStatus.totalLinks = entityLinks.length;
+      
+      console.log(`🔄 Synced ${entityLinks.length} entity links and ${wordFilters.length} word filters with running bot`);
+      
+      // Send signal to bot process to reload config (if supported)
+      if (liveCloningProcess && !liveCloningProcess.killed) {
+        try {
+          // Send SIGUSR1 to tell bot to reload config
+          liveCloningProcess.kill('SIGUSR1');
+        } catch (signalError) {
+          // Signal failed, bot will pick up changes on next message anyway
+          console.log('🔄 Config updated, bot will sync on next message');
+        }
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error syncing entity links with bot:', error);
+    throw error;
   }
 }
