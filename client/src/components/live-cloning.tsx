@@ -17,23 +17,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { storage } from '@/lib/storage';
-import type { Chat } from '@shared/schema';
-
-interface EntityLink {
-  id?: number;
-  instanceId: string;
-  fromEntity: string;
-  toEntity: string;
-  isActive: boolean;
-}
-
-interface WordFilter {
-  id?: number;
-  instanceId: string;
-  fromWord: string;
-  toWord: string;
-  isActive: boolean;
-}
+import type { Chat, EntityLink, WordFilter } from '@shared/schema';
 
 interface LiveCloningStatus {
   running: boolean;
@@ -106,6 +90,10 @@ export function LiveCloning() {
   // Word Filter Form
   const [newFromWord, setNewFromWord] = useState('');
   const [newToWord, setNewToWord] = useState('');
+  
+  // Edit states
+  const [editingEntityLink, setEditingEntityLink] = useState<EntityLink | null>(null);
+  const [editingWordFilter, setEditingWordFilter] = useState<WordFilter | null>(null);
   
   // Bot Settings
   const [botEnabled, setBotEnabled] = useState(true);
@@ -208,6 +196,43 @@ export function LiveCloning() {
     },
     recentActivity: []
   };
+
+  // Fetch existing entity links for the current instance
+  const { data: entityLinksData } = useQuery({
+    queryKey: ['entity-links', status.instanceId],
+    queryFn: async () => {
+      if (!status.instanceId) return { links: [] };
+      const response = await fetch(`/api/live-cloning/entity-links/${status.instanceId}`);
+      if (!response.ok) throw new Error('Failed to fetch entity links');
+      return response.json();
+    },
+    enabled: !!status.instanceId,
+  });
+
+  // Fetch existing word filters for the current instance
+  const { data: wordFiltersData } = useQuery({
+    queryKey: ['word-filters', status.instanceId],
+    queryFn: async () => {
+      if (!status.instanceId) return { filters: [] };
+      const response = await fetch(`/api/live-cloning/word-filters/${status.instanceId}`);
+      if (!response.ok) throw new Error('Failed to fetch word filters');
+      return response.json();
+    },
+    enabled: !!status.instanceId,
+  });
+
+  // Update local state when data is fetched
+  useEffect(() => {
+    if (entityLinksData?.links) {
+      setEntityLinks(entityLinksData.links);
+    }
+  }, [entityLinksData]);
+
+  useEffect(() => {
+    if (wordFiltersData?.filters) {
+      setWordFilters(wordFiltersData.filters);
+    }
+  }, [wordFiltersData]);
 
   // Test session string login
   const testSessionMutation = useMutation({
@@ -435,18 +460,190 @@ export function LiveCloning() {
     },
   });
 
+  // Remove entity link mutation
+  const removeEntityLinkMutation = useMutation({
+    mutationFn: async (linkId: number) => {
+      const response = await fetch(`/api/live-cloning/entity-links/${linkId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete entity link');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      // Refetch entity links and invalidate cache
+      queryClient.invalidateQueries({ queryKey: ['entity-links', status.instanceId] });
+      toast({ title: 'Entity Link Removed', description: 'Forwarding configuration removed successfully' });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: 'Failed to Remove Entity Link', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
+    },
+  });
+
+  // Remove word filter mutation
+  const removeWordFilterMutation = useMutation({
+    mutationFn: async (filterId: number) => {
+      const response = await fetch(`/api/live-cloning/word-filters/${filterId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete word filter');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      // Refetch word filters and invalidate cache
+      queryClient.invalidateQueries({ queryKey: ['word-filters', status.instanceId] });
+      toast({ title: 'Word Filter Removed', description: 'Filter configuration removed successfully' });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: 'Failed to Remove Word Filter', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
+    },
+  });
+
   // Remove entity link
-  const removeEntityLink = (index: number) => {
-    const updatedLinks = entityLinks.filter((_, i) => i !== index);
-    setEntityLinks(updatedLinks);
-    toast({ title: 'Entity Link Removed', description: 'Forwarding configuration removed' });
+  const removeEntityLink = (link: EntityLink) => {
+    if (link.id) {
+      removeEntityLinkMutation.mutate(link.id);
+    } else {
+      // For local-only links, remove from local state
+      const updatedLinks = entityLinks.filter((l) => l !== link);
+      setEntityLinks(updatedLinks);
+      toast({ title: 'Entity Link Removed', description: 'Forwarding configuration removed' });
+    }
   };
 
   // Remove word filter
-  const removeWordFilter = (index: number) => {
-    const updatedFilters = wordFilters.filter((_, i) => i !== index);
-    setWordFilters(updatedFilters);
-    toast({ title: 'Word Filter Removed', description: 'Filter configuration removed' });
+  const removeWordFilter = (filter: WordFilter) => {
+    if (filter.id) {
+      removeWordFilterMutation.mutate(filter.id);
+    } else {
+      // For local-only filters, remove from local state
+      const updatedFilters = wordFilters.filter((f) => f !== filter);
+      setWordFilters(updatedFilters);
+      toast({ title: 'Word Filter Removed', description: 'Filter configuration removed' });
+    }
+  };
+
+  // Edit entity link mutation
+  const editEntityLinkMutation = useMutation({
+    mutationFn: async (link: EntityLink) => {
+      if (!link.id) throw new Error('Cannot edit entity link without ID');
+      
+      const response = await fetch(`/api/live-cloning/entity-links/${link.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fromEntity: link.fromEntity,
+          toEntity: link.toEntity,
+          isActive: link.isActive
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update entity link');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      setEditingEntityLink(null);
+      queryClient.invalidateQueries({ queryKey: ['entity-links', status.instanceId] });
+      toast({ title: 'Entity Link Updated', description: 'Forwarding configuration updated successfully' });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: 'Failed to Update Entity Link', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
+    },
+  });
+
+  // Edit word filter mutation
+  const editWordFilterMutation = useMutation({
+    mutationFn: async (filter: WordFilter) => {
+      if (!filter.id) throw new Error('Cannot edit word filter without ID');
+      
+      const response = await fetch(`/api/live-cloning/word-filters/${filter.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fromWord: filter.fromWord,
+          toWord: filter.toWord,
+          isActive: filter.isActive
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update word filter');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      setEditingWordFilter(null);
+      queryClient.invalidateQueries({ queryKey: ['word-filters', status.instanceId] });
+      toast({ title: 'Word Filter Updated', description: 'Filter configuration updated successfully' });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: 'Failed to Update Word Filter', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
+    },
+  });
+
+  // Start editing entity link
+  const startEditEntityLink = (link: EntityLink) => {
+    setEditingEntityLink({...link});
+  };
+
+  // Start editing word filter
+  const startEditWordFilter = (filter: WordFilter) => {
+    setEditingWordFilter({...filter});
+  };
+
+  // Save entity link edit
+  const saveEntityLinkEdit = () => {
+    if (editingEntityLink) {
+      editEntityLinkMutation.mutate(editingEntityLink);
+    }
+  };
+
+  // Save word filter edit
+  const saveWordFilterEdit = () => {
+    if (editingWordFilter) {
+      editWordFilterMutation.mutate(editingWordFilter);
+    }
+  };
+
+  // Cancel entity link edit
+  const cancelEntityLinkEdit = () => {
+    setEditingEntityLink(null);
+  };
+
+  // Cancel word filter edit
+  const cancelWordFilterEdit = () => {
+    setEditingWordFilter(null);
   };
 
   // Get chat name helper
@@ -1258,42 +1455,146 @@ export function LiveCloning() {
               </div>
             ) : (
               entityLinks.map((link, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-card" data-testid={`entity-link-${index}`}>
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="flex items-center gap-2 flex-1">
-                      <Badge variant="outline" className="text-xs">
-                        FROM
-                      </Badge>
-                      <span className="font-mono text-sm truncate">
-                        {getChatName(link.fromEntity)}
-                      </span>
+                <div key={index} className="border rounded-lg bg-card" data-testid={`entity-link-${index}`}>
+                  {editingEntityLink?.id === link.id ? (
+                    // Edit mode
+                    <div className="p-3 space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <Label>From Entity (Source)</Label>
+                          <Select 
+                            value={editingEntityLink?.fromEntity || ''} 
+                            onValueChange={(value) => editingEntityLink && setEditingEntityLink({
+                              ...editingEntityLink, 
+                              fromEntity: value,
+                              instanceId: editingEntityLink.instanceId || status.instanceId || '',
+                              toEntity: editingEntityLink.toEntity || '',
+                              isActive: editingEntityLink.isActive ?? true
+                            })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {chats.map((chat) => (
+                                <SelectItem key={chat.id} value={chat.id}>
+                                  {getChatName(chat.id)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>To Entity (Target)</Label>
+                          <Select 
+                            value={editingEntityLink?.toEntity || ''} 
+                            onValueChange={(value) => editingEntityLink && setEditingEntityLink({
+                              ...editingEntityLink, 
+                              toEntity: value,
+                              instanceId: editingEntityLink.instanceId || status.instanceId || '',
+                              fromEntity: editingEntityLink.fromEntity || '',
+                              isActive: editingEntityLink.isActive ?? true
+                            })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {chats.map((chat) => (
+                                <SelectItem key={chat.id} value={chat.id}>
+                                  {getChatName(chat.id)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={editingEntityLink?.isActive ?? false}
+                            onCheckedChange={(checked) => editingEntityLink && setEditingEntityLink({
+                              ...editingEntityLink, 
+                              isActive: checked,
+                              instanceId: editingEntityLink.instanceId || status.instanceId || '',
+                              fromEntity: editingEntityLink.fromEntity || '',
+                              toEntity: editingEntityLink.toEntity || ''
+                            })}
+                          />
+                          <Label>Active</Label>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={saveEntityLinkEdit}
+                            size="sm"
+                            disabled={editEntityLinkMutation.isPending}
+                          >
+                            <Save className="w-4 h-4 mr-1" />
+                            Save
+                          </Button>
+                          <Button
+                            onClick={cancelEntityLinkEdit}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <X className="w-4 h-4 mr-1" />
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="px-2">
-                      <span className="text-muted-foreground">→</span>
+                  ) : (
+                    // View mode
+                    <div className="flex items-center justify-between p-3">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="flex items-center gap-2 flex-1">
+                          <Badge variant="outline" className="text-xs">
+                            FROM
+                          </Badge>
+                          <span className="font-mono text-sm truncate">
+                            {getChatName(link.fromEntity)}
+                          </span>
+                        </div>
+                        <div className="px-2">
+                          <span className="text-muted-foreground">→</span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-1">
+                          <Badge variant="outline" className="text-xs">
+                            TO
+                          </Badge>
+                          <span className="font-mono text-sm truncate">
+                            {getChatName(link.toEntity)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={link.isActive ? "default" : "secondary"} className="text-xs">
+                          {link.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                        {link.id && (
+                          <Button
+                            onClick={() => startEditEntityLink(link)}
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            data-testid={`edit-entity-link-${index}`}
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <Button
+                          onClick={() => removeEntityLink(link)}
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          data-testid={`remove-entity-link-${index}`}
+                          disabled={removeEntityLinkMutation.isPending}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-1">
-                      <Badge variant="outline" className="text-xs">
-                        TO
-                      </Badge>
-                      <span className="font-mono text-sm truncate">
-                        {getChatName(link.toEntity)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={link.isActive ? "default" : "secondary"} className="text-xs">
-                      {link.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                    <Button
-                      onClick={() => removeEntityLink(index)}
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      data-testid={`remove-entity-link-${index}`}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  )}
                 </div>
               ))
             )}
@@ -1357,38 +1658,122 @@ export function LiveCloning() {
               </div>
             ) : (
               wordFilters.map((filter, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-card" data-testid={`word-filter-${index}`}>
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="flex items-center gap-2 flex-1">
-                      <Badge variant="outline" className="text-xs">
-                        FROM
-                      </Badge>
-                      <span className="font-mono text-sm">"{filter.fromWord}"</span>
+                <div key={index} className="border rounded-lg bg-card" data-testid={`word-filter-${index}`}>
+                  {editingWordFilter?.id === filter.id ? (
+                    // Edit mode
+                    <div className="p-3 space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <Label>From Word</Label>
+                          <Input
+                            value={editingWordFilter?.fromWord || ''}
+                            onChange={(e) => editingWordFilter && setEditingWordFilter({
+                              ...editingWordFilter,
+                              fromWord: e.target.value,
+                              instanceId: editingWordFilter.instanceId || status.instanceId || '',
+                              toWord: editingWordFilter.toWord || '',
+                              isActive: editingWordFilter.isActive ?? true
+                            })}
+                            placeholder="Original word/phrase"
+                          />
+                        </div>
+                        <div>
+                          <Label>To Word</Label>
+                          <Input
+                            value={editingWordFilter?.toWord || ''}
+                            onChange={(e) => editingWordFilter && setEditingWordFilter({
+                              ...editingWordFilter,
+                              toWord: e.target.value,
+                              instanceId: editingWordFilter.instanceId || status.instanceId || '',
+                              fromWord: editingWordFilter.fromWord || '',
+                              isActive: editingWordFilter.isActive ?? true
+                            })}
+                            placeholder="Replacement word/phrase"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={editingWordFilter?.isActive ?? false}
+                            onCheckedChange={(checked) => editingWordFilter && setEditingWordFilter({
+                              ...editingWordFilter,
+                              isActive: checked,
+                              instanceId: editingWordFilter.instanceId || status.instanceId || '',
+                              fromWord: editingWordFilter.fromWord || '',
+                              toWord: editingWordFilter.toWord || ''
+                            })}
+                          />
+                          <Label>Active</Label>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={saveWordFilterEdit}
+                            size="sm"
+                            disabled={editWordFilterMutation.isPending}
+                          >
+                            <Save className="w-4 h-4 mr-1" />
+                            Save
+                          </Button>
+                          <Button
+                            onClick={cancelWordFilterEdit}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <X className="w-4 h-4 mr-1" />
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="px-2">
-                      <span className="text-muted-foreground">→</span>
+                  ) : (
+                    // View mode
+                    <div className="flex items-center justify-between p-3">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="flex items-center gap-2 flex-1">
+                          <Badge variant="outline" className="text-xs">
+                            FROM
+                          </Badge>
+                          <span className="font-mono text-sm">"{filter.fromWord}"</span>
+                        </div>
+                        <div className="px-2">
+                          <span className="text-muted-foreground">→</span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-1">
+                          <Badge variant="outline" className="text-xs">
+                            TO
+                          </Badge>
+                          <span className="font-mono text-sm">"{filter.toWord}"</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={filter.isActive ? "default" : "secondary"} className="text-xs">
+                          {filter.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                        {filter.id && (
+                          <Button
+                            onClick={() => startEditWordFilter(filter)}
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            data-testid={`edit-word-filter-${index}`}
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <Button
+                          onClick={() => removeWordFilter(filter)}
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          data-testid={`remove-word-filter-${index}`}
+                          disabled={removeWordFilterMutation.isPending}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-1">
-                      <Badge variant="outline" className="text-xs">
-                        TO
-                      </Badge>
-                      <span className="font-mono text-sm">"{filter.toWord}"</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={filter.isActive ? "default" : "secondary"} className="text-xs">
-                      {filter.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                    <Button
-                      onClick={() => removeWordFilter(index)}
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      data-testid={`remove-word-filter-${index}`}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  )}
                 </div>
               ))
             )}

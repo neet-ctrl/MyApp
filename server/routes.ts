@@ -2676,6 +2676,32 @@ if __name__ == "__main__":
     }
   });
 
+  app.put('/api/live-cloning/entity-links/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { fromEntity, toEntity, isActive } = req.body;
+      
+      if (!fromEntity || !toEntity) {
+        return res.status(400).json({ error: 'From entity and to entity are required' });
+      }
+
+      const updated = await storage.updateEntityLink(parseInt(id), {
+        fromEntity,
+        toEntity,
+        isActive: isActive !== undefined ? isActive : true
+      });
+      
+      if (updated) {
+        res.json({ success: true, link: updated });
+      } else {
+        res.status(404).json({ error: 'Entity link not found' });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
   app.delete('/api/live-cloning/entity-links/:id', async (req, res) => {
     try {
       const { id } = req.params;
@@ -2720,6 +2746,32 @@ if __name__ == "__main__":
       const { instanceId } = req.params;
       const filters = await storage.getWordFilters(instanceId);
       res.json({ filters });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  app.put('/api/live-cloning/word-filters/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { fromWord, toWord, isActive } = req.body;
+      
+      if (!fromWord || !toWord) {
+        return res.status(400).json({ error: 'From word and to word are required' });
+      }
+
+      const updated = await storage.updateWordFilter(parseInt(id), {
+        fromWord,
+        toWord,
+        isActive: isActive !== undefined ? isActive : true
+      });
+      
+      if (updated) {
+        res.json({ success: true, filter: updated });
+      } else {
+        res.status(404).json({ error: 'Word filter not found' });
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ error: errorMessage });

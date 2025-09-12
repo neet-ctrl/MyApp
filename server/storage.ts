@@ -49,12 +49,14 @@ export interface IStorage {
   // Entity Links Management
   getEntityLinks(instanceId: string): Promise<EntityLink[]>;
   saveEntityLink(link: InsertEntityLink): Promise<EntityLink>;
+  updateEntityLink(id: number, updates: Partial<Omit<EntityLink, 'id' | 'instanceId'>>): Promise<EntityLink | null>;
   deleteEntityLink(id: number): Promise<boolean>;
   deleteEntityLinksByInstance(instanceId: string): Promise<number>;
   
   // Word Filters Management
   getWordFilters(instanceId: string): Promise<WordFilter[]>;
   saveWordFilter(filter: InsertWordFilter): Promise<WordFilter>;
+  updateWordFilter(id: number, updates: Partial<Omit<WordFilter, 'id' | 'instanceId'>>): Promise<WordFilter | null>;
   deleteWordFilter(id: number): Promise<boolean>;
   deleteWordFiltersByInstance(instanceId: string): Promise<number>;
   
@@ -229,13 +231,28 @@ export class MemStorage implements IStorage {
     return savedLink;
   }
 
+  async updateEntityLink(id: number, updates: Partial<Omit<EntityLink, 'id' | 'instanceId'>>): Promise<EntityLink | null> {
+    const existingLink = this.entityLinks.get(id);
+    if (!existingLink) return null;
+    
+    const updatedLink: EntityLink = {
+      ...existingLink,
+      ...updates,
+      id: existingLink.id, // Preserve original ID
+      instanceId: existingLink.instanceId, // Preserve original instanceId
+    };
+    
+    this.entityLinks.set(id, updatedLink);
+    return updatedLink;
+  }
+
   async deleteEntityLink(id: number): Promise<boolean> {
     return this.entityLinks.delete(id);
   }
 
   async deleteEntityLinksByInstance(instanceId: string): Promise<number> {
     let deletedCount = 0;
-    for (const [id, link] of this.entityLinks.entries()) {
+    for (const [id, link] of Array.from(this.entityLinks.entries())) {
       if (link.instanceId === instanceId) {
         this.entityLinks.delete(id);
         deletedCount++;
@@ -262,13 +279,28 @@ export class MemStorage implements IStorage {
     return savedFilter;
   }
 
+  async updateWordFilter(id: number, updates: Partial<Omit<WordFilter, 'id' | 'instanceId'>>): Promise<WordFilter | null> {
+    const existingFilter = this.wordFilters.get(id);
+    if (!existingFilter) return null;
+    
+    const updatedFilter: WordFilter = {
+      ...existingFilter,
+      ...updates,
+      id: existingFilter.id, // Preserve original ID
+      instanceId: existingFilter.instanceId, // Preserve original instanceId
+    };
+    
+    this.wordFilters.set(id, updatedFilter);
+    return updatedFilter;
+  }
+
   async deleteWordFilter(id: number): Promise<boolean> {
     return this.wordFilters.delete(id);
   }
 
   async deleteWordFiltersByInstance(instanceId: string): Promise<number> {
     let deletedCount = 0;
-    for (const [id, filter] of this.wordFilters.entries()) {
+    for (const [id, filter] of Array.from(this.wordFilters.entries())) {
       if (filter.instanceId === instanceId) {
         this.wordFilters.delete(id);
         deletedCount++;
@@ -298,7 +330,7 @@ export class MemStorage implements IStorage {
 
   async deleteLiveCloningMessagesByInstance(instanceId: string): Promise<number> {
     let deletedCount = 0;
-    for (const [id, message] of this.liveCloningMessages.entries()) {
+    for (const [id, message] of Array.from(this.liveCloningMessages.entries())) {
       if (message.instanceId === instanceId) {
         this.liveCloningMessages.delete(id);
         deletedCount++;
