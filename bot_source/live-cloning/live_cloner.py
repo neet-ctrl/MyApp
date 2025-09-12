@@ -23,6 +23,7 @@ from telethon.sync import TelegramClient
 from telethon import events
 from telethon.tl.custom import Message
 from telethon.errors import SessionPasswordNeededError, PhoneCodeInvalidError
+from telethon.sessions import StringSession
 
 # Configure logging
 logging.basicConfig(
@@ -121,10 +122,10 @@ class LiveCloner:
             if not self.session_string:
                 raise ValueError("Session string not provided")
             
-            client = TelegramClient("temp_session", self.config["api_id"], self.config["api_hash"])
+            client = TelegramClient(StringSession(self.session_string), self.config["api_id"], self.config["api_hash"])
             
-            # Import session from string
-            await client.start(session=self.session_string)
+            # Start client with session string
+            await client.start()
             
             if await client.is_user_authorized():
                 me = await client.get_me()
@@ -150,10 +151,10 @@ class LiveCloner:
             if not self.session_string:
                 raise ValueError("Session string is required")
             
-            self.client = TelegramClient("live_cloner", self.config["api_id"], self.config["api_hash"])
+            self.client = TelegramClient(StringSession(self.session_string), self.config["api_id"], self.config["api_hash"])
             
             # Start client with session string
-            await self.client.start(session=self.session_string)
+            await self.client.start()
             
             if not await self.client.is_user_authorized():
                 raise ValueError("Session is not authorized")

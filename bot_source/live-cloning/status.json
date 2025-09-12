@@ -1,0 +1,12 @@
+{
+  "running": false,
+  "processed_messages": 0,
+  "last_activity": "2025-09-12T19:38:03.506382",
+  "session_valid": false,
+  "bot_enabled": true,
+  "filter_words": true,
+  "add_signature": false,
+  "signature": "",
+  "total_links": 0,
+  "message": "Bot stopped"
+}

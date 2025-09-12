@@ -952,7 +952,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
     } catch (error) {
-      logger.debug('Could not read Python bot downloads:', error);
+      logger.debug(`Could not read Python bot downloads: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
     
     return downloads;
@@ -2897,7 +2897,7 @@ if __name__ == "__main__":
       console.error('Failed to start Node.js bot:', error);
       res.status(500).json({ 
         error: 'Failed to start Node.js bot', 
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       });
     }
   });
@@ -2918,7 +2918,7 @@ if __name__ == "__main__":
       console.error('Failed to stop Node.js bot:', error);
       res.status(500).json({ 
         error: 'Failed to stop Node.js bot', 
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       });
     }
   });
@@ -2940,7 +2940,7 @@ if __name__ == "__main__":
       console.error('Failed to restart Node.js bot:', error);
       res.status(500).json({ 
         error: 'Failed to restart Node.js bot', 
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       });
     }
   });
@@ -2982,7 +2982,7 @@ if __name__ == "__main__":
       console.error('Failed to cancel download:', error);
       res.status(500).json({ 
         error: 'Failed to cancel download', 
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       });
     }
   });
@@ -3021,7 +3021,7 @@ if __name__ == "__main__":
       console.error('Failed to download YouTube content:', error);
       res.status(500).json({ 
         error: 'Failed to download YouTube content', 
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       });
     }
   });
@@ -3051,7 +3051,7 @@ if __name__ == "__main__":
       console.error('Failed to download direct URL:', error);
       res.status(500).json({ 
         error: 'Failed to download direct URL', 
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       });
     }
   });
@@ -3082,7 +3082,7 @@ if __name__ == "__main__":
       console.error('Failed to extract file:', error);
       res.status(500).json({ 
         error: 'Failed to extract file', 
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       });
     }
   });
@@ -3107,7 +3107,7 @@ if __name__ == "__main__":
       console.error('Failed to get YouTube info:', error);
       res.status(500).json({ 
         error: 'Failed to get YouTube info', 
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       });
     }
   });
@@ -3131,7 +3131,7 @@ if __name__ == "__main__":
       console.error('Failed to update config:', error);
       res.status(500).json({ 
         error: 'Failed to update config', 
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       });
     }
   });
@@ -4044,7 +4044,7 @@ if __name__ == "__main__":
             logger.error(`Failed to execute Python script: ${error.message}`);
             res.status(500).json({
               error: 'Failed to execute Python script',
-              details: error.message,
+              details: error instanceof Error ? error.message : 'Unknown error',
               status: 'error'
             });
           }

@@ -10,7 +10,9 @@ import { Switch } from '@/components/ui/switch';
 import { 
   Play, Square, Activity, Terminal, AlertTriangle, CheckCircle, 
   Copy, Trash2, Plus, Save, Edit3, X, Link, Filter, Settings,
-  MessageSquare, Users, Zap
+  MessageSquare, Users, Zap, Eye, BarChart3, Clock, UserCheck,
+  Shield, Database, Wifi, AlertCircle, TrendingUp, MessageCircle,
+  Hash, FileText, Image, Video, AudioLines, Archive
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -50,10 +52,48 @@ interface LiveCloningStatus {
   addSignature: boolean;
   signature?: string;
   logs: string[];
+  // Advanced monitoring data
+  performance: {
+    messagesPerMinute: number;
+    averageProcessingTime: number;
+    successRate: number;
+    errorCount: number;
+    uptime: number;
+  };
+  statistics: {
+    totalProcessed: number;
+    totalFiltered: number;
+    totalForwarded: number;
+    mediaProcessed: number;
+    textProcessed: number;
+    errorMessages: number;
+  };
+  activeUsers: Array<{
+    id: number;
+    username: string;
+    lastSeen: string;
+    messageCount: number;
+  }>;
+  messageTypes: {
+    text: number;
+    photo: number;
+    video: number;
+    audio: number;
+    document: number;
+    sticker: number;
+    voice: number;
+  };
+  recentActivity: Array<{
+    timestamp: string;
+    type: 'message' | 'filter' | 'forward' | 'error';
+    description: string;
+    fromEntity?: string;
+    toEntity?: string;
+  }>;
 }
 
 export function LiveCloning() {
-  const [sessionString, setSessionString] = useState(import.meta.env.VITE_DEFAULT_SESSION_STRING || '');
+  const [sessionString, setSessionString] = useState('**********************************************Default Session Configured**********************************************');
   const [entityLinks, setEntityLinks] = useState<EntityLink[]>([]);
   const [wordFilters, setWordFilters] = useState<WordFilter[]>([]);
   const [showLogs, setShowLogs] = useState(false);
@@ -72,6 +112,28 @@ export function LiveCloning() {
   const [filterWords, setFilterWords] = useState(true);
   const [addSignature, setAddSignature] = useState(false);
   const [signature, setSignature] = useState('');
+  
+  // Advanced Settings
+  const [showAdvancedMonitoring, setShowAdvancedMonitoring] = useState(true);
+  const [showPerformanceStats, setShowPerformanceStats] = useState(false);
+  const [showActiveUsers, setShowActiveUsers] = useState(false);
+  const [showRecentActivity, setShowRecentActivity] = useState(false);
+  const [messageTypeFilter, setMessageTypeFilter] = useState('all');
+  const [userFilter, setUserFilter] = useState('');
+  const [autoScroll, setAutoScroll] = useState(true);
+  const [alertsEnabled, setAlertsEnabled] = useState(true);
+  const [performanceThreshold, setPerformanceThreshold] = useState(90);
+  
+  // Advanced Bot Features
+  const [skipDuplicates, setSkipDuplicates] = useState(true);
+  const [preserveFormatting, setPreserveFormatting] = useState(true);
+  const [forwardMedia, setForwardMedia] = useState(true);
+  const [forwardStickers, setForwardStickers] = useState(false);
+  const [forwardVoice, setForwardVoice] = useState(true);
+  const [maxMessageLength, setMaxMessageLength] = useState(4096);
+  const [delayBetweenMessages, setDelayBetweenMessages] = useState(1);
+  const [retryFailedMessages, setRetryFailedMessages] = useState(true);
+  const [logLevel, setLogLevel] = useState('INFO');
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -118,7 +180,33 @@ export function LiveCloning() {
     filterWords: true,
     addSignature: false,
     signature: undefined,
-    logs: []
+    logs: [],
+    performance: {
+      messagesPerMinute: 0,
+      averageProcessingTime: 0,
+      successRate: 0,
+      errorCount: 0,
+      uptime: 0
+    },
+    statistics: {
+      totalProcessed: 0,
+      totalFiltered: 0,
+      totalForwarded: 0,
+      mediaProcessed: 0,
+      textProcessed: 0,
+      errorMessages: 0
+    },
+    activeUsers: [],
+    messageTypes: {
+      text: 0,
+      photo: 0,
+      video: 0,
+      audio: 0,
+      document: 0,
+      sticker: 0,
+      voice: 0
+    },
+    recentActivity: []
   };
 
   // Test session string login
@@ -663,9 +751,438 @@ export function LiveCloning() {
                 <div className="text-xs text-muted-foreground">Word Filters</div>
               </div>
             </div>
+            
+            {/* Advanced Monitoring Toggle */}
+            <div className="pt-4 border-t">
+              <Button
+                onClick={() => setShowAdvancedMonitoring(!showAdvancedMonitoring)}
+                variant="outline"
+                className="w-full"
+                data-testid="toggle-advanced-monitoring"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                {showAdvancedMonitoring ? 'Hide' : 'Show'} Advanced Monitoring
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Advanced Monitoring Dashboard */}
+      {showAdvancedMonitoring && (
+        <>
+          {/* Performance Metrics */}
+          <Card data-testid="performance-metrics-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5" />
+                Performance Metrics
+                <Button
+                  onClick={() => setShowPerformanceStats(!showPerformanceStats)}
+                  variant="ghost"
+                  size="sm"
+                >
+                  <TrendingUp className="w-4 h-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+                  <div className="text-lg font-semibold text-green-600">
+                    {status.performance.messagesPerMinute.toFixed(1)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Messages/Min</div>
+                </div>
+                <div className="text-center p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                  <div className="text-lg font-semibold text-blue-600">
+                    {status.performance.averageProcessingTime.toFixed(2)}ms
+                  </div>
+                  <div className="text-xs text-muted-foreground">Avg Processing</div>
+                </div>
+                <div className="text-center p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
+                  <div className="text-lg font-semibold text-purple-600">
+                    {status.performance.successRate.toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-muted-foreground">Success Rate</div>
+                </div>
+                <div className="text-center p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
+                  <div className="text-lg font-semibold text-orange-600">
+                    {Math.floor(status.performance.uptime / 3600)}h {Math.floor((status.performance.uptime % 3600) / 60)}m
+                  </div>
+                  <div className="text-xs text-muted-foreground">Uptime</div>
+                </div>
+              </div>
+              
+              {showPerformanceStats && (
+                <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <div className="text-sm font-medium mb-2">Message Statistics</div>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>Total Processed:</span>
+                          <span className="font-mono">{status.statistics.totalProcessed}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Filtered:</span>
+                          <span className="font-mono">{status.statistics.totalFiltered}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Forwarded:</span>
+                          <span className="font-mono">{status.statistics.totalForwarded}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium mb-2">Media Statistics</div>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>Media Files:</span>
+                          <span className="font-mono">{status.statistics.mediaProcessed}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Text Messages:</span>
+                          <span className="font-mono">{status.statistics.textProcessed}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Errors:</span>
+                          <span className="font-mono text-red-600">{status.statistics.errorMessages}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium mb-2">Performance Alerts</div>
+                      <div className="space-y-1">
+                        {status.performance.successRate < performanceThreshold && (
+                          <div className="flex items-center gap-2 text-sm text-red-600">
+                            <AlertCircle className="w-4 h-4" />
+                            Low success rate
+                          </div>
+                        )}
+                        {status.performance.errorCount > 10 && (
+                          <div className="flex items-center gap-2 text-sm text-yellow-600">
+                            <AlertTriangle className="w-4 h-4" />
+                            High error count
+                          </div>
+                        )}
+                        {status.performance.messagesPerMinute > 100 && (
+                          <div className="flex items-center gap-2 text-sm text-green-600">
+                            <CheckCircle className="w-4 h-4" />
+                            High throughput
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Message Types Distribution */}
+          <Card data-testid="message-types-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Hash className="w-5 h-5" />
+                Message Types Distribution
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-950 rounded">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                  <div>
+                    <div className="text-sm font-medium">{status.messageTypes.text}</div>
+                    <div className="text-xs text-muted-foreground">Text</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-950 rounded">
+                  <Image className="w-4 h-4 text-green-600" />
+                  <div>
+                    <div className="text-sm font-medium">{status.messageTypes.photo}</div>
+                    <div className="text-xs text-muted-foreground">Photos</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-purple-50 dark:bg-purple-950 rounded">
+                  <Video className="w-4 h-4 text-purple-600" />
+                  <div>
+                    <div className="text-sm font-medium">{status.messageTypes.video}</div>
+                    <div className="text-xs text-muted-foreground">Videos</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-orange-50 dark:bg-orange-950 rounded">
+                  <AudioLines className="w-4 h-4 text-orange-600" />
+                  <div>
+                    <div className="text-sm font-medium">{status.messageTypes.audio}</div>
+                    <div className="text-xs text-muted-foreground">Audio</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-red-50 dark:bg-red-950 rounded">
+                  <Archive className="w-4 h-4 text-red-600" />
+                  <div>
+                    <div className="text-sm font-medium">{status.messageTypes.document}</div>
+                    <div className="text-xs text-muted-foreground">Documents</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-yellow-50 dark:bg-yellow-950 rounded">
+                  <MessageCircle className="w-4 h-4 text-yellow-600" />
+                  <div>
+                    <div className="text-sm font-medium">{status.messageTypes.sticker}</div>
+                    <div className="text-xs text-muted-foreground">Stickers</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-indigo-50 dark:bg-indigo-950 rounded">
+                  <AudioLines className="w-4 h-4 text-indigo-600" />
+                  <div>
+                    <div className="text-sm font-medium">{status.messageTypes.voice}</div>
+                    <div className="text-xs text-muted-foreground">Voice</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Active Users Monitoring */}
+          <Card data-testid="active-users-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Active Users ({status.activeUsers.length})
+                <Button
+                  onClick={() => setShowActiveUsers(!showActiveUsers)}
+                  variant="ghost"
+                  size="sm"
+                >
+                  <UserCheck className="w-4 h-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {showActiveUsers && status.activeUsers.length > 0 ? (
+                <div className="space-y-2">
+                  {status.activeUsers.map((user, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-semibold text-blue-600">
+                            {user.username?.charAt(0)?.toUpperCase() || 'U'}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-medium">@{user.username}</div>
+                          <div className="text-sm text-muted-foreground">ID: {user.id}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">{user.messageCount} messages</div>
+                        <div className="text-xs text-muted-foreground">
+                          Last seen: {new Date(user.lastSeen).toLocaleTimeString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>No active users detected</p>
+                  <p className="text-sm">Start live cloning to monitor user activity</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity Feed */}
+          <Card data-testid="recent-activity-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                Recent Activity ({status.recentActivity.length})
+                <Button
+                  onClick={() => setShowRecentActivity(!showRecentActivity)}
+                  variant="ghost"
+                  size="sm"
+                >
+                  <Activity className="w-4 h-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {showRecentActivity && status.recentActivity.length > 0 ? (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {status.recentActivity.slice(0, 20).map((activity, index) => (
+                    <div key={index} className="flex items-start gap-3 p-2 border-l-2 border-blue-200 dark:border-blue-800 pl-3">
+                      <div className="flex-shrink-0 mt-1">
+                        {activity.type === 'message' && <MessageSquare className="w-4 h-4 text-blue-600" />}
+                        {activity.type === 'filter' && <Filter className="w-4 h-4 text-purple-600" />}
+                        {activity.type === 'forward' && <Link className="w-4 h-4 text-green-600" />}
+                        {activity.type === 'error' && <AlertTriangle className="w-4 h-4 text-red-600" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{activity.description}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(activity.timestamp).toLocaleTimeString()}
+                          {activity.fromEntity && ` • From: ${activity.fromEntity}`}
+                          {activity.toEntity && ` • To: ${activity.toEntity}`}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Clock className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>No recent activity</p>
+                  <p className="text-sm">Activity will appear here when live cloning is running</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Advanced Bot Settings */}
+          <Card data-testid="advanced-settings-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                Advanced Bot Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Message Processing Settings */}
+              <div className="space-y-4">
+                <div className="text-sm font-medium">Message Processing</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="skip-duplicates">Skip Duplicate Messages</Label>
+                    <Switch
+                      id="skip-duplicates"
+                      checked={skipDuplicates}
+                      onCheckedChange={setSkipDuplicates}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="preserve-formatting">Preserve Formatting</Label>
+                    <Switch
+                      id="preserve-formatting"
+                      checked={preserveFormatting}
+                      onCheckedChange={setPreserveFormatting}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="retry-failed">Retry Failed Messages</Label>
+                    <Switch
+                      id="retry-failed"
+                      checked={retryFailedMessages}
+                      onCheckedChange={setRetryFailedMessages}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Media Settings */}
+              <div className="space-y-4">
+                <div className="text-sm font-medium">Media Forwarding</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="forward-media">Forward Media Files</Label>
+                    <Switch
+                      id="forward-media"
+                      checked={forwardMedia}
+                      onCheckedChange={setForwardMedia}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="forward-stickers">Forward Stickers</Label>
+                    <Switch
+                      id="forward-stickers"
+                      checked={forwardStickers}
+                      onCheckedChange={setForwardStickers}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="forward-voice">Forward Voice Messages</Label>
+                    <Switch
+                      id="forward-voice"
+                      checked={forwardVoice}
+                      onCheckedChange={setForwardVoice}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Performance Settings */}
+              <div className="space-y-4">
+                <div className="text-sm font-medium">Performance Settings</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="max-message-length">Max Message Length</Label>
+                    <Input
+                      id="max-message-length"
+                      type="number"
+                      value={maxMessageLength}
+                      onChange={(e) => setMaxMessageLength(parseInt(e.target.value))}
+                      min={1}
+                      max={4096}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="delay-messages">Delay Between Messages (seconds)</Label>
+                    <Input
+                      id="delay-messages"
+                      type="number"
+                      value={delayBetweenMessages}
+                      onChange={(e) => setDelayBetweenMessages(parseFloat(e.target.value))}
+                      min={0}
+                      step={0.1}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Monitoring Settings */}
+              <div className="space-y-4">
+                <div className="text-sm font-medium">Monitoring & Alerts</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="alerts-enabled">Enable Performance Alerts</Label>
+                    <Switch
+                      id="alerts-enabled"
+                      checked={alertsEnabled}
+                      onCheckedChange={setAlertsEnabled}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="performance-threshold">Performance Threshold (%)</Label>
+                    <Input
+                      id="performance-threshold"
+                      type="number"
+                      value={performanceThreshold}
+                      onChange={(e) => setPerformanceThreshold(parseInt(e.target.value))}
+                      min={0}
+                      max={100}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="log-level">Log Level</Label>
+                    <Select value={logLevel} onValueChange={setLogLevel}>
+                      <SelectTrigger id="log-level">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DEBUG">DEBUG</SelectItem>
+                        <SelectItem value="INFO">INFO</SelectItem>
+                        <SelectItem value="WARNING">WARNING</SelectItem>
+                        <SelectItem value="ERROR">ERROR</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {/* Entity Links Management */}
       <Card data-testid="entity-links-card">
