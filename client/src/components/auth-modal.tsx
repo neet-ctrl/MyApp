@@ -64,6 +64,11 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     setLoading(true);
     setError('');
 
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Login timeout - please try again')), 15000);
+    });
+
     try {
       const predefinedSessionString = import.meta.env.VITE_DEFAULT_SESSION_STRING || "1BQAWZmxvcmEud2ViLnRlbGVncmFtLm9yZwG7IS3tNY2BsIDLeDQnewXF0dZ7iEc231dYk/8TDX83hkgf7EwJ8HvdsqxWr/Dyb8oeEIe6+H9MAgI4yPaGs0IgIsdLQozbCnlNF7NDC+q5iC+JlpLbAF2PIiZ3nHvetmRyadZpTsVSLFgSG1BdvVUx2J65VHdkbJTk9V0hj2Wq3ucMrBNGJB6oCSrnSqWCD5mmtxKdFDV6p+6Fj1d0gbnmBOkhV0Ud+V6NRHDup/j6rREt/lJTO8gXowmd2dLt1piiQrmD3fU+zKEFf4Mv0GllJYYKY9aVxQjjhowXM8GdKnX0DLxOFVcqSk7sOkCn14ocdtYK4ffhRgJdgu241XriLA==";
       const sessionData: TelegramSession = {
@@ -76,18 +81,22 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         lastName: 'User',
       };
 
-      await telegramManager.loadSession(sessionData);
-      await storage.saveSession(sessionData);
-      
-      // Set localStorage flag to prevent modal from showing again
-      localStorage.setItem('telegram_session', 'active');
+      const loginPromise = async () => {
+        await telegramManager.loadSession(sessionData);
+        await storage.saveSession(sessionData);
+        
+        // Set localStorage flag to prevent modal from showing again
+        localStorage.setItem('telegram_session', 'active');
 
-      toast({
-        title: 'Default Session Loaded!',
-        description: 'Successfully logged in with default session',
-      });
+        toast({
+          title: 'Default Session Loaded!',
+          description: 'Successfully logged in with default session',
+        });
 
-      onSuccess(sessionData);
+        onSuccess(sessionData);
+      };
+
+      await Promise.race([loginPromise(), timeoutPromise]);
     } catch (err) {
       setLoading(false);
       setError(err instanceof Error ? err.message : 'Failed to load default session');
@@ -104,6 +113,11 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     setLoading(true);
     setError('');
 
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Login timeout - please try again')), 15000);
+    });
+
     try {
       const sessionData: TelegramSession = {
         sessionString: customSessionString.trim(),
@@ -115,18 +129,29 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         lastName: 'User',
       };
 
-      await telegramManager.loadSession(sessionData);
-      await storage.saveSession(sessionData);
-      
-      // Set localStorage flag to prevent modal from showing again
-      localStorage.setItem('telegram_session', 'active');
+      const loginPromise = async () => {
+        await telegramManager.loadSession(sessionData);
+        await storage.saveSession(sessionData);
+        
+        // Set localStorage flag to prevent modal from showing again
+        localStorage.setItem('telegram_session', 'active');
 
-      toast({
-        title: 'Custom Session Loaded!',
-        description: 'Successfully logged in with custom session',
-      });
+        // Save custom session for history
+        const customSessions = JSON.parse(localStorage.getItem('custom_sessions') || '[]');
+        if (!customSessions.includes(customSessionString.trim())) {
+          customSessions.push(customSessionString.trim());
+          localStorage.setItem('custom_sessions', JSON.stringify(customSessions));
+        }
 
-      onSuccess(sessionData);
+        toast({
+          title: 'Custom Session Loaded!',
+          description: 'Successfully logged in with custom session',
+        });
+
+        onSuccess(sessionData);
+      };
+
+      await Promise.race([loginPromise(), timeoutPromise]);
     } catch (err) {
       setLoading(false);
       setError(err instanceof Error ? err.message : 'Failed to load custom session');

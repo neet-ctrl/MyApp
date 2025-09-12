@@ -43,9 +43,10 @@ export class TelegramManager {
     try {
       const stringSession = new StringSession(sessionString || '');
       this.client = new TelegramClient(stringSession, apiId, apiHash, {
-        connectionRetries: 5,
+        connectionRetries: 2,
         useWSS: true, // Use WebSocket Secure for browser
-        timeout: 30000,
+        timeout: 10000, // Reduced timeout to prevent hanging
+        retryDelay: 1000,
       });
 
       return this.client;
