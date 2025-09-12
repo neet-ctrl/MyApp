@@ -5513,27 +5513,43 @@ export async function startLiveCloningService(): Promise<void> {
     }
     
     try {
-      // Get existing entity links from database
-      const allInstances = await storage.getAllLiveCloningInstances();
+      // CRITICAL: Load existing entity links from Python config files FIRST (like original implementation)
+      const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
+      const entitiesJsonPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'plugins', 'jsons', 'entities.json');
+      
       let entityLinks: any[] = [];
       let wordFilters: any[] = [];
       
-      if (allInstances.length > 0) {
-        // Use the most recent instance
-        const latestInstance = allInstances[0];
-        const links = await storage.getEntityLinks(latestInstance.instanceId);
-        const filters = await storage.getWordFilters(latestInstance.instanceId);
-        
-        // Convert entity strings to numbers like Python implementation expects
-        entityLinks = links.map(link => {
-          const fromId = parseInt(link.fromEntity) || link.fromEntity;
-          const toId = parseInt(link.toEntity) || link.toEntity;
-          return [fromId, toId];
-        });
-        wordFilters = filters.map(filter => [filter.fromWord, filter.toWord]);
-        
-        console.log(`📎 Loaded ${entityLinks.length} entity links and ${wordFilters.length} word filters for auto-start`);
+      // Load from Python config.json if it exists
+      if (fs.existsSync(originalConfigPath)) {
+        try {
+          const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
+          if (originalConfig.entities && Array.isArray(originalConfig.entities)) {
+            entityLinks = originalConfig.entities;
+            console.log(`📎 Loaded ${entityLinks.length} entity links from Python config.json`);
+          }
+          if (originalConfig.filters && Array.isArray(originalConfig.filters)) {
+            wordFilters = originalConfig.filters;
+          }
+        } catch (error) {
+          console.error('⚠️ Error reading Python config.json:', error);
+        }
       }
+      
+      // Also try to load from entities.json if config.json didn't have entities
+      if (entityLinks.length === 0 && fs.existsSync(entitiesJsonPath)) {
+        try {
+          const entitiesData = JSON.parse(fs.readFileSync(entitiesJsonPath, 'utf8'));
+          if (entitiesData.entities && Array.isArray(entitiesData.entities)) {
+            entityLinks = entitiesData.entities;
+            console.log(`📎 Loaded ${entityLinks.length} entity links from entities.json`);
+          }
+        } catch (error) {
+          console.error('⚠️ Error reading entities.json:', error);
+        }
+      }
+      
+      console.log(`📎 Total loaded for auto-start: ${entityLinks.length} entity links and ${wordFilters.length} word filters`);
       
       // Auto-start the Live Cloning bot with existing configuration
       const telegramConfig = configReader.getTelegramConfig();
