@@ -271,6 +271,60 @@ export function LiveCloning() {
     }
   });
 
+  // Settings mutations
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (settings: { botEnabled?: boolean; filterWords?: boolean; addSignature?: boolean; signature?: string }) => {
+      const response = await fetch('/api/live-cloning/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update settings');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Settings Updated",
+        description: "Bot settings updated successfully"
+      });
+      queryClient.invalidateQueries({ queryKey: ['live-cloning-status'] });
+      queryClient.invalidateQueries({ queryKey: ['live-cloning-settings'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to Update Settings",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Load settings from backend
+  const { data: settingsData } = useQuery({
+    queryKey: ['live-cloning-settings'],
+    queryFn: async () => {
+      const response = await fetch('/api/live-cloning/settings');
+      return response.json();
+    },
+    enabled: true
+  });
+
+  // Update local state when backend settings change
+  useEffect(() => {
+    if (settingsData?.settings) {
+      const { botEnabled: backendBotEnabled, filterWords: backendFilterWords, addSignature: backendAddSignature, signature: backendSignature } = settingsData.settings;
+      if (typeof backendBotEnabled === 'boolean') setBotEnabled(backendBotEnabled);
+      if (typeof backendFilterWords === 'boolean') setFilterWords(backendFilterWords);
+      if (typeof backendAddSignature === 'boolean') setAddSignature(backendAddSignature);
+      if (typeof backendSignature === 'string') setSignature(backendSignature);
+    }
+  }, [settingsData]);
+
   // Add entity link
   const addEntityLinkMutation = useMutation({
     mutationFn: async () => {
@@ -817,7 +871,10 @@ export function LiveCloning() {
                   <Switch
                     id="bot-enabled"
                     checked={botEnabled}
-                    onCheckedChange={setBotEnabled}
+                    onCheckedChange={(checked) => {
+                      setBotEnabled(checked);
+                      updateSettingsMutation.mutate({ botEnabled: checked });
+                    }}
                     data-testid="bot-enabled-switch"
                   />
                 </div>
@@ -827,7 +884,10 @@ export function LiveCloning() {
                   <Switch
                     id="filter-words"
                     checked={filterWords}
-                    onCheckedChange={setFilterWords}
+                    onCheckedChange={(checked) => {
+                      setFilterWords(checked);
+                      updateSettingsMutation.mutate({ filterWords: checked });
+                    }}
                     data-testid="filter-words-switch"
                   />
                 </div>
@@ -837,7 +897,10 @@ export function LiveCloning() {
                   <Switch
                     id="add-signature"
                     checked={addSignature}
-                    onCheckedChange={setAddSignature}
+                    onCheckedChange={(checked) => {
+                      setAddSignature(checked);
+                      updateSettingsMutation.mutate({ addSignature: checked });
+                    }}
                     data-testid="add-signature-switch"
                   />
                 </div>
@@ -849,7 +912,13 @@ export function LiveCloning() {
                       id="signature-text"
                       placeholder="Enter signature text..."
                       value={signature}
-                      onChange={(e) => setSignature(e.target.value)}
+                      onChange={(e) => {
+                        setSignature(e.target.value);
+                        // Debounce the API call to avoid too many requests
+                        setTimeout(() => {
+                          updateSettingsMutation.mutate({ signature: e.target.value });
+                        }, 1000);
+                      }}
                       data-testid="signature-text-input"
                     />
                   </div>

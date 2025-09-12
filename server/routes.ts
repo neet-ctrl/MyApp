@@ -127,6 +127,19 @@ let jsCopierStatus = {
 
 // Live Cloning Management
 let liveCloningProcess: ChildProcess | null = null;
+// Load persistent settings if available
+const persistentSettingsPath = path.join(process.cwd(), 'tmp', 'live_cloning_persistent_settings.json');
+let loadedSettings: any = {};
+if (fs.existsSync(persistentSettingsPath)) {
+  try {
+    const settingsData = fs.readFileSync(persistentSettingsPath, 'utf-8');
+    loadedSettings = JSON.parse(settingsData);
+    console.log('✅ Loaded persistent live cloning settings:', loadedSettings);
+  } catch (e) {
+    console.error('❌ Error loading persistent settings:', e);
+  }
+}
+
 let liveCloningStatus = {
   running: false,
   instanceId: undefined as string | undefined,
@@ -135,10 +148,10 @@ let liveCloningStatus = {
   totalLinks: 0,
   sessionValid: false,
   currentUserInfo: undefined as { id: number; username: string; firstName: string; } | undefined,
-  botEnabled: true,
-  filterWords: true,
-  addSignature: false,
-  signature: undefined as string | undefined,
+  botEnabled: loadedSettings.botEnabled !== undefined ? loadedSettings.botEnabled : true,
+  filterWords: loadedSettings.filterWords !== undefined ? loadedSettings.filterWords : true,
+  addSignature: loadedSettings.addSignature !== undefined ? loadedSettings.addSignature : false,
+  signature: loadedSettings.signature || undefined,
   logs: [] as string[]
 };
 
@@ -2629,6 +2642,109 @@ if __name__ == "__main__":
   // Get live cloning logs
   app.get('/api/live-cloning/logs', (req, res) => {
     res.json({ logs: liveCloningStatus.logs });
+  });
+
+  // Update bot settings in real-time
+  app.put('/api/live-cloning/settings', async (req, res) => {
+    try {
+      const { botEnabled, filterWords, addSignature, signature } = req.body;
+      
+      // Update in-memory status
+      if (typeof botEnabled === 'boolean') liveCloningStatus.botEnabled = botEnabled;
+      if (typeof filterWords === 'boolean') liveCloningStatus.filterWords = filterWords;
+      if (typeof addSignature === 'boolean') liveCloningStatus.addSignature = addSignature;
+      if (typeof signature === 'string') liveCloningStatus.signature = signature;
+      
+      liveCloningStatus.lastActivity = new Date().toISOString();
+
+      // Always persist settings in storage (regardless of running state)
+      try {
+        const settingsToStore = {
+          botEnabled: liveCloningStatus.botEnabled,
+          filterWords: liveCloningStatus.filterWords,
+          addSignature: liveCloningStatus.addSignature,
+          signature: liveCloningStatus.signature
+        };
+        
+        // Store in a persistent config that survives restarts
+        const persistentConfigPath = path.join(process.cwd(), 'tmp', 'live_cloning_persistent_settings.json');
+        fs.writeFileSync(persistentConfigPath, JSON.stringify(settingsToStore, null, 2));
+      } catch (error) {
+        console.error('Error persisting settings:', error);
+      }
+
+      // If bot is running, update the config file and notify the bot process
+      if (liveCloningStatus.running && liveCloningStatus.instanceId) {
+        const configDir = path.join(process.cwd(), 'tmp', 'config');
+        const configPath = path.join(configDir, 'live_cloning_config.json');
+        
+        try {
+          // Read current config
+          let config: any = {};
+          if (fs.existsSync(configPath)) {
+            const configData = fs.readFileSync(configPath, 'utf8');
+            config = JSON.parse(configData);
+          }
+          
+          // Update config with new settings
+          if (typeof botEnabled === 'boolean') config.bot_enabled = botEnabled;
+          if (typeof filterWords === 'boolean') config.filter_words = filterWords;
+          if (typeof addSignature === 'boolean') config.add_signature = addSignature;
+          if (typeof signature === 'string') config.signature = signature;
+          
+          // Write updated config
+          fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+          
+          // Persist settings in storage if instance exists
+          if (liveCloningStatus.instanceId) {
+            try {
+              await storage.updateLiveCloningInstance(liveCloningStatus.instanceId, {
+                config: {
+                  ...config,
+                  botEnabled,
+                  filterWords,
+                  addSignature,
+                  signature
+                }
+              });
+            } catch (storageError) {
+              console.error('Error updating instance in storage:', storageError);
+            }
+          }
+          
+        } catch (error) {
+          console.error('Error updating bot config:', error);
+        }
+      }
+
+      res.json({
+        success: true,
+        message: 'Settings updated successfully',
+        settings: {
+          botEnabled: liveCloningStatus.botEnabled,
+          filterWords: liveCloningStatus.filterWords,
+          addSignature: liveCloningStatus.addSignature,
+          signature: liveCloningStatus.signature
+        }
+      });
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Failed to update settings:', errorMessage);
+      res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  // Get current bot settings
+  app.get('/api/live-cloning/settings', (req, res) => {
+    res.json({
+      settings: {
+        botEnabled: liveCloningStatus.botEnabled,
+        filterWords: liveCloningStatus.filterWords,
+        addSignature: liveCloningStatus.addSignature,
+        signature: liveCloningStatus.signature
+      }
+    });
   });
 
   // Clear live cloning logs
