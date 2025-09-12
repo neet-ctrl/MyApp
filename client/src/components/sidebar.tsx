@@ -34,6 +34,7 @@ const navigationItems = [
   { id: 'python-script', label: '🐍 Python Script Mode', icon: Code2 },
   { id: 'python-bot', label: '🐍 Python Telethon Bot', icon: Bot },
   { id: 'python-copier', label: '🐍 Python Copier', icon: Forward },
+  { id: 'js-copier', label: '⚡ JS Copier', icon: Forward },
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'chats', label: 'Chat Selection', icon: MessageSquare },
   { id: 'messages', label: 'Message Search', icon: Search },

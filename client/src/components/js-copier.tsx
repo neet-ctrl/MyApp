@@ -27,7 +27,7 @@ interface ForwardPair {
   isActive: boolean;
 }
 
-interface PythonCopierStatus {
+interface JSCopierStatus {
   running: boolean;
   currentPair?: string;
   lastActivity: string | null;
@@ -42,7 +42,7 @@ interface PythonCopierStatus {
   };
 }
 
-export function PythonCopier() {
+export function JSCopier() {
   const [forwardPairs, setForwardPairs] = useState<ForwardPair[]>([]);
   const [newPairName, setNewPairName] = useState('');
   const [selectedFromChat, setSelectedFromChat] = useState<string>('');
@@ -71,9 +71,9 @@ export function PythonCopier() {
 
   // Fetch copier status
   const { data: statusData, isLoading } = useQuery({
-    queryKey: ['python-copier-status'],
+    queryKey: ['js-copier-status'],
     queryFn: async () => {
-      const response = await fetch('/api/python-copier/status');
+      const response = await fetch('/api/js-copier/status');
       if (!response.ok) throw new Error('Failed to fetch status');
       return response.json();
     },
@@ -82,9 +82,9 @@ export function PythonCopier() {
 
   // Fetch logs
   const { data: logsData } = useQuery({
-    queryKey: ['python-copier-logs'],
+    queryKey: ['js-copier-logs'],
     queryFn: async () => {
-      const response = await fetch('/api/python-copier/logs');
+      const response = await fetch('/api/js-copier/logs');
       if (!response.ok) throw new Error('Failed to fetch logs');
       return response.json();
     },
@@ -94,9 +94,9 @@ export function PythonCopier() {
 
   // Load config
   const { data: configData } = useQuery({
-    queryKey: ['python-copier-config'],
+    queryKey: ['js-copier-config'],
     queryFn: async () => {
-      const response = await fetch('/api/python-copier/config');
+      const response = await fetch('/api/js-copier/config');
       if (!response.ok) throw new Error('Failed to fetch config');
       return response.json();
     },
@@ -104,9 +104,9 @@ export function PythonCopier() {
 
   // Fetch last forwarding log
   const { data: lastLogData, refetch: refetchLastLog } = useQuery({
-    queryKey: ['python-copier-last-log'],
+    queryKey: ['js-copier-last-log'],
     queryFn: async () => {
-      const response = await fetch('/api/python-copier/last-log');
+      const response = await fetch('/api/js-copier/last-log');
       if (!response.ok) throw new Error('Failed to fetch last log');
       return response.json();
     },
@@ -121,7 +121,7 @@ export function PythonCopier() {
     }
   }, [configData]);
 
-  const status: PythonCopierStatus = statusData?.status || {
+  const status: JSCopierStatus = statusData?.status || {
     running: false,
     currentPair: undefined,
     lastActivity: null,
@@ -132,7 +132,7 @@ export function PythonCopier() {
   // Test session string login
   const testSessionMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/python-copier/test-session', {
+      const response = await fetch('/api/js-copier/test-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionString: sessionString.trim() }),
@@ -151,7 +151,7 @@ export function PythonCopier() {
         title: 'Session Valid! ✅', 
         description: `Logged in as ${data.userInfo.firstName} (@${data.userInfo.username}) - ID: ${data.userInfo.id}` 
       });
-      queryClient.invalidateQueries({ queryKey: ['python-copier-status'] });
+      queryClient.invalidateQueries({ queryKey: ['js-copier-status'] });
     },
     onError: (error: Error) => {
       setLoginStatus('error');
@@ -222,7 +222,7 @@ export function PythonCopier() {
   // Start individual pair
   const startIndividualPair = useMutation({
     mutationFn: async (pairId: string) => {
-      const response = await fetch('/api/python-copier/start-pair', {
+      const response = await fetch('/api/js-copier/start-pair', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -244,7 +244,7 @@ export function PythonCopier() {
         title: 'Individual Pair Started', 
         description: `Started forwarding for "${pairName}"` 
       });
-      queryClient.invalidateQueries({ queryKey: ['python-copier-status'] });
+      queryClient.invalidateQueries({ queryKey: ['js-copier-status'] });
     },
     onError: (error: Error) => {
       toast({ 
@@ -258,7 +258,7 @@ export function PythonCopier() {
   // Pause copier
   const pauseCopierMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/python-copier/pause', {
+      const response = await fetch('/api/js-copier/pause', {
         method: 'POST',
       });
       
@@ -270,8 +270,8 @@ export function PythonCopier() {
       return response.json();
     },
     onSuccess: () => {
-      toast({ title: 'Python Copier Paused', description: 'Message forwarding has been paused. Progress saved.' });
-      queryClient.invalidateQueries({ queryKey: ['python-copier-status'] });
+      toast({ title: 'JS Copier Paused', description: 'Message forwarding has been paused. Progress saved.' });
+      queryClient.invalidateQueries({ queryKey: ['js-copier-status'] });
     },
     onError: (error: Error) => {
       toast({ 
@@ -285,7 +285,7 @@ export function PythonCopier() {
   // Resume copier
   const resumeCopierMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/python-copier/resume', {
+      const response = await fetch('/api/js-copier/resume', {
         method: 'POST',
       });
       
@@ -297,8 +297,8 @@ export function PythonCopier() {
       return response.json();
     },
     onSuccess: () => {
-      toast({ title: 'Python Copier Resumed', description: 'Message forwarding has been resumed from saved offset.' });
-      queryClient.invalidateQueries({ queryKey: ['python-copier-status'] });
+      toast({ title: 'JS Copier Resumed', description: 'Message forwarding has been resumed from saved offset.' });
+      queryClient.invalidateQueries({ queryKey: ['js-copier-status'] });
     },
     onError: (error: Error) => {
       toast({ 
@@ -315,7 +315,7 @@ export function PythonCopier() {
       // Always use the properly formatted config content from frontend
       const formattedConfigContent = generateConfigContent();
       
-      const response = await fetch('/api/python-copier/config', {
+      const response = await fetch('/api/js-copier/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -333,7 +333,7 @@ export function PythonCopier() {
     },
     onSuccess: () => {
       toast({ title: 'Configuration Saved', description: 'config.ini has been saved successfully' });
-      queryClient.invalidateQueries({ queryKey: ['python-copier-config'] });
+      queryClient.invalidateQueries({ queryKey: ['js-copier-config'] });
     },
     onError: (error: Error) => {
       toast({ 
@@ -347,7 +347,7 @@ export function PythonCopier() {
   // Save custom config mutation
   const saveCustomConfigMutation = useMutation({
     mutationFn: async (configContent: string) => {
-      const response = await fetch('/api/python-copier/config/custom', {
+      const response = await fetch('/api/js-copier/config/custom', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ configContent }),
@@ -363,7 +363,7 @@ export function PythonCopier() {
     onSuccess: () => {
       toast({ title: 'Custom Config Saved', description: 'Your edited configuration has been saved successfully' });
       setIsEditingConfig(false);
-      queryClient.invalidateQueries({ queryKey: ['python-copier-config'] });
+      queryClient.invalidateQueries({ queryKey: ['js-copier-config'] });
     },
     onError: (error: Error) => {
       toast({ 
@@ -384,7 +384,7 @@ export function PythonCopier() {
       // Always use the properly formatted config content
       const formattedConfigContent = generateConfigContent();
 
-      const response = await fetch('/api/python-copier/start', {
+      const response = await fetch('/api/js-copier/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -403,10 +403,10 @@ export function PythonCopier() {
     },
     onSuccess: () => {
       toast({ 
-        title: 'Python Copier Started', 
+        title: 'JS Copier Started', 
         description: 'Message forwarding has started using your existing session!' 
       });
-      queryClient.invalidateQueries({ queryKey: ['python-copier-status'] });
+      queryClient.invalidateQueries({ queryKey: ['js-copier-status'] });
     },
     onError: (error: Error) => {
       toast({ 
@@ -420,7 +420,7 @@ export function PythonCopier() {
   // Stop copier mutation
   const stopCopierMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/python-copier/stop', {
+      const response = await fetch('/api/js-copier/stop', {
         method: 'POST',
       });
       
@@ -432,8 +432,8 @@ export function PythonCopier() {
       return response.json();
     },
     onSuccess: () => {
-      toast({ title: 'Python Copier Stopped', description: 'Message forwarding has been stopped.' });
-      queryClient.invalidateQueries({ queryKey: ['python-copier-status'] });
+      toast({ title: 'JS Copier Stopped', description: 'Message forwarding has been stopped.' });
+      queryClient.invalidateQueries({ queryKey: ['js-copier-status'] });
     },
     onError: (error: Error) => {
       toast({ 
@@ -447,7 +447,7 @@ export function PythonCopier() {
   // Clear logs mutation
   const clearLogsMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/python-copier/clear-logs', {
+      const response = await fetch('/api/js-copier/clear-logs', {
         method: 'POST',
       });
       
@@ -460,8 +460,8 @@ export function PythonCopier() {
     },
     onSuccess: () => {
       toast({ title: 'Logs Cleared', description: 'All copier logs have been cleared successfully.' });
-      queryClient.invalidateQueries({ queryKey: ['python-copier-logs'] });
-      queryClient.invalidateQueries({ queryKey: ['python-copier-status'] });
+      queryClient.invalidateQueries({ queryKey: ['js-copier-logs'] });
+      queryClient.invalidateQueries({ queryKey: ['js-copier-status'] });
     },
     onError: (error: Error) => {
       toast({ 
@@ -496,14 +496,14 @@ export function PythonCopier() {
     saveCustomConfigMutation.mutate(editableConfigContent);
   };
 
-  const formatChatIdForTelethon = (chatId: string): string => {
+  const formatChatIdForGramJS = (chatId: string): string => {
     const chat = chats.find(c => c.id === chatId);
     
     if (!chat) {
       return chatId; // fallback to original ID
     }
 
-    // ALWAYS prefer username if available (most reliable for Telethon)
+    // ALWAYS prefer username if available (most reliable for GramJS)
     if (chat.username) {
       return `@${chat.username}`;
     }
@@ -534,12 +534,12 @@ export function PythonCopier() {
   };
 
   const generateConfigContent = () => {
-    let content = '; Telegram Chat Direct Copier Configuration\n';
-    content += '; Generated by Telegram Manager\n\n';
+    let content = '; Telegram Chat Direct Copier Configuration (JavaScript/GramJS)\n';
+    content += '; Generated by Telegram Manager - JS Copier\n\n';
     
     forwardPairs.forEach(pair => {
-      const fromFormatted = formatChatIdForTelethon(pair.fromChat);
-      const toFormatted = formatChatIdForTelethon(pair.toChat);
+      const fromFormatted = formatChatIdForGramJS(pair.fromChat);
+      const toFormatted = formatChatIdForGramJS(pair.toChat);
       
       content += `[${pair.name}]\n`;
       content += `from = ${fromFormatted}\n`;
@@ -563,13 +563,13 @@ export function PythonCopier() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-          <Forward className="w-6 h-6 text-primary-foreground" />
+        <div className="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
+          <Forward className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">🐍 Python Copier</h1>
+          <h1 className="text-2xl font-bold">⚡ JS Copier</h1>
           <p className="text-muted-foreground">
-            Forward messages between chats using the exact same functionality as telegram-chat-direct-copier
+            Forward messages between chats using Node.js/GramJS with exact same functionality as Python Copier
           </p>
         </div>
       </div>
@@ -609,7 +609,7 @@ export function PythonCopier() {
                 <span className="font-medium">Last Activity:</span> {formatTime(status.lastActivity)}
               </div>
               <div className="col-span-2">
-                <span className="font-medium text-green-600">✅ Using session string (no authentication prompt needed)</span>
+                <span className="font-medium text-green-600">✅ Using GramJS string session (no authentication prompt needed)</span>
               </div>
               {status.isPaused && (
                 <div className="col-span-2">
@@ -655,7 +655,7 @@ export function PythonCopier() {
             </div>
             
             <p className="text-xs text-muted-foreground">
-              This session string will be used to authenticate with Telegram without requiring login prompts.
+              This session string will be used to authenticate with Telegram via GramJS without requiring login prompts.
               Click "Test & Login" to verify your session and see account details.
             </p>
           </div>
@@ -674,158 +674,141 @@ export function PythonCopier() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => clearLogsMutation.mutate()}
-              disabled={clearLogsMutation.isPending}
-              data-testid="button-clear-logs"
+              onClick={() => setShowLastLog(true)}
+              data-testid="button-show-last-log"
             >
-              🗑️ {clearLogsMutation.isPending ? 'Clearing...' : 'Clear Logs'}
+              <FileText className="w-4 h-4 mr-2" />
+              Last Log
             </Button>
+            
+            {status.running && status.isPaused && (
+              <Button
+                onClick={() => resumeCopierMutation.mutate()}
+                disabled={resumeCopierMutation.isPending}
+                variant="outline"
+                size="sm"
+                data-testid="button-resume-copier"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                {resumeCopierMutation.isPending ? 'Resuming...' : 'Resume'}
+              </Button>
+            )}
+            
+            {status.running && !status.isPaused && (
+              <Button
+                onClick={() => pauseCopierMutation.mutate()}
+                disabled={pauseCopierMutation.isPending}
+                variant="outline"
+                size="sm"
+                data-testid="button-pause-copier"
+              >
+                <Square className="w-4 h-4 mr-2" />
+                {pauseCopierMutation.isPending ? 'Pausing...' : 'Pause'}
+              </Button>
+            )}
             
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                refetchLastLog();
-                setShowLastLog(true);
-              }}
-              data-testid="button-last-log"
+              onClick={() => clearLogsMutation.mutate()}
+              disabled={clearLogsMutation.isPending}
+              data-testid="button-clear-logs"
             >
-              📋 Last Log
+              <Trash2 className="w-4 h-4 mr-2" />
+              {clearLogsMutation.isPending ? 'Clearing...' : 'Clear Logs'}
             </Button>
-            
-            {status.running && (
-              <>
-                {!status.isPaused ? (
-                  <Button
-                    onClick={() => pauseCopierMutation.mutate()}
-                    disabled={pauseCopierMutation.isPending}
-                    variant="outline"
-                    size="sm"
-                    data-testid="button-pause-copier"
-                  >
-                    ⏸️ {pauseCopierMutation.isPending ? 'Pausing...' : 'Pause'}
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={() => resumeCopierMutation.mutate()}
-                    disabled={resumeCopierMutation.isPending}
-                    variant="outline"
-                    size="sm"
-                    data-testid="button-resume-copier"
-                  >
-                    ▶️ {resumeCopierMutation.isPending ? 'Resuming...' : 'Resume'}
-                  </Button>
-                )}
-              </>
-            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Forward Pairs Configuration */}
+      {/* Forward Pairs Configuration Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Copy className="w-5 h-5" />
+            <Forward className="w-5 h-5" />
             Forward Pairs Configuration
           </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Set up forwarding pairs to copy messages from one chat to another
-          </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
-            <div className="flex items-start gap-2">
-              <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-green-800 dark:text-green-200">✅ Ready to Forward</p>
-                <p className="text-green-700 dark:text-green-300 mt-1">
-                  Using your existing Telegram session - no API setup needed!
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Add New Pair */}
-          <div className="grid grid-cols-1 gap-4 p-4 border rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="pairName">Pair Name</Label>
-                <Input
-                  id="pairName"
-                  placeholder="e.g., News Forward"
-                  value={newPairName}
-                  onChange={(e) => setNewPairName(e.target.value)}
-                  data-testid="input-pair-name"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="fromChat">From Chat</Label>
-                <Select value={selectedFromChat} onValueChange={setSelectedFromChat}>
-                  <SelectTrigger data-testid="select-from-chat">
-                    <SelectValue placeholder="Select source chat" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {chats.map((chat) => (
-                      <SelectItem key={chat.id} value={chat.id}>
-                        {chat.title} ({chat.type})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="toChat">To Chat</Label>
-                <Select value={selectedToChat} onValueChange={setSelectedToChat}>
-                  <SelectTrigger data-testid="select-to-chat">
-                    <SelectValue placeholder="Select destination chat" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {chats.map((chat) => (
-                      <SelectItem key={chat.id} value={chat.id}>
-                        {chat.title} ({chat.type})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border rounded-lg">
+            <div className="space-y-2">
+              <Label htmlFor="pairName">Pair Name</Label>
+              <Input
+                id="pairName"
+                placeholder="e.g., News to Archive"
+                value={newPairName}
+                onChange={(e) => setNewPairName(e.target.value)}
+                data-testid="input-pair-name"
+              />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="fromOffset">From Offset (Message ID)</Label>
-                <Input
-                  id="fromOffset"
-                  type="number"
-                  placeholder="0 = start from first message"
-                  value={newFromOffset}
-                  onChange={(e) => setNewFromOffset(Number(e.target.value) || 0)}
-                  data-testid="input-from-offset"
-                />
-                <p className="text-xs text-muted-foreground">0 or empty = start from first message</p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="toOffset">To Offset (Message ID)</Label>
-                <Input
-                  id="toOffset"
-                  type="number"
-                  placeholder="0 = forward to last message"
-                  value={newToOffset}
-                  onChange={(e) => setNewToOffset(Number(e.target.value) || 0)}
-                  data-testid="input-to-offset"
-                />
-                <p className="text-xs text-muted-foreground">0 or empty = forward to last message</p>
-              </div>
-              
-              <div className="flex items-end">
-                <Button onClick={addForwardPair} className="w-full" data-testid="button-add-pair">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Pair
-                </Button>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="fromChat">From Chat</Label>
+              <Select value={selectedFromChat} onValueChange={setSelectedFromChat}>
+                <SelectTrigger data-testid="select-from-chat">
+                  <SelectValue placeholder="Select source chat" />
+                </SelectTrigger>
+                <SelectContent>
+                  {chats.map((chat) => (
+                    <SelectItem key={chat.id} value={chat.id}>
+                      {chat.title} ({chat.type})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="toChat">To Chat</Label>
+              <Select value={selectedToChat} onValueChange={setSelectedToChat}>
+                <SelectTrigger data-testid="select-to-chat">
+                  <SelectValue placeholder="Select destination chat" />
+                </SelectTrigger>
+                <SelectContent>
+                  {chats.map((chat) => (
+                    <SelectItem key={chat.id} value={chat.id}>
+                      {chat.title} ({chat.type})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="fromOffset">From Offset</Label>
+              <Input
+                id="fromOffset"
+                type="number"
+                placeholder="0"
+                value={newFromOffset}
+                onChange={(e) => setNewFromOffset(Number(e.target.value) || 0)}
+                data-testid="input-from-offset"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="toOffset">To Offset (Optional)</Label>
+              <Input
+                id="toOffset"
+                type="number"
+                placeholder="Latest message"
+                value={newToOffset}
+                onChange={(e) => setNewToOffset(Number(e.target.value) || 0)}
+                data-testid="input-to-offset"
+              />
+            </div>
+            
+            <div className="flex items-end">
+              <Button
+                onClick={addForwardPair}
+                disabled={!newPairName || !selectedFromChat || !selectedToChat}
+                className="w-full"
+                data-testid="button-add-pair"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Pair
+              </Button>
             </div>
           </div>
 
@@ -834,148 +817,143 @@ export function PythonCopier() {
             <div className="space-y-3">
               <h4 className="font-medium">Configured Forward Pairs:</h4>
               {forwardPairs.map((pair) => (
-                <div key={pair.id} className="p-4 border rounded-lg bg-muted/30">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="font-medium text-lg">{pair.name}</div>
-                      <div className="text-sm text-muted-foreground mt-1">
-                        <strong>{getChatName(pair.fromChat)}</strong> → <strong>{getChatName(pair.toChat)}</strong>
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-2 space-y-1">
-                        <div className="grid grid-cols-3 gap-4">
-                          <span>📍 From Offset: <strong>{pair.fromOffset}</strong></span>
-                          <span>🎯 To Offset: <strong>{pair.toOffset || 'end'}</strong></span>
-                          <span>🔄 Current: <strong>{pair.currentOffset}</strong></span>
-                        </div>
-                        <div className="mt-2">
-                          Status: <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            pair.status === 'running' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                            pair.status === 'paused' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                            pair.status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                            'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                          }`}>
-                            {pair.status === 'running' ? '🟢 Running' :
-                             pair.status === 'paused' ? '⏸️ Paused' :
-                             pair.status === 'completed' ? '✅ Completed' :
-                             '⏹️ Pending'}
-                          </span>
-                        </div>
-                      </div>
+                <div key={pair.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-2 flex-1">
+                    <div>
+                      <span className="font-medium">{pair.name}</span>
+                      <Badge variant="outline" className="ml-2">{pair.status}</Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      From: {getChatName(pair.fromChat)}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      To: {getChatName(pair.toChat)}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Offset: {pair.currentOffset}
                     </div>
                   </div>
                   
-                  {/* Action Buttons */}
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-2">
                     <Button
-                      onClick={() => startIndividualPair.mutate(pair.id)}
-                      disabled={startIndividualPair.isPending || pair.status === 'running'}
-                      size="sm"
-                      variant="default"
-                      data-testid={`button-start-pair-${pair.id}`}
-                    >
-                      <Play className="w-3 h-3 mr-1" />
-                      {startIndividualPair.isPending ? 'Starting...' : 'Start This Pair'}
-                    </Button>
-                    
-                    <Button
-                      onClick={() => editPair(pair)}
-                      size="sm"
                       variant="outline"
-                      data-testid={`button-edit-pair-${pair.id}`}
+                      size="sm"
+                      onClick={() => startIndividualPair.mutate(pair.id)}
+                      disabled={startIndividualPair.isPending || status.running}
+                      data-testid={`button-start-individual-${pair.id}`}
                     >
-                      ✏️ Edit
+                      <Play className="w-3 h-3" />
                     </Button>
-                    
                     <Button
-                      variant="destructive"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => editPair(pair)}
+                      data-testid={`button-edit-${pair.id}`}
+                    >
+                      <Edit3 className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => removePair(pair.id)}
-                      data-testid={`button-remove-pair-${pair.id}`}
+                      disabled={status.running}
+                      data-testid={`button-remove-${pair.id}`}
                     >
-                      <Trash2 className="w-3 h-3 mr-1" />
-                      Delete
+                      <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
                 </div>
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
 
-          <div className="flex gap-2">
+      {/* Configuration File Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Configuration File (config.ini)
             <Button
+              variant="outline"
+              size="sm"
               onClick={() => saveConfigMutation.mutate()}
               disabled={saveConfigMutation.isPending || forwardPairs.length === 0}
-              variant="outline"
+              className="ml-auto"
               data-testid="button-save-config"
             >
               <Save className="w-4 h-4 mr-2" />
               {saveConfigMutation.isPending ? 'Saving...' : 'Save Config'}
             </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={startEditingConfig}
+                disabled={isEditingConfig}
+                data-testid="button-edit-config"
+              >
+                <Edit3 className="w-4 h-4 mr-2" />
+                Edit Config
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const formatted = generateConfigContent();
+                  setConfigContent(formatted);
+                }}
+                data-testid="button-regenerate-config"
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Regenerate from Pairs
+              </Button>
+            </div>
+
+            {isEditingConfig ? (
+              <div className="space-y-3">
+                <Textarea
+                  value={editableConfigContent}
+                  onChange={(e) => setEditableConfigContent(e.target.value)}
+                  className="min-h-[200px] font-mono text-xs"
+                  placeholder="Enter your custom configuration..."
+                  data-testid="textarea-edit-config"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    onClick={saveCustomConfig}
+                    disabled={saveCustomConfigMutation.isPending}
+                    data-testid="button-save-custom-config"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {saveCustomConfigMutation.isPending ? 'Saving...' : 'Save Custom Config'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={cancelEditingConfig}
+                    data-testid="button-cancel-edit-config"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Textarea
+                value={configContent || generateConfigContent()}
+                readOnly
+                className="min-h-[200px] font-mono text-xs bg-muted"
+                data-testid="textarea-config-display"
+              />
+            )}
           </div>
         </CardContent>
       </Card>
-
-      {/* Config.ini Preview */}
-      {forwardPairs.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              config.ini Preview
-              <div className="ml-auto flex gap-2">
-                {isEditingConfig ? (
-                  <>
-                    <Button
-                      onClick={saveCustomConfig}
-                      disabled={saveCustomConfigMutation.isPending}
-                      size="sm"
-                      data-testid="button-save-custom-config"
-                    >
-                      <Save className="w-4 h-4 mr-2" />
-                      {saveCustomConfigMutation.isPending ? 'Saving...' : 'Save'}
-                    </Button>
-                    <Button
-                      onClick={cancelEditingConfig}
-                      variant="outline"
-                      size="sm"
-                      data-testid="button-cancel-edit-config"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Cancel
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    onClick={startEditingConfig}
-                    variant="outline"
-                    size="sm"
-                    data-testid="button-edit-config"
-                  >
-                    <Edit3 className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                )}
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              value={isEditingConfig ? editableConfigContent : generateConfigContent()}
-              onChange={isEditingConfig ? (e) => setEditableConfigContent(e.target.value) : undefined}
-              readOnly={!isEditingConfig}
-              className="min-h-[150px] font-mono text-xs"
-              data-testid="config-preview"
-              placeholder={isEditingConfig ? "Edit your config.ini content here..." : ""}
-            />
-            {isEditingConfig && (
-              <p className="text-xs text-muted-foreground mt-2">
-                ⚠️ <strong>Advanced editing:</strong> Make sure to follow the correct .ini format. 
-                Each section should have [SectionName], from=source, to=destination, offset=number.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Action Buttons */}
       <Card>
@@ -1036,7 +1014,7 @@ export function PythonCopier() {
       {/* Info Card */}
       <Card>
         <CardHeader>
-          <CardTitle>🚀 Python Copier Features</CardTitle>
+          <CardTitle>⚡ JS Copier Features</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -1053,7 +1031,7 @@ export function PythonCopier() {
             <div className="space-y-2">
               <h4 className="font-medium">🔧 Technical Details:</h4>
               <ul className="space-y-1 text-muted-foreground">
-                <li>• Based on telegram-chat-direct-copier</li>
+                <li>• Based on Node.js/GramJS instead of Python/Telethon</li>
                 <li>• Preserves message order and content</li>
                 <li>• Handles flood control automatically</li>
                 <li>• Config.ini file management</li>
