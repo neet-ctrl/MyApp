@@ -2801,27 +2801,30 @@ if __name__ == "__main__":
         isActive: true
       });
 
-      // CRITICAL: Save entity links to Python bot's config.json file exactly like original
+      // CRITICAL: Save entity links to Python bot's config.json file ONLY (exactly like original)
       try {
         const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
-        const entitiesJsonPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'plugins', 'jsons', 'entities.json');
         
         // Get all entity links for this instance
         const allLinks = await storage.getEntityLinks(instanceId);
-        const entityPairs = allLinks.map(link => [parseInt(link.fromEntity) || link.fromEntity, parseInt(link.toEntity) || link.toEntity]);
         
-        // Update the original Python config.json file
+        // Convert to numeric IDs - ensure we have proper numbers, not strings or usernames
+        const entityPairs = allLinks.map(link => {
+          // Try to parse as numbers first, fallback to original if not a valid number
+          const fromId = !isNaN(Number(link.fromEntity)) ? Number(link.fromEntity) : link.fromEntity;
+          const toId = !isNaN(Number(link.toEntity)) ? Number(link.toEntity) : link.toEntity;
+          return [fromId, toId];
+        });
+        
+        // Update ONLY the main Python config.json file (no entities.json needed)
         if (fs.existsSync(originalConfigPath)) {
           const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
           originalConfig.entities = entityPairs;
           fs.writeFileSync(originalConfigPath, JSON.stringify(originalConfig, null, 2));
-          console.log(`✅ Updated Python bot config.json with ${entityPairs.length} entity links`);
+          console.log(`✅ Updated main config.json with ${entityPairs.length} entity links:`, entityPairs);
+        } else {
+          console.error('❌ Main config.json not found at:', originalConfigPath);
         }
-        
-        // Update entities.json file
-        const entitiesData = { entities: entityPairs };
-        fs.writeFileSync(entitiesJsonPath, JSON.stringify(entitiesData, null, 2));
-        console.log(`✅ Updated entities.json with persistent entity links`);
         
         // Sync with running bot if active
         if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
@@ -2866,6 +2869,33 @@ if __name__ == "__main__":
       });
       
       if (updated) {
+        // CRITICAL: Update main config.json file after entity link update
+        try {
+          const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
+          
+          // Get all entity links for this instance
+          if (liveCloningStatus.instanceId) {
+            const allLinks = await storage.getEntityLinks(liveCloningStatus.instanceId);
+            
+            // Convert to numeric IDs - ensure we have proper numbers, not strings or usernames
+            const entityPairs = allLinks.map(link => {
+              const fromId = !isNaN(Number(link.fromEntity)) ? Number(link.fromEntity) : link.fromEntity;
+              const toId = !isNaN(Number(link.toEntity)) ? Number(link.toEntity) : link.toEntity;
+              return [fromId, toId];
+            });
+            
+            // Update ONLY the main Python config.json file
+            if (fs.existsSync(originalConfigPath)) {
+              const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
+              originalConfig.entities = entityPairs;
+              fs.writeFileSync(originalConfigPath, JSON.stringify(originalConfig, null, 2));
+              console.log(`✅ Updated main config.json after entity link update:`, entityPairs);
+            }
+          }
+        } catch (syncError) {
+          console.error('⚠️ Error updating Python config after entity link update:', syncError);
+        }
+        
         // Sync with running bot if active
         if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
           try {
@@ -2892,28 +2922,28 @@ if __name__ == "__main__":
       const deleted = await storage.deleteEntityLink(parseInt(id));
       
       if (deleted) {
-        // CRITICAL: Update Python config files after deletion
+        // CRITICAL: Update main config.json file ONLY after deletion
         try {
           const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
-          const entitiesJsonPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'plugins', 'jsons', 'entities.json');
           
           // Get remaining entity links after deletion
           if (liveCloningStatus.instanceId) {
             const allLinks = await storage.getEntityLinks(liveCloningStatus.instanceId);
-            const entityPairs = allLinks.map(link => [parseInt(link.fromEntity) || link.fromEntity, parseInt(link.toEntity) || link.toEntity]);
             
-            // Update Python config.json
+            // Convert to numeric IDs - ensure we have proper numbers, not strings or usernames
+            const entityPairs = allLinks.map(link => {
+              const fromId = !isNaN(Number(link.fromEntity)) ? Number(link.fromEntity) : link.fromEntity;
+              const toId = !isNaN(Number(link.toEntity)) ? Number(link.toEntity) : link.toEntity;
+              return [fromId, toId];
+            });
+            
+            // Update ONLY the main Python config.json file
             if (fs.existsSync(originalConfigPath)) {
               const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
               originalConfig.entities = entityPairs;
               fs.writeFileSync(originalConfigPath, JSON.stringify(originalConfig, null, 2));
-              console.log(`✅ Updated Python config.json after deletion: ${entityPairs.length} entity links remaining`);
+              console.log(`✅ Updated main config.json after deletion: ${entityPairs.length} entity links remaining:`, entityPairs);
             }
-            
-            // Update entities.json
-            const entitiesData = { entities: entityPairs };
-            fs.writeFileSync(entitiesJsonPath, JSON.stringify(entitiesData, null, 2));
-            console.log(`✅ Updated entities.json after deletion`);
           }
           
           // Sync with running bot if active
@@ -2951,6 +2981,31 @@ if __name__ == "__main__":
         isActive: true
       });
 
+      // CRITICAL: Save word filters to main config.json file
+      try {
+        const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
+        
+        // Get all word filters for this instance
+        const allFilters = await storage.getWordFilters(instanceId);
+        const filterPairs = allFilters.map(filter => [filter.fromWord, filter.toWord]);
+        
+        // Update ONLY the main Python config.json file
+        if (fs.existsSync(originalConfigPath)) {
+          const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
+          originalConfig.filters = filterPairs;
+          fs.writeFileSync(originalConfigPath, JSON.stringify(originalConfig, null, 2));
+          console.log(`✅ Updated main config.json with ${filterPairs.length} word filters:`, filterPairs);
+        }
+        
+        // Sync with running bot if active
+        if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
+          await syncEntityLinksWithBot();
+          console.log(`✅ Synced new word filter with running bot: ${fromWord} → ${toWord}`);
+        }
+      } catch (syncError) {
+        console.error('⚠️ Error persisting word filters to Python config:', syncError);
+      }
+
       res.json({ success: true, filter });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -2985,6 +3040,27 @@ if __name__ == "__main__":
       });
       
       if (updated) {
+        // CRITICAL: Update main config.json file after word filter update
+        try {
+          const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
+          
+          // Get all word filters for this instance
+          if (liveCloningStatus.instanceId) {
+            const allFilters = await storage.getWordFilters(liveCloningStatus.instanceId);
+            const filterPairs = allFilters.map(filter => [filter.fromWord, filter.toWord]);
+            
+            // Update ONLY the main Python config.json file
+            if (fs.existsSync(originalConfigPath)) {
+              const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
+              originalConfig.filters = filterPairs;
+              fs.writeFileSync(originalConfigPath, JSON.stringify(originalConfig, null, 2));
+              console.log(`✅ Updated main config.json after word filter update:`, filterPairs);
+            }
+          }
+        } catch (syncError) {
+          console.error('⚠️ Error updating Python config after word filter update:', syncError);
+        }
+        
         res.json({ success: true, filter: updated });
       } else {
         res.status(404).json({ error: 'Word filter not found' });
@@ -3001,6 +3077,27 @@ if __name__ == "__main__":
       const deleted = await storage.deleteWordFilter(parseInt(id));
       
       if (deleted) {
+        // CRITICAL: Update main config.json file after word filter deletion
+        try {
+          const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
+          
+          // Get remaining word filters after deletion
+          if (liveCloningStatus.instanceId) {
+            const allFilters = await storage.getWordFilters(liveCloningStatus.instanceId);
+            const filterPairs = allFilters.map(filter => [filter.fromWord, filter.toWord]);
+            
+            // Update ONLY the main Python config.json file
+            if (fs.existsSync(originalConfigPath)) {
+              const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
+              originalConfig.filters = filterPairs;
+              fs.writeFileSync(originalConfigPath, JSON.stringify(originalConfig, null, 2));
+              console.log(`✅ Updated main config.json after word filter deletion: ${filterPairs.length} filters remaining:`, filterPairs);
+            }
+          }
+        } catch (syncError) {
+          console.error('⚠️ Error updating Python config after word filter deletion:', syncError);
+        }
+        
         res.json({ success: true, message: 'Word filter deleted' });
       } else {
         res.status(404).json({ error: 'Word filter not found' });
@@ -5758,8 +5855,8 @@ async function syncEntityLinksWithBot(): Promise<void> {
       .filter(link => link.isActive)
       .map(link => {
         // Convert to numbers like Python implementation expects: [chat_id, chat_id]
-        const fromId = parseInt(link.fromEntity) || link.fromEntity;
-        const toId = parseInt(link.toEntity) || link.toEntity;
+        const fromId = !isNaN(Number(link.fromEntity)) ? Number(link.fromEntity) : link.fromEntity;
+        const toId = !isNaN(Number(link.toEntity)) ? Number(link.toEntity) : link.toEntity;
         return [fromId, toId];
       });
 
