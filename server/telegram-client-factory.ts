@@ -1,6 +1,7 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
 import { logger } from './telegram-bot/logger';
+import { Logger } from 'telegram/extensions';
 
 export interface TelegramClientConfig {
   apiId: number;
@@ -28,7 +29,6 @@ export function createTelegramClient(config: TelegramClientConfig): TelegramClie
     useWSS: true, // Force WebSocket Secure on port 443
     testServers: false,
     timeout: 30000,
-    baseLogger: 'debug',
     useIPV6: false,
     proxy: undefined,
   });
@@ -79,7 +79,7 @@ export async function testTelegramSession(config: TelegramClientConfig): Promise
         await client.disconnect();
         logger.info('Telegram client disconnected after session test');
       } catch (disconnectError) {
-        logger.warn('Error disconnecting client:', disconnectError);
+        logger.warn(`Error disconnecting client: ${disconnectError}`);
       }
     }
   }
