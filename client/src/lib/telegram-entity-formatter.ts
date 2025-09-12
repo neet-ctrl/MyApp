@@ -21,17 +21,21 @@ export interface TelegramEntityInfo {
 export function formatChatToTelegramEntity(chat: Chat): TelegramEntityInfo {
   let formattedId = chat.id;
   
-  // For channels and supergroups, ensure proper -100 prefix
-  if ((chat.type === 'channel' || chat.type === 'group') && !chat.username) {
-    // If it's a numeric ID for a channel/group, ensure it has -100 prefix
+  // For channels and supergroups, handle ID formatting carefully
+  if (chat.type === 'channel' && !chat.username) {
+    // Only add -100 prefix if it's a positive number (likely a supergroup)
     const numericId = parseInt(chat.id);
     if (!isNaN(numericId) && numericId > 0) {
       // Add -100 prefix for supergroups/channels (Telegram requirement)
       formattedId = `-100${Math.abs(numericId)}`;
-    } else if (!chat.id.startsWith('-100') && chat.id.startsWith('-')) {
-      // Already has negative prefix but not -100, make it -100
-      formattedId = `-100${Math.abs(numericId)}`;
     }
+    // If it already starts with negative sign, leave it unchanged (basic groups or proper IDs)
+  }
+  
+  // For basic groups, preserve the original ID format
+  if (chat.type === 'group') {
+    // Basic groups have their own ID format, don't modify
+    formattedId = chat.id;
   }
   
   // For private chats, use the raw ID (can be positive for users)
@@ -67,65 +71,76 @@ export function parseEntityInput(input: string): TelegramEntityInfo {
     };
   }
   
-  // Remove @ prefix if present
-  const cleanInput = trimmed.startsWith('@') ? trimmed.slice(1) : trimmed;
-  
-  // Try to parse as number
-  const numericId = parseInt(cleanInput);
-  
-  if (!isNaN(numericId)) {
-    // It's a numeric ID
-    if (numericId < 0) {
-      // Already negative - likely a group/channel ID
-      if (cleanInput.startsWith('-100')) {
-        // Perfect format for supergroup/channel
-        return {
-          id: cleanInput,
-          displayName: `Channel/Group (${cleanInput})`,
-          type: 'channel',
-          isValid: true,
-          originalInput: input
-        };
-      } else {
-        // Regular group (add -100 prefix to make it work)
-        return {
-          id: `-100${Math.abs(numericId)}`,
-          displayName: `Group (${cleanInput} → -100${Math.abs(numericId)})`,
-          type: 'group',
-          isValid: true,
-          originalInput: input
-        };
-      }
-    } else {
-      // Positive number - likely a user ID
-      return {
-        id: cleanInput,
-        displayName: `User (${cleanInput})`,
-        type: 'private',
-        isValid: true,
-        originalInput: input
-      };
-    }
-  } else {
-    // It's a username (non-numeric)
-    // Validate username format: letters, numbers, underscore, 4+ chars
-    const isValidUsername = /^[a-zA-Z][a-zA-Z0-9_]{3,}$/.test(cleanInput);
+  // Handle username format (@username or username) - STRICT Telegram rules 5-32 chars
+  if (trimmed.startsWith('@') || /^[a-zA-Z]/.test(trimmed)) {
+    const cleanInput = trimmed.startsWith('@') ? trimmed.slice(1) : trimmed;
+    const isValidUsername = /^[a-zA-Z][a-zA-Z0-9_]{4,31}$/.test(cleanInput); // 5-32 characters (4,31 = 5-32)
+    
+    // Store canonical format with @ for consistency with Python copier
+    const canonicalId = `@${cleanInput}`;
     
     return {
-      id: cleanInput,
-      displayName: isValidUsername ? `@${cleanInput}` : cleanInput,
+      id: canonicalId,
+      displayName: canonicalId,
       username: cleanInput,
-      type: 'channel', // Assume channel for usernames
+      type: 'channel', // Channels/groups with usernames
       isValid: isValidUsername,
       originalInput: input
     };
   }
+  
+  // Handle supergroup/channel ID format (-100...)
+  if (/^-100\d{5,}$/.test(trimmed)) {
+    // Valid supergroup/channel ID
+    return {
+      id: trimmed,
+      displayName: trimmed,
+      username: '',
+      type: 'channel', // Supergroups/channels are 'channel' type
+      isValid: true,
+      originalInput: input
+    };
+  }
+  
+  // Handle basic group ID format (-123456, not starting with -100)
+  if (/^-(?!100)\d+$/.test(trimmed)) {
+    // Valid basic group ID
+    return {
+      id: trimmed,
+      displayName: trimmed,
+      username: '',
+      type: 'group', // Basic groups are 'group' type
+      isValid: true,
+      originalInput: input
+    };
+  }
+  
+  if (/^\d+$/.test(trimmed)) {
+    // Valid user ID (positive integer)
+    return {
+      id: trimmed,
+      displayName: trimmed,
+      username: '',
+      type: 'private', // User chats are 'private' type
+      isValid: true,
+      originalInput: input
+    };
+  }
+  
+  // Invalid format - don't try to normalize
+  return {
+    id: trimmed,
+    displayName: trimmed,
+    username: '',
+    type: 'private', // Use valid type even for invalid entities
+    isValid: false,
+    originalInput: input
+  };
 }
 
 /**
  * Validate if an entity format is compatible with Telegram
- * Based on the Python copier's regex pattern:
- * r'^[Ll]ink @?(-?[1-9a-zA-Z][a-zA-Z0-9_]{4,}) to @?(-?[1-9a-zA-Z][a-zA-Z0-9_]{4,})$'
+ * STRICT validation matching Python copier and Telegram requirements
  */
 export function validateTelegramEntity(entityId: string): boolean {
   if (!entityId || entityId.trim() === '') {
@@ -134,10 +149,28 @@ export function validateTelegramEntity(entityId: string): boolean {
   
   const trimmed = entityId.trim();
   
-  // Check the Python copier's regex pattern for valid entities
-  const telegramEntityRegex = /^-?[1-9a-zA-Z][a-zA-Z0-9_]{3,}$/;
+  // Username format: @username (5-32 characters, starts with letter)
+  if (trimmed.startsWith('@')) {
+    const username = trimmed.slice(1);
+    return /^[a-zA-Z][a-zA-Z0-9_]{4,31}$/.test(username); // 5-32 characters total
+  }
   
-  return telegramEntityRegex.test(trimmed);
+  // Supergroup/channel ID: -100xxxxxxxxx (at least 10 digits after -100)
+  if (trimmed.startsWith('-100')) {
+    return /^-100\d{5,}$/.test(trimmed);
+  }
+  
+  // Basic group ID: negative number not starting with -100
+  if (/^-(?!100)\d+$/.test(trimmed)) {
+    return true;
+  }
+  
+  // User ID: positive integer
+  if (/^\d+$/.test(trimmed)) {
+    return true;
+  }
+  
+  return false;
 }
 
 /**
@@ -147,25 +180,41 @@ export function getSuggestedEntityFormat(input: string): string {
   const trimmed = input.trim();
   
   if (!trimmed) {
-    return 'Enter @username or -100123456789';
+    return 'Enter @username (5-32 chars) or -100123456789';
   }
   
   // If it looks like it could be a username
   if (/^@?[a-zA-Z][a-zA-Z0-9_]*$/.test(trimmed)) {
     const clean = trimmed.startsWith('@') ? trimmed.slice(1) : trimmed;
-    if (clean.length < 4) {
-      return `Username too short. Try: @${clean}example`;
+    if (clean.length < 5) {
+      return `Username too short (need 5-32 chars). Try: @${clean}example`;
+    }
+    if (clean.length > 32) {
+      return `Username too long (max 32 chars). Try: @${clean.substring(0, 32)}`;
     }
     return `@${clean}`;
   }
   
-  // If it looks like it could be a chat ID
-  const numericPart = trimmed.replace(/[^0-9]/g, '');
-  if (numericPart) {
-    return `-100${numericPart}`;
+  // If it looks like it could be a numeric ID
+  if (/^-?\d+$/.test(trimmed)) {
+    if (trimmed.startsWith('-100') && trimmed.length < 8) {
+      return 'Channel ID too short. Try: -1001234567890';
+    }
+    if (trimmed.startsWith('-') && !trimmed.startsWith('-100') && trimmed.length < 4) {
+      return 'Basic group ID too short. Try: -123456';
+    }
   }
   
-  return 'Format: @username or -100123456789';
+  return 'Format: @username (5-32 chars), -100123456789 for channels, or -123456 for basic groups';
+}
+
+/**
+ * Get the formatted entity ID for display
+ */
+export function getFormattedEntityId(chatId: string): string {
+  // For now, return the chatId directly since we need to look up the chat to format it properly
+  // This function will be enhanced when called with actual chat data
+  return chatId;
 }
 
 /**

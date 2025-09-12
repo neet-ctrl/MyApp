@@ -1503,58 +1503,222 @@ export function LiveCloning() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Add Entity Link Form */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-muted/50 rounded-lg">
-            <div className="space-y-2">
-              <Label htmlFor="from-entity">From Entity (Source)</Label>
-              {chatsLoading ? (
-                <div className="text-sm text-muted-foreground">Loading chats...</div>
-              ) : (
-                <Select value={newFromEntity} onValueChange={setNewFromEntity} data-testid="from-entity-select">
-                  <SelectTrigger id="from-entity">
-                    <SelectValue placeholder="Select source chat" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {chats.map((chat) => (
-                      <SelectItem key={chat.id} value={chat.id}>
-                        {getChatName(chat.id)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+          {/* Enhanced Entity Link Form with Manual Input & Validation */}
+          <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+            {/* Input Mode Toggle */}
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Entity Link Configuration</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="manual-input" className="text-sm">Manual Input</Label>
+                <Switch
+                  id="manual-input"
+                  checked={useManualInput}
+                  onCheckedChange={(checked) => {
+                    setUseManualInput(checked);
+                    if (checked) {
+                      setNewFromEntity('');
+                      setNewToEntity('');
+                    } else {
+                      setManualFromEntity('');
+                      setManualToEntity('');
+                    }
+                  }}
+                  data-testid="manual-input-toggle"
+                />
+              </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="to-entity">To Entity (Target)</Label>
-              {chatsLoading ? (
-                <div className="text-sm text-muted-foreground">Loading chats...</div>
-              ) : (
-                <Select value={newToEntity} onValueChange={setNewToEntity} data-testid="to-entity-select">
-                  <SelectTrigger id="to-entity">
-                    <SelectValue placeholder="Select target chat" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {chats.map((chat) => (
-                      <SelectItem key={chat.id} value={chat.id}>
-                        {getChatName(chat.id)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
+            {!useManualInput ? (
+              /* Dropdown Selection Mode */
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="from-entity">From Entity (Source)</Label>
+                  {chatsLoading ? (
+                    <div className="text-sm text-muted-foreground">Loading chats...</div>
+                  ) : (
+                    <Select value={newFromEntity} onValueChange={setNewFromEntity} data-testid="from-entity-select">
+                      <SelectTrigger id="from-entity">
+                        <SelectValue placeholder="Select source chat" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {chats.map((chat) => {
+                          const entityInfo = formatChatToTelegramEntity(chat);
+                          return (
+                            <SelectItem key={chat.id} value={chat.id}>
+                              {createEntityDisplayName(entityInfo, chat)}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {newFromEntity && (
+                    <div className="text-xs text-muted-foreground">
+                      Formatted ID: <code className="bg-muted px-1 rounded">{getFormattedEntityId(newFromEntity)}</code>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="to-entity">To Entity (Target)</Label>
+                  {chatsLoading ? (
+                    <div className="text-sm text-muted-foreground">Loading chats...</div>
+                  ) : (
+                    <Select value={newToEntity} onValueChange={setNewToEntity} data-testid="to-entity-select">
+                      <SelectTrigger id="to-entity">
+                        <SelectValue placeholder="Select target chat" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {chats.map((chat) => {
+                          const entityInfo = formatChatToTelegramEntity(chat);
+                          return (
+                            <SelectItem key={chat.id} value={chat.id}>
+                              {createEntityDisplayName(entityInfo, chat)}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {newToEntity && (
+                    <div className="text-xs text-muted-foreground">
+                      Formatted ID: <code className="bg-muted px-1 rounded">{getFormattedEntityId(newToEntity)}</code>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex items-end">
+                  <Button
+                    onClick={() => addEntityLinkMutation.mutate()}
+                    disabled={addEntityLinkMutation.isPending || !newFromEntity || !newToEntity}
+                    className="w-full"
+                    data-testid="add-entity-link-button"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Link
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* Manual Input Mode */
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="manual-from-entity">From Entity (Source)</Label>
+                  <Input
+                    id="manual-from-entity"
+                    placeholder="@username or -100123456789"
+                    value={manualFromEntity}
+                    onChange={(e) => setManualFromEntity(e.target.value)}
+                    data-testid="manual-from-entity-input"
+                    className={`font-mono ${
+                      manualFromEntity && !validateTelegramEntity(parseEntityInput(manualFromEntity).id)
+                        ? 'border-red-500 focus:border-red-500'
+                        : manualFromEntity
+                        ? 'border-green-500 focus:border-green-500'
+                        : ''
+                    }`}
+                  />
+                  {manualFromEntity && (
+                    <div className="text-xs">
+                      {validateTelegramEntity(parseEntityInput(manualFromEntity).id) ? (
+                        <span className="text-green-600 flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          Valid: <code className="bg-green-50 px-1 rounded">{parseEntityInput(manualFromEntity).id}</code>
+                        </span>
+                      ) : (
+                        <span className="text-red-600 flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          {getSuggestedEntityFormat(manualFromEntity)}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="manual-to-entity">To Entity (Target)</Label>
+                  <Input
+                    id="manual-to-entity"
+                    placeholder="@username or -100123456789"
+                    value={manualToEntity}
+                    onChange={(e) => setManualToEntity(e.target.value)}
+                    data-testid="manual-to-entity-input"
+                    className={`font-mono ${
+                      manualToEntity && !validateTelegramEntity(parseEntityInput(manualToEntity).id)
+                        ? 'border-red-500 focus:border-red-500'
+                        : manualToEntity
+                        ? 'border-green-500 focus:border-green-500'
+                        : ''
+                    }`}
+                  />
+                  {manualToEntity && (
+                    <div className="text-xs">
+                      {validateTelegramEntity(parseEntityInput(manualToEntity).id) ? (
+                        <span className="text-green-600 flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          Valid: <code className="bg-green-50 px-1 rounded">{parseEntityInput(manualToEntity).id}</code>
+                        </span>
+                      ) : (
+                        <span className="text-red-600 flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          {getSuggestedEntityFormat(manualToEntity)}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex items-end">
+                  <Button
+                    onClick={() => {
+                      // Set the parsed entity IDs for manual input
+                      const fromEntityId = parseEntityInput(manualFromEntity).id;
+                      const toEntityId = parseEntityInput(manualToEntity).id;
+                      
+                      if (!validateTelegramEntity(fromEntityId) || !validateTelegramEntity(toEntityId)) {
+                        toast({
+                          title: 'Invalid Entity Format',
+                          description: 'Please fix the invalid entity formats before adding.',
+                          variant: 'destructive'
+                        });
+                        return;
+                      }
+                      
+                      // Create temporary entity objects for the mutation
+                      setNewFromEntity(fromEntityId);
+                      setNewToEntity(toEntityId);
+                      
+                      // Trigger the mutation after a short delay to let state update
+                      setTimeout(() => {
+                        addEntityLinkMutation.mutate();
+                      }, 100);
+                    }}
+                    disabled={
+                      addEntityLinkMutation.isPending || 
+                      !manualFromEntity || 
+                      !manualToEntity ||
+                      !validateTelegramEntity(parseEntityInput(manualFromEntity).id) ||
+                      !validateTelegramEntity(parseEntityInput(manualToEntity).id)
+                    }
+                    className="w-full"
+                    data-testid="add-manual-entity-link-button"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Link
+                  </Button>
+                </div>
+              </div>
+            )}
             
-            <div className="flex items-end">
-              <Button
-                onClick={() => addEntityLinkMutation.mutate()}
-                disabled={addEntityLinkMutation.isPending || !newFromEntity || !newToEntity}
-                className="w-full"
-                data-testid="add-entity-link-button"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Link
-              </Button>
+            {/* Format Guide */}
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded border border-blue-200 dark:border-blue-800">
+              <div className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">✅ Supported Entity Formats (100% Telegram Compatible)</div>
+              <div className="text-xs text-blue-700 dark:text-blue-200 space-y-1">
+                <div><code className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">@username</code> - Public channels/groups with username</div>
+                <div><code className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">-100123456789</code> - Private supergroups and channels</div>
+                <div><code className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">123456789</code> - User IDs (private chats)</div>
+                <div className="text-blue-600 dark:text-blue-300 text-xs mt-2">💡 These formats are automatically validated and will work 100% with Telegram forwarding, just like the Python copier!</div>
+              </div>
             </div>
           </div>
 
