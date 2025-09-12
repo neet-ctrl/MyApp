@@ -847,6 +847,25 @@ export function Settings() {
           </Card>
         </div>
       </div>
+
+      {/* Comprehensive Settings Button */}
+      <div className="mt-8 p-4 border-t border-border">
+        <Button
+          onClick={() => {
+            // Open comprehensive settings page in new tab
+            window.open('/settings', '_blank');
+          }}
+          className="w-full"
+          size="lg"
+          data-testid="button-comprehensive-settings"
+        >
+          <Settings className="mr-2 h-5 w-5" />
+          Open Comprehensive Settings Manager
+        </Button>
+        <p className="text-xs text-muted-foreground mt-2 text-center">
+          Advanced settings management with hardcoded values editor
+        </p>
+      </div>
     </div>
   );
 }
