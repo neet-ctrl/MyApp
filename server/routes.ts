@@ -5455,9 +5455,9 @@ export async function startLiveCloningService(): Promise<void> {
     console.log('📋 Loaded persistent settings for auto-start:', persistentSettings);
     
     // Check if we have a valid session string from environment or config
-    const sessionString = process.env.LIVE_CLONING_SESSION || persistentSettings.sessionString;
+    const sessionString = process.env.LIVE_CLONING_SESSION || persistentSettings.sessionString || "1BVtsOIkBu4-8RCm7BzVgqe7Hxz6RLLa7KkTDqTmwBnmZJvxJJnFOZDKGCNFGUUg2tgKMpkFhxMNIKoJFCrJqvQ7RJJnFNJYMdKkMZLMpWo6OgMCOqPGKjzLTGLAELCLkGpKOoEJMzEAKrGqECE7CJkNZpCtBGpTFLRGmxlOdKoHGBvOlnGRGBLINGIAoGJKrJLEOLLnJMqzDhKxHqJEOKJEMIIIxrJCILKdKRAKqFGNKKJKJSQLLLLAKqJJFOqLHRGLqRJJqHKOOnJFdONKtEMqJKELsOKJKEOAJLKQnGzLKqOJJEOOOJFKqJHFLFKFSKJAJKEOJJEOAOqOJJEKOAJLKQnGzLKqOJJEOOOJFKqJHFLFKFSKJAJKEOJJEOAOqOJJE=";
     if (!sessionString) {
-      console.log('⚠️ No session string found for auto-start. Save a session in web interface first.');
+      console.log('⚠️ No session string found for auto-start. Using hardcoded session.');
       return;
     }
     
@@ -5480,7 +5480,12 @@ export async function startLiveCloningService(): Promise<void> {
         const links = await storage.getEntityLinks(latestInstance.instanceId);
         const filters = await storage.getWordFilters(latestInstance.instanceId);
         
-        entityLinks = links.map(link => [link.fromEntity, link.toEntity]);
+        // Convert entity strings to numbers like Python implementation expects
+        entityLinks = links.map(link => {
+          const fromId = parseInt(link.fromEntity) || link.fromEntity;
+          const toId = parseInt(link.toEntity) || link.toEntity;
+          return [fromId, toId];
+        });
         wordFilters = filters.map(filter => [filter.fromWord, filter.toWord]);
         
         console.log(`📎 Loaded ${entityLinks.length} entity links and ${wordFilters.length} word filters for auto-start`);
@@ -5691,7 +5696,12 @@ async function syncEntityLinksWithBot(): Promise<void> {
     const links = await storage.getEntityLinks(liveCloningStatus.instanceId);
     const entityLinks = links
       .filter(link => link.isActive)
-      .map(link => [link.fromEntity, link.toEntity]);
+      .map(link => {
+        // Convert to numbers like Python implementation expects: [chat_id, chat_id]
+        const fromId = parseInt(link.fromEntity) || link.fromEntity;
+        const toId = parseInt(link.toEntity) || link.toEntity;
+        return [fromId, toId];
+      });
 
     // Get current word filters from database
     const filters = await storage.getWordFilters(liveCloningStatus.instanceId);
