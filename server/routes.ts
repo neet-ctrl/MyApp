@@ -5577,7 +5577,7 @@ export async function startLiveCloningService(): Promise<void> {
       console.log('🔄 Starting Live Cloning Python process for 24/7 operation...');
       
       // Start live cloning process
-      liveCloningProcess = spawn('python3', [liveClonerPath, '--session', sessionString, '--config', configPath, '--auto-start'], {
+      liveCloningProcess = spawn('python3', [liveClonerPath, '--session', sessionString, '--config', configPath], {
         env: {
           ...process.env,
           TG_API_ID: telegramConfig.api_id,
