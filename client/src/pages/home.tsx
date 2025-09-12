@@ -255,7 +255,7 @@ export default function Home() {
         isDownloadDirectorySelected={downloadManager.isDownloadDirectorySelected()}
       />
       
-      <main className="flex-1 overflow-hidden relative">
+      <main className="flex-1 overflow-y-auto relative">
         {renderCurrentView()}
         
         {/* Floating Dark/Light Mode Toggle */}
