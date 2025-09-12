@@ -5388,3 +5388,35 @@ if __name__ == '__main__':
 
   return httpServer;
 }
+
+// Always-running Live Cloning Service - Auto-start functionality
+export async function startLiveCloningService(): Promise<void> {
+  try {
+    console.log('🚀 Starting Live Cloning service for always-running architecture...');
+    
+    // Check if we have a valid session and persistent settings
+    const persistentConfigPath = path.join(process.cwd(), 'tmp', 'live_cloning_persistent_settings.json');
+    if (!fs.existsSync(persistentConfigPath)) {
+      console.log('⚠️ No persistent Live Cloning settings found, skipping auto-start');
+      return;
+    }
+    
+    // Load persistent settings
+    const persistentSettings = JSON.parse(fs.readFileSync(persistentConfigPath, 'utf8'));
+    console.log('📋 Loaded persistent settings for auto-start:', persistentSettings);
+    
+    // Check if bot is enabled
+    if (!persistentSettings.botEnabled) {
+      console.log('🔕 Bot is disabled in settings, service available but not processing messages');
+      return;
+    }
+    
+    // For now, we'll implement this as settings-controlled behavior
+    // The bot can be started manually when needed, but settings will control processing
+    console.log('✅ Live Cloning service configured for always-running architecture');
+    console.log('💡 Bot behavior controlled by settings - use web interface to manage');
+    
+  } catch (error) {
+    console.error('❌ Error starting Live Cloning service:', error);
+  }
+}

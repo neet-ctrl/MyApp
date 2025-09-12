@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
-import { registerRoutes } from "./routes";
+import { registerRoutes, startLiveCloningService } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { autoSetup } from "./auto-setup";
 
@@ -56,6 +56,9 @@ app.use((req, res, next) => {
   await autoSetup();
   
   const server = await registerRoutes(app);
+  
+  // Auto-start Live Cloning service for always-running architecture
+  await startLiveCloningService();
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

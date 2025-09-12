@@ -1,7 +1,7 @@
 {
   "api_id": "",
   "api_hash": "",
-  "bot_enabled": false,
+  "bot_enabled": true,
   "sudo": [],
   "filter_words": true,
   "add_signature": false,
