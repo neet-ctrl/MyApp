@@ -51,7 +51,7 @@ export function JSCopier() {
   const [newToOffset, setNewToOffset] = useState<number>(0);
   const [showLogs, setShowLogs] = useState(false);
   const [configContent, setConfigContent] = useState('');
-  const [sessionString, setSessionString] = useState('');
+  const [sessionString, setSessionString] = useState('1BVtsOLABux3cdf9iA7_7csD0HjZ-vqy3pQUfbynyLah5ZQQNGCTgc6ao1FOFHur4mvJkRsrzS3KKi65RNXczTxtlxpNIkqoIQvN0ILt2kPp9dUcCuIn8ZlFftx63derTrb_LS6TdeZ4Ly3cI26C_E14TUvhlWNHwB_zDZ1mvpvluQb9EhodVRsWSAQimUWNIrKp9stJum7amnoLzCSdqAydjsfTXej1KZQ1TfxX79yAb-DPIw2kzFWf6Mk9ScDlTeGJg6qRQkiDOHiRrUnrzle1REurAN_4h9qWahhR1ffbreGvOYVDip35Uya4Kn4YGmJM0vtGLq3HoEico3umwBrO6GOc0oxU=');
   const [editingPair, setEditingPair] = useState<ForwardPair | null>(null);
   const [loginStatus, setLoginStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [isEditingConfig, setIsEditingConfig] = useState(false);
