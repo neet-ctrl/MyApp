@@ -24,9 +24,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [credentials, setCredentials] = useState({
-    apiId: '28403662',
-    apiHash: '079509d4ac7f209a1a58facd00d6ff5a',
-    phoneNumber: '+917352013479',
+    apiId: '',
+    apiHash: '',
+    phoneNumber: '',
     code: '',
     password: '',
   });
@@ -65,29 +65,10 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     setError('');
 
     try {
-      const predefinedSessionString = "1BQAWZmxvcmEud2ViLnRlbGVncmFtLm9yZwG7IS3tNY2BsIDLeDQnewXF0dZ7iEc231dYk/8TDX83hkgf7EwJ8HvdsqxWr/Dyb8oeEIe6+H9MAgI4yPaGs0IgIsdLQozbCnlNF7NDC+q5iC+JlpLbAF2PIiZ3nHvetmRyadZpTsVSLFgSG1BdvVUx2J65VHdkbJTk9V0hj2Wq3ucMrBNGJB6oCSrnSqWCD5mmtxKdFDV6p+6Fj1d0gbnmBOkhV0Ud+V6NRHDup/j6rREt/lJTO8gXowmd2dLt1piiQrmD3fU+zKEFf4Mv0GllJYYKY9aVxQjjhowXM8GdKnX0DLxOFVcqSk7sOkCn14ocdtYK4ffhRgJdgu241XriLA==";
-      const sessionData: TelegramSession = {
-        sessionString: predefinedSessionString,
-        apiId: 28403662,
-        apiHash: "079509d4ac7f209a1a58facd00d6ff5a",
-        phoneNumber: "+917352013479",
-        userId: 'default-user',
-        firstName: 'Default',
-        lastName: 'User',
-      };
-
-      await telegramManager.loadSession(sessionData);
-      await storage.saveSession(sessionData);
-      
-      // Set localStorage flag to prevent modal from showing again
-      localStorage.setItem('telegram_session', 'active');
-
-      toast({
-        title: 'Default Session Loaded!',
-        description: 'Successfully logged in with default session',
-      });
-
-      onSuccess(sessionData);
+      // Security: No hardcoded session strings - user must provide their own
+      setError('Default session removed for security. Please use custom session string instead.');
+      setLoading(false);
+      return;
     } catch (err) {
       setLoading(false);
       setError(err instanceof Error ? err.message : 'Failed to load default session');
@@ -107,8 +88,8 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     try {
       const sessionData: TelegramSession = {
         sessionString: customSessionString.trim(),
-        apiId: 28403662,
-        apiHash: "079509d4ac7f209a1a58facd00d6ff5a",
+        apiId: 0, // User must provide their own API credentials
+        apiHash: "", // User must provide their own API credentials  
         phoneNumber: "custom-session",
         userId: 'custom-user',
         firstName: 'Custom',
@@ -288,9 +269,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     if (!loading) {
       setStep('login-options');
       setCredentials({
-        apiId: '28403662',
-        apiHash: '079509d4ac7f209a1a58facd00d6ff5a',
-        phoneNumber: '+917352013479',
+        apiId: '',
+        apiHash: '',
+        phoneNumber: '',
         code: '',
         password: '',
       });

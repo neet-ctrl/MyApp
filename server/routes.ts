@@ -1337,6 +1337,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get last offset from Python copier logs
+  app.get('/api/python-copier/last-offset', (req, res) => {
+    try {
+      const logs = pythonCopierStatus.logs.length > 0 ? pythonCopierStatus.logs : 
+                   (lastForwardingLog?.logs || []);
+                   
+      // Look for the last forwarded message log (Python format)
+      let lastOffset = null;
+      let pairName = null;
+      
+      for (let i = logs.length - 1; i >= 0; i--) {
+        const log = logs[i];
+        // Try multiple patterns for Python copier logs
+        let match = log.match(/Forwarded message with id = (\d+) from (.+?)(?:\s*$|\s+\[|$)/) ||  // Same as JS
+                   log.match(/message.*?id\s*[=:]\s*(\d+).*?pair\s*[=:]\s*(.+?)(?:\s|$)/i) ||  // Alternative format
+                   log.match(/offset.*?(\d+).*?pair.*?(.+?)(?:\s|$)/i) ||  // Offset format
+                   log.match(/(\d+).*?forwarded.*?from\s+(.+?)(?:\s|$)/i);  // General format
+        
+        if (match) {
+          lastOffset = parseInt(match[1]);
+          pairName = match[2] ? match[2].trim() : 'Unknown Pair';
+          // Don't break if pairName is empty or just "Unknown Pair" - keep looking
+          if (pairName && pairName !== 'Unknown Pair' && pairName.length > 0) {
+            break;
+          }
+        }
+      }
+      
+      if (lastOffset !== null) {
+        res.json({ 
+          hasOffset: true, 
+          lastOffset, 
+          pairName, 
+          message: `Last forwarded message ID: ${lastOffset} from ${pairName}` 
+        });
+      } else {
+        res.json({ 
+          hasOffset: false, 
+          message: 'No forwarded messages found in logs' 
+        });
+      }
+    } catch (error) {
+      console.error('Failed to get last offset:', error);
+      res.status(500).json({ error: 'Failed to get last offset' });
+    }
+  });
+
+  // Update offset in Python copier config and saved pairs
+  app.post('/api/python-copier/update-offset', (req, res) => {
+    try {
+      const { pairName, newOffset } = req.body;
+      
+      if (!pairName || newOffset === undefined) {
+        return res.status(400).json({ error: 'Pair name and new offset are required' });
+      }
+
+      // Update offset in Python copier config file
+      const configDir = path.join(process.cwd(), 'tmp', 'config');
+      const configPath = path.join(configDir, 'copier_config.ini');
+      
+      if (fs.existsSync(configPath)) {
+        let configContent = fs.readFileSync(configPath, 'utf8');
+        
+        // Update the offset for the specific pair using regex with escaped pair name
+        const escapedPairName = escapeRegex(pairName);
+        const pairRegex = new RegExp(`(\\[${escapedPairName}\\][\\s\\S]*?offset\\s*=\\s*)\\d+`, 'i');
+        if (pairRegex.test(configContent)) {
+          configContent = configContent.replace(pairRegex, `$1${newOffset}`);
+          fs.writeFileSync(configPath, configContent, 'utf8');
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        message: `Updated offset to ${newOffset} for ${pairName}`,
+        updatedPairs: 1
+      });
+    } catch (error) {
+      console.error('Failed to update offset:', error);
+      res.status(500).json({ error: 'Failed to update offset' });
+    }
+  });
+
   app.get('/api/python-copier/config', (req, res) => {
     try {
       const configDir = path.join(process.cwd(), 'tmp', 'config');
@@ -1969,6 +2052,23 @@ if __name__ == "__main__":
   // Stop JS copier
   app.post('/api/js-copier/stop', async (req, res) => {
     try {
+      // Save current logs to lastJSForwardingLog before stopping like Python copier does
+      if (jsCopierStatus.logs.length > 0) {
+        if (!lastJSForwardingLog) {
+          lastJSForwardingLog = {
+            configName: 'JS Copier Session',
+            startTime: new Date().toISOString(),
+            logs: [],
+            status: 'running'
+          };
+        }
+        lastJSForwardingLog.endTime = new Date().toISOString();
+        lastJSForwardingLog.status = 'failed'; // Stopped manually
+        lastJSForwardingLog.logs = [...jsCopierStatus.logs];
+        
+        addJSCopierLog('JS copier stopped by user');
+      }
+
       if (jsCopier) {
         await jsCopier.stop();
         jsCopier = null;
@@ -2137,6 +2237,83 @@ if __name__ == "__main__":
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Failed to retrieve JS last log:', errorMessage);
       res.status(500).json({ error: 'Failed to retrieve last log' });
+    }
+  });
+
+  // Get last offset from JS copier logs
+  app.get('/api/js-copier/last-offset', (req, res) => {
+    try {
+      const logs = jsCopierStatus.logs.length > 0 ? jsCopierStatus.logs : 
+                   (lastJSForwardingLog?.logs || []);
+                   
+      // Look for the last forwarded message log (JS format is very specific)
+      let lastOffset = null;
+      let pairName = null;
+      
+      for (let i = logs.length - 1; i >= 0; i--) {
+        const log = logs[i];
+        // Match exact JS copier log format: "Forwarded message with id = 1234 from PairName"
+        const match = log.match(/Forwarded message with id = (\d+) from (.+?)(?:\s*$|\s+\[|$)/);
+        if (match) {
+          lastOffset = parseInt(match[1]);
+          pairName = match[2].trim();
+          break;
+        }
+      }
+      
+      if (lastOffset !== null) {
+        res.json({ 
+          hasOffset: true, 
+          lastOffset, 
+          pairName, 
+          message: `Last forwarded message ID: ${lastOffset} from ${pairName}` 
+        });
+      } else {
+        res.json({ 
+          hasOffset: false, 
+          message: 'No forwarded messages found in logs' 
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Failed to get last offset:', errorMessage);
+      res.status(500).json({ error: 'Failed to get last offset' });
+    }
+  });
+
+  // Update offset in JS copier config and saved pairs
+  app.post('/api/js-copier/update-offset', (req, res) => {
+    try {
+      const { pairName, newOffset } = req.body;
+      
+      if (!pairName || newOffset === undefined) {
+        return res.status(400).json({ error: 'Pair name and new offset are required' });
+      }
+
+      // Update offset in JS copier config file
+      updateJSCopierOffset(pairName, newOffset);
+      
+      // Also update in memory config if available
+      const configDir = path.join(process.cwd(), 'tmp', 'config');
+      const configPath = path.join(configDir, 'js_copier_config.ini');
+      
+      let updatedPairs = 0;
+      if (fs.existsSync(configPath)) {
+        // Re-read and parse the updated config to refresh the pairs
+        const configContent = fs.readFileSync(configPath, 'utf8');
+        // The config will be re-parsed next time it's requested
+        updatedPairs = 1;
+      }
+
+      res.json({ 
+        success: true, 
+        message: `Updated offset to ${newOffset} for ${pairName}`,
+        updatedPairs
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Failed to update offset:', errorMessage);
+      res.status(500).json({ error: 'Failed to update offset' });
     }
   });
 

@@ -51,12 +51,14 @@ export function JSCopier() {
   const [newToOffset, setNewToOffset] = useState<number>(0);
   const [showLogs, setShowLogs] = useState(false);
   const [configContent, setConfigContent] = useState('');
-  const [sessionString, setSessionString] = useState('1BVtsOLABux3cdf9iA7_7csD0HjZ-vqy3pQUfbynyLah5ZQQNGCTgc6ao1FOFHur4mvJkRsrzS3KKi65RNXczTxtlxpNIkqoIQvN0ILt2kPp9dUcCuIn8ZlFftx63derTrb_LS6TdeZ4Ly3cI26C_E14TUvhlWNHwB_zDZ1mvpvluQb9EhodVRsWSAQimUWNIrKp9stJum7amnoLzCSdqAydjsfTXej1KZQ1TfxX79yAb-DPIw2kzFWf6Mk9ScDlTeGJg6qRQkiDOHiRrUnrzle1REurAN_4h9qWahhR1ffbreGvOYVDip35Uya4Kn4YGmJM0vtGLq3HoEico3umwBrO6GOc0oxU=');
+  const [sessionString, setSessionString] = useState('');
   const [editingPair, setEditingPair] = useState<ForwardPair | null>(null);
   const [loginStatus, setLoginStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [isEditingConfig, setIsEditingConfig] = useState(false);
   const [editableConfigContent, setEditableConfigContent] = useState('');
   const [showLastLog, setShowLastLog] = useState(false);
+  const [offsetClickCount, setOffsetClickCount] = useState(0);
+  const [offsetClickTimer, setOffsetClickTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -374,6 +376,68 @@ export function JSCopier() {
     },
   });
 
+  // Get last offset mutation
+  const getLastOffsetMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/js-copier/last-offset');
+      if (!response.ok) throw new Error('Failed to get last offset');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.hasOffset) {
+        toast({ 
+          title: 'Last Offset Found! 📍', 
+          description: data.message,
+          duration: 5000
+        });
+      } else {
+        toast({ 
+          title: 'No Offset Found', 
+          description: data.message
+        });
+      }
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: 'Failed to Get Offset ❌', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Update offset mutation
+  const updateOffsetMutation = useMutation({
+    mutationFn: async ({ pairName, newOffset }: { pairName: string; newOffset: number }) => {
+      const response = await fetch('/api/js-copier/update-offset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pairName, newOffset }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update offset');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({ 
+        title: 'Offset Updated! ✅', 
+        description: data.message,
+        duration: 5000
+      });
+      // Refresh config to show updated offset
+      queryClient.invalidateQueries({ queryKey: ['js-copier-config'] });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: 'Failed to Update Offset ❌', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
+    }
+  });
+
   // Start copier mutation
   const startCopierMutation = useMutation({
     mutationFn: async () => {
@@ -482,6 +546,55 @@ export function JSCopier() {
   const cancelEditingConfig = () => {
     setIsEditingConfig(false);
     setEditableConfigContent('');
+  };
+
+  // Generate Telegram link from chat ID or username
+  const getTelegramLink = (chatId: string) => {
+    if (chatId.startsWith('@')) {
+      // Username format: @username -> https://t.me/username
+      return `https://t.me/${chatId.substring(1)}`;
+    } else if (chatId.startsWith('-100')) {
+      // Supergroup ID: -1001234567890 -> https://t.me/c/1234567890
+      return `https://t.me/c/${chatId.substring(4)}`;
+    } else if (chatId.startsWith('-')) {
+      // Regular group ID: convert to positive and use joinchat (may not work for all)
+      return `https://t.me/joinchat/${Math.abs(parseInt(chatId))}`;
+    } else {
+      // Positive ID or other format
+      return `https://t.me/${chatId}`;
+    }
+  };
+
+  // Handle offset button clicks (single click = show, double click = update)
+  const handleOffsetButtonClick = () => {
+    if (offsetClickTimer) {
+      clearTimeout(offsetClickTimer);
+      setOffsetClickTimer(null);
+      
+      // This is a double click - update offset
+      getLastOffsetMutation.mutate(undefined, {
+        onSuccess: (data) => {
+          if (data.hasOffset) {
+            updateOffsetMutation.mutate({
+              pairName: data.pairName,
+              newOffset: data.lastOffset
+            });
+          }
+        }
+      });
+      setOffsetClickCount(0);
+    } else {
+      // This is potentially a single click
+      setOffsetClickCount(1);
+      const timer = setTimeout(() => {
+        // Single click confirmed - just show offset
+        getLastOffsetMutation.mutate();
+        setOffsetClickCount(0);
+        setOffsetClickTimer(null);
+      }, 300); // 300ms window for double click
+      
+      setOffsetClickTimer(timer);
+    }
   };
 
   const saveCustomConfig = () => {
@@ -823,11 +936,31 @@ export function JSCopier() {
                       <span className="font-medium">{pair.name}</span>
                       <Badge variant="outline" className="ml-2">{pair.status}</Badge>
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
                       From: {getChatName(pair.fromChat)}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => window.open(getTelegramLink(pair.fromChat), '_blank')}
+                        title="Open in Telegram"
+                        data-testid={`button-telegram-from-${pair.id}`}
+                      >
+                        📲
+                      </Button>
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
                       To: {getChatName(pair.toChat)}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => window.open(getTelegramLink(pair.toChat), '_blank')}
+                        title="Open in Telegram"
+                        data-testid={`button-telegram-to-${pair.id}`}
+                      >
+                        📲
+                      </Button>
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Offset: {pair.currentOffset}
@@ -1000,19 +1133,33 @@ export function JSCopier() {
                 <Terminal className="w-5 h-5" />
                 Copier Logs
               </CardTitle>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  const logText = logsData?.logs?.slice(-30).join('\n') || 'No logs available...';
-                  navigator.clipboard.writeText(logText);
-                  toast({ title: "Copied to clipboard!", description: "Live logs copied successfully" });
-                }}
-                data-testid="button-copy-logs"
-              >
-                <Copy className="h-4 w-4 mr-1" />
-                Copy Logs
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    const logText = logsData?.logs?.slice(-30).join('\n') || 'No logs available...';
+                    navigator.clipboard.writeText(logText);
+                    toast({ title: "Copied to clipboard!", description: "Live logs copied successfully" });
+                  }}
+                  data-testid="button-copy-logs"
+                >
+                  <Copy className="h-4 w-4 mr-1" />
+                  Copy Logs
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleOffsetButtonClick}
+                  disabled={getLastOffsetMutation.isPending || updateOffsetMutation.isPending}
+                  data-testid="button-show-offset"
+                  title="Single click: Show last offset | Double click: Update offset in config"
+                >
+                  📍
+                  {getLastOffsetMutation.isPending || updateOffsetMutation.isPending ? ' ...' : ' Offset'}
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
