@@ -3,8 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Phone, MessageSquare, Loader2, AlertCircle } from 'lucide-react';
+import { Phone, MessageSquare, Loader2, AlertCircle, History } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { telegramManager } from '@/lib/telegram';
 import { storage } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +22,8 @@ type AuthStep = 'login-options' | 'credentials' | 'phone' | 'code' | 'password' 
 export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [step, setStep] = useState<AuthStep>('login-options');
   const [customSessionString, setCustomSessionString] = useState('');
+  const [showSessionHistory, setShowSessionHistory] = useState(false);
+  const [sessionHistoryPassword, setSessionHistoryPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [credentials, setCredentials] = useState({
@@ -104,6 +107,20 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   };
 
   // Handler for using custom session string
+  const handleSessionHistoryClick = () => {
+    const password = prompt('Enter password for session history:');
+    if (password === (import.meta.env.VITE_SESSION_HISTORY_PASSWORD || 'Sh@090609')) {
+      setShowSessionHistory(true);
+    } else if (password !== null) {
+      setError('Incorrect password');
+    }
+  };
+
+  const handleSelectStoredSession = (sessionString: string) => {
+    setCustomSessionString(sessionString);
+    setShowSessionHistory(false);
+  };
+
   const handleUseCustomSession = async () => {
     if (!customSessionString.trim()) {
       setError('Please enter a session string');
@@ -451,14 +468,56 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="session-string">Session String</Label>
-                <Input
-                  id="session-string"
-                  type="password"
-                  placeholder="1BQAWZmxvcmE..."
-                  value={customSessionString}
-                  onChange={(e) => setCustomSessionString(e.target.value)}
-                  data-testid="input-custom-session"
-                />
+                <div className="flex space-x-2">
+                  <Input
+                    id="session-string"
+                    type="password"
+                    placeholder="1BQAWZmxvcmE..."
+                    value={customSessionString}
+                    onChange={(e) => setCustomSessionString(e.target.value)}
+                    data-testid="input-custom-session"
+                    className="flex-1"
+                  />
+                  <Popover open={showSessionHistory} onOpenChange={setShowSessionHistory}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSessionHistoryClick}
+                        data-testid="button-session-history"
+                        title="View saved session history (password required)"
+                        className="px-2"
+                      >
+                        <History className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80">
+                      <div className="space-y-2">
+                        <h4 className="font-medium">Saved Sessions</h4>
+                        {(() => {
+                          const savedSessions = JSON.parse(localStorage.getItem('custom_sessions') || '[]');
+                          if (savedSessions.length === 0) {
+                            return <p className="text-sm text-muted-foreground">No saved sessions</p>;
+                          }
+                          return savedSessions.map((session: string, index: number) => (
+                            <div key={index} className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleSelectStoredSession(session)}
+                                className="flex-1 text-left truncate"
+                                data-testid={`button-saved-session-${index}`}
+                              >
+                                {session.substring(0, 20)}...
+                              </Button>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
 
               <div className="flex space-x-2">
