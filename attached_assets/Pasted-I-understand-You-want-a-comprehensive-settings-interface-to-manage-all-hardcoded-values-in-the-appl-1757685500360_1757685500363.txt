@@ -72,6 +72,12 @@ Planned frontend API integration
 Now let me update the frontend settings page to fetch data from the backend APIs I just created:
 
 
+Edited client/src/pages/settings.tsx
+
+Edited client/src/pages/settings.tsx
+
+Edited client/src/pages/settings.tsx
+
 Completed task list update
 
 Create page for settings and options
