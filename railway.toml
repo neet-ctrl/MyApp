@@ -10,28 +10,39 @@ restartPolicyMaxRetries = 3
 [service]
 autoDeploy = true
 
-[[volumes]]
-name = "telegram-data"
-mountPath = "/app/data"
-
 [env]
 NODE_ENV = "production"
 # PORT will be set by Railway dynamically - don't override
 FALLBACK_PORT = "5000"
 APP_LANGUAGE = "en_EN"
+# Exact hardcoded values from workspace
 TG_API_ID = "28403662"
 TG_API_HASH = "079509d4ac7f209a1a58facd00d6ff5a"
-# TG_BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+TG_BOT_TOKEN = "8154976061:AAGrNr6OcdMhFNhV5bCkpGfQAh0FYeJO1gE"
 TG_AUTHORIZED_USER_ID = "6956029558"
-TG_DOWNLOAD_PATH = "/app/data/downloads"
-TG_SESSION = "/app/data/sessions/bottorrent"
-PATH_CONFIG = "/app/data/tmp/config/config.ini"
-PATH_PENDING_MESSAGES = "/app/data/tmp/config/pending_messages.json"
-PATH_DOWNLOAD_FILES = "/app/data/tmp/config/download_files.json"
+# Use exact workspace folder structure - no volumes
+TG_DOWNLOAD_PATH = "/app/downloads"
+TG_SESSION = "/app/bottorrent"
+PATH_CONFIG = "/app/config/config.ini"
+PATH_PENDING_MESSAGES = "/app/config/pending_messages.json"
+PATH_DOWNLOAD_FILES = "/app/config/download_files.json"
 TG_MAX_PARALLEL = "4"
 TG_DL_TIMEOUT = "3600"
-# YouTube folders removed - not needed for production deployment
+# YouTube paths using exact workspace structure
+YOUTUBE_AUDIO_FOLDER = "/app/downloads/youtube/audio"
+YOUTUBE_VIDEO_FOLDER = "/app/downloads/youtube/videos"
+# Enable all features exactly like workspace
 ENABLED_UNZIP = "true"
 ENABLED_UNRAR = "true"
 ENABLED_7Z = "true"
+ENABLED_YOUTUBE = "true"
 TG_PROGRESS_DOWNLOAD = "true"
+# Session paths for all components exactly like workspace
+SESSION = "/app/bottorrent"
+BOT_SESSION = "/app/bottorrent"
+LIVE_CLONING_SESSION = "/app/bot_source/live-cloning/live_cloner"
+COPIER_SESSION = "/app/tmp/config/copier"
+# Exact hardcoded paths from workspace configurations
+API_ID = "28403662"
+API_HASH = "079509d4ac7f209a1a58facd00d6ff5a"
+BOT_TOKEN = "8154976061:AAGrNr6OcdMhFNhV5bCkpGfQAh0FYeJO1gE"
