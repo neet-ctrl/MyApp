@@ -2794,10 +2794,113 @@ if __name__ == "__main__":
         return res.status(400).json({ error: 'Instance ID, from entity, and to entity are required' });
       }
 
+      // CRITICAL: Resolve entities first before storing (like original Python does)
+      // This ensures entities exist and are valid in the Telegram session
+      let resolvedFromEntity, resolvedToEntity;
+      
+      try {
+        // Get current session string from the live cloning status or instance
+        const instance = await storage.getLiveCloningInstance(instanceId);
+        if (!instance || !instance.sessionString) {
+          return res.status(400).json({ 
+            error: 'No valid session found for this instance. Please test your session first.' 
+          });
+        }
+
+        const telegramConfig = configReader.getTelegramConfig();
+        
+        // Create temporary client for entity resolution
+        const { StringSession } = require('telegram/sessions');
+        const { TelegramClient } = require('telegram');
+        
+        const client = new TelegramClient(
+          new StringSession(instance.sessionString),
+          parseInt(telegramConfig.api_id),
+          telegramConfig.api_hash,
+          {
+            connectionRetries: 3,
+            deviceModel: 'Live Cloning Web Interface',
+            systemVersion: '1.0.0',
+            appVersion: '1.0.0',
+            langCode: 'en',
+            systemLangCode: 'en'
+          }
+        );
+
+        await client.connect();
+        
+        // Resolve both entities like original Python code does
+        try {
+          console.log(`🔍 Resolving source entity: ${fromEntity}`);
+          resolvedFromEntity = await client.getEntity(fromEntity);
+          console.log(`✅ Source entity resolved: ${resolvedFromEntity.id} (${resolvedFromEntity.title || resolvedFromEntity.firstName || 'Unknown'})`);
+          
+          console.log(`🔍 Resolving target entity: ${toEntity}`);
+          resolvedToEntity = await client.getEntity(toEntity);
+          console.log(`✅ Target entity resolved: ${resolvedToEntity.id} (${resolvedToEntity.title || resolvedToEntity.firstName || 'Unknown'})`);
+          
+        } catch (entityError: any) {
+          console.error('❌ Entity resolution failed, trying dialog sync...', entityError.message);
+          
+          // Fallback: Get dialogs to sync entities (like Python "Sync" command)
+          try {
+            console.log('📥 Syncing dialogs to find entities...');
+            const dialogs = await client.getDialogs();
+            console.log(`Found ${dialogs.length} dialogs, searching for entities...`);
+            
+            // Try to find entities in dialogs
+            for (const dialog of dialogs) {
+              if (dialog.entity) {
+                const entityId = dialog.entity.id.toString();
+                const entityUsername = dialog.entity.username;
+                const entityTitle = dialog.entity.title || dialog.entity.firstName;
+                
+                // Match source entity
+                if (!resolvedFromEntity && (
+                  entityId === fromEntity.toString() || 
+                  entityId === fromEntity.toString().replace('-100', '') ||
+                  entityUsername === fromEntity.replace('@', '') ||
+                  entityTitle === fromEntity
+                )) {
+                  resolvedFromEntity = dialog.entity;
+                  console.log(`✅ Found source entity in dialogs: ${resolvedFromEntity.id}`);
+                }
+                
+                // Match target entity
+                if (!resolvedToEntity && (
+                  entityId === toEntity.toString() || 
+                  entityId === toEntity.toString().replace('-100', '') ||
+                  entityUsername === toEntity.replace('@', '') ||
+                  entityTitle === toEntity
+                )) {
+                  resolvedToEntity = dialog.entity;
+                  console.log(`✅ Found target entity in dialogs: ${resolvedToEntity.id}`);
+                }
+              }
+            }
+            
+            if (!resolvedFromEntity || !resolvedToEntity) {
+              throw new Error(`Could not resolve entities. Source: ${!!resolvedFromEntity}, Target: ${!!resolvedToEntity}. Make sure the bot is joined to both chats and try the Sync command.`);
+            }
+            
+          } catch (dialogError: any) {
+            throw new Error(`Failed to resolve entities: ${entityError.message}. Dialog sync failed: ${dialogError.message}. Please ensure the bot is joined to both chats.`);
+          }
+        }
+        
+        await client.disconnect();
+        
+      } catch (resolutionError: any) {
+        return res.status(400).json({ 
+          error: `Entity resolution failed: ${resolutionError.message}` 
+        });
+      }
+
+      // Save with resolved entity IDs (just like original Python does)
       const link = await storage.saveEntityLink({
         instanceId,
-        fromEntity,
-        toEntity,
+        fromEntity: resolvedFromEntity.id.toString(),
+        toEntity: resolvedToEntity.id.toString(),
         isActive: true
       });
 

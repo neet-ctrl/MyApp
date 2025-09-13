@@ -162,6 +162,19 @@ class LiveCloner:
             me = await self.client.get_me()
             logging.info(f"Connected as: {me.first_name} (@{me.username}) - ID: {me.id}")
             
+            # CRITICAL: Sync dialogs first (like original Python script does)
+            # This ensures all entities are loaded into the session before processing
+            try:
+                logging.info("🔄 Syncing dialogs to load entities...")
+                dialogs = await self.client.get_dialogs()
+                logging.info(f"✅ Successfully synced {len(dialogs)} chats - entities are now available")
+            except Exception as e:
+                logging.warning(f"⚠️ Dialog sync failed: {e} - some entities may not be available")
+            
+            # CRITICAL: Pre-resolve all stored entity links (fix the PeerChannel error)
+            # This ensures all configured entities are valid before message processing starts
+            await self.pre_resolve_entities()
+            
             # Register event handlers
             self.register_event_handlers()
             
@@ -171,6 +184,45 @@ class LiveCloner:
             logging.error(f"Failed to start client: {e}")
             self.update_status({"error": str(e)})
             return False
+
+    async def pre_resolve_entities(self):
+        """Pre-resolve all configured entity links to prevent PeerChannel errors"""
+        try:
+            entities = self.config.get("entities", [])
+            if not entities:
+                logging.info("📝 No entity links configured, skipping pre-resolution")
+                return
+            
+            logging.info(f"🔍 Pre-resolving {len(entities)} entity link pairs...")
+            resolved_count = 0
+            failed_entities = []
+            
+            # Collect all unique entity IDs from configured links
+            unique_entities = set()
+            for entity_pair in entities:
+                if len(entity_pair) >= 2:
+                    unique_entities.add(entity_pair[0])  # from entity
+                    unique_entities.add(entity_pair[1])  # to entity
+            
+            # Resolve each unique entity
+            for entity_id in unique_entities:
+                try:
+                    resolved_entity = await self.client.get_entity(entity_id)
+                    entity_name = getattr(resolved_entity, 'title', getattr(resolved_entity, 'first_name', f'ID:{entity_id}'))
+                    logging.info(f"✅ Resolved entity: {entity_id} -> {entity_name}")
+                    resolved_count += 1
+                except Exception as e:
+                    logging.error(f"❌ Failed to resolve entity {entity_id}: {e}")
+                    failed_entities.append(entity_id)
+            
+            if failed_entities:
+                logging.warning(f"⚠️ {len(failed_entities)} entities could not be resolved: {failed_entities}")
+                logging.warning("💡 Make sure the bot is joined to all channels/groups and try the Sync command")
+            
+            logging.info(f"✅ Pre-resolution complete: {resolved_count}/{len(unique_entities)} entities resolved")
+            
+        except Exception as e:
+            logging.error(f"❌ Error during entity pre-resolution: {e}")
 
     def register_event_handlers(self):
         """Register Telegram event handlers"""
