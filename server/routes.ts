@@ -5864,10 +5864,15 @@ export async function startLiveCloningService(): Promise<void> {
       // Also try to load from entities.json if config.json didn't have entities
       if (entityLinks.length === 0 && fs.existsSync(entitiesJsonPath)) {
         try {
-          const entitiesData = JSON.parse(fs.readFileSync(entitiesJsonPath, 'utf8'));
-          if (entitiesData.entities && Array.isArray(entitiesData.entities)) {
-            entityLinks = entitiesData.entities;
-            console.log(`📎 Loaded ${entityLinks.length} entity links from entities.json`);
+          const fileContent = fs.readFileSync(entitiesJsonPath, 'utf8').trim();
+          if (fileContent) {
+            const entitiesData = JSON.parse(fileContent);
+            if (entitiesData.entities && Array.isArray(entitiesData.entities)) {
+              entityLinks = entitiesData.entities;
+              console.log(`📎 Loaded ${entityLinks.length} entity links from entities.json`);
+            }
+          } else {
+            console.log('📎 entities.json file is empty, skipping');
           }
         } catch (error) {
           console.error('⚠️ Error reading entities.json:', error);
