@@ -68,7 +68,7 @@ export class DownloadManager {
       console.error('❌ Direct download error:', error);
       return {
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
