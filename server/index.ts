@@ -1,10 +1,26 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { createServer } from "http";
+import session from "express-session";
+import { registerRoutes, startLiveCloningService } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { autoSetup } from "./auto-setup";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+// Session middleware for GitHub OAuth
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'telegram-manager-github-sync-' + Math.random().toString(36),
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+app.use(express.json({ limit: '500mb' }));
+app.use(express.urlencoded({ extended: false, limit: '500mb' }));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -37,7 +53,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  // Run automatic setup first
+  await autoSetup();
+  
+  await registerRoutes(app);
+  const server = createServer(app);
+  
+  // Auto-start Live Cloning service for always-running architecture
+  await startLiveCloningService();
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

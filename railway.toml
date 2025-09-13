@@ -15,10 +15,8 @@ NODE_ENV = "production"
 # PORT will be set by Railway dynamically - don't override
 FALLBACK_PORT = "5000"
 APP_LANGUAGE = "en_EN"
-# Railway-specific session to avoid conflict with workspace
-RAILWAY_SESSION_STRING = "1BQAWZmxvcmEud2ViLnRlbGVncmFtLm9yZwG7IS3tNY2BsIDLeDQnewXF0dZ7iEc231dYk/8TDX83hkgf7EwJ8HvdsqxWr/Dyb8oeEIe6+H9MAgI4yPaGs0IgIsdLQozbCnlNF7NDC+q5iC+JlpLbAF2PIiZ3nHvetmRyadZpTsVSLFgSG1BdvVUx2J65VHdkbJTk9V0hj2Wq3ucMrBNGJB6oCSrnSqWCD5mmtxKdFDV6p+6Fj1d0gbnmBOkhV0Ud+V6NRHDup/j6rREt/lJTO8gXowmd2dLt1piiQrmD3fU+zKEFf4Mv0GllJYYKY9aVxQjjhowXM8GdKnX0DLxOFVcqSk7sOkCn14ocdtYK4ffhRgJdgu241XriLA=="
-# Use same defaults as workspace (API_ID=21, API_HASH='default_hash')
-# TG_API_ID = "28403662"  
+# Use same defaults as workspace (empty env vars = fallback to API_ID=1, API_HASH='default_hash')
+# TG_API_ID = "28403662"
 # TG_API_HASH = "079509d4ac7f209a1a58facd00d6ff5a"
 TG_BOT_TOKEN = "8154976061:AAGrNr6OcdMhFNhV5bCkpGfQAh0FYeJO1gE"
 TG_AUTHORIZED_USER_ID = "6956029558"
