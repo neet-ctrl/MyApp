@@ -11,3 +11,5 @@ tmp/
 # Exception: Include critical live cloning settings for Railway deployment
 !tmp/live_cloning_persistent_settings.json
 logs/
+# Exception: Include critical live cloning settings for Railway deployment  
+!tmp/live_cloning_persistent_settings.json
