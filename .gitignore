@@ -8,4 +8,6 @@ vite.config.ts.*
 # Downloads and temporary files
 downloads/
 tmp/
+# Exception: Include critical live cloning settings for Railway deployment
+!tmp/live_cloning_persistent_settings.json
 logs/

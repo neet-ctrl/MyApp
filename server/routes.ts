@@ -63,6 +63,24 @@ let liveCloningProcess: ChildProcess | null = null;
 // Load persistent settings if available
 const persistentSettingsPath = path.join(process.cwd(), 'tmp', 'live_cloning_persistent_settings.json');
 let loadedSettings: any = {};
+
+// DEBUG: Add detailed logging to debug Railway deployment
+console.log('🔍 DEBUG: process.cwd():', process.cwd());
+console.log('🔍 DEBUG: persistentSettingsPath:', persistentSettingsPath);
+console.log('🔍 DEBUG: File exists check:', fs.existsSync(persistentSettingsPath));
+
+// Check what's in tmp directory
+try {
+  const tmpDir = path.join(process.cwd(), 'tmp');
+  console.log('🔍 DEBUG: tmp directory exists:', fs.existsSync(tmpDir));
+  if (fs.existsSync(tmpDir)) {
+    const files = fs.readdirSync(tmpDir);
+    console.log('🔍 DEBUG: Files in tmp directory:', files);
+  }
+} catch (e) {
+  console.log('🔍 DEBUG: Error reading tmp directory:', e);
+}
+
 if (fs.existsSync(persistentSettingsPath)) {
   try {
     const settingsData = fs.readFileSync(persistentSettingsPath, 'utf-8');
@@ -74,6 +92,8 @@ if (fs.existsSync(persistentSettingsPath)) {
   } catch (e) {
     console.error('❌ Error loading persistent settings:', e);
   }
+} else {
+  console.log('⚠️ Persistent settings file not found at:', persistentSettingsPath);
 }
 
 let liveCloningStatus = {
