@@ -4953,7 +4953,8 @@ export async function startLiveCloningService(): Promise<void> {
     console.log('📋 Loaded persistent settings for auto-start:', persistentSettings);
     
     // Check if we have a valid session string from environment or config
-    let sessionString = process.env.LIVE_CLONING_SESSION || persistentSettings.sessionString;
+    // Priority: Railway-specific session > Environment > Config file > Hardcoded fallback
+    let sessionString = process.env.RAILWAY_SESSION_STRING || process.env.LIVE_CLONING_SESSION || persistentSettings.sessionString;
     
     // Fallback to hardcoded session (same as used by entity creation endpoint)
     if (!sessionString) {
@@ -4964,6 +4965,15 @@ export async function startLiveCloningService(): Promise<void> {
       persistentSettings.sessionString = sessionString;
       fs.writeFileSync(persistentConfigPath, JSON.stringify(persistentSettings, null, 2));
       console.log('💾 Saved session string to persistent settings');
+    }
+    
+    // Log which session source is being used
+    if (process.env.RAILWAY_SESSION_STRING) {
+      console.log('🚂 Using Railway-specific session string (avoiding IP conflict)');
+    } else if (process.env.LIVE_CLONING_SESSION) {
+      console.log('🔧 Using environment session string');
+    } else if (persistentSettings.sessionString) {
+      console.log('📝 Using persistent config session string');  
     }
     
     // Stop existing process if running
