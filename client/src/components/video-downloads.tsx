@@ -159,20 +159,14 @@ export function VideoDownloads() {
 
   const downloadFile = useMutation({
     mutationFn: async ({ message }: { message: Message }) => {
-      const downloadId = `download_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const downloadItem: DownloadItem = {
         id: `${message.chatId}-${message.id}-${Date.now()}`,
-        downloadId,
         messageId: message.id,
         chatId: message.chatId,
         fileName: message.mediaFileName || `${message.mediaType || 'file'}_${message.id}`,
         fileSize: message.mediaSize || 0,
-        downloadedBytes: 0,
         progress: 0,
         status: 'pending',
-        isResumable: false, // Will be updated based on server support
-        resumeSupported: false,
-        downloadDate: new Date(),
       };
 
       await storage.saveDownload(downloadItem);
@@ -1094,30 +1088,12 @@ export function VideoDownloads() {
                               variant="ghost"
                               size="sm"
                               onClick={async () => {
-                                try {
-                                  // Update download status to paused
-                                  const downloads = await storage.getDownloads();
-                                  const downloadToPause = downloads.find(d => d.id === download.id);
-                                  if (downloadToPause) {
-                                    downloadToPause.status = 'paused';
-                                    await storage.saveDownload(downloadToPause);
-                                    
-                                    // Call the DownloadManager pause functionality
-                                    await downloadManager.pauseDownload(downloadToPause.downloadId);
-                                    
-                                    queryClient.invalidateQueries({ queryKey: ['downloads'] });
-                                    toast({
-                                      title: 'Download paused',
-                                      description: 'The download has been paused and can be resumed later',
-                                    });
-                                  }
-                                } catch (error) {
-                                  toast({
-                                    variant: 'destructive',
-                                    title: 'Pause failed',
-                                    description: error instanceof Error ? error.message : 'Failed to pause download',
-                                  });
-                                }
+                                await downloadManager.pauseDownload(download.id);
+                                queryClient.invalidateQueries({ queryKey: ['downloads'] });
+                                toast({
+                                  title: 'Download paused',
+                                  description: 'The download has been paused instantly',
+                                });
                               }}
                               className="h-6 w-6 p-0 text-yellow-500 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-950"
                               data-testid={`pause-${download.id}`}
@@ -1129,38 +1105,17 @@ export function VideoDownloads() {
                               variant="ghost"
                               size="sm"
                               onClick={async () => {
-                                try {
-                                  // Update status to resuming
-                                  const downloads = await storage.getDownloads();
-                                  const downloadToResume = downloads.find(d => d.id === download.id);
-                                  if (downloadToResume) {
-                                    downloadToResume.status = 'resuming';
-                                    await storage.saveDownload(downloadToResume);
-                                    queryClient.invalidateQueries({ queryKey: ['downloads'] });
-
-                                    // Resume the download with proper range request support
-                                    const dataProvider = (onProgress: (progress: number, speed: number) => void) => {
-                                      return telegramManager.downloadFile(downloadToResume.messageId, downloadToResume.chatId, onProgress);
-                                    };
-
-                                    const fileName = await downloadManager.resumeDownloadWithProgress(
-                                      downloadToResume,
-                                      dataProvider,
-                                      (progress, speed) => {
-                                        queryClient.invalidateQueries({ queryKey: ['downloads'] });
-                                      }
-                                    );
-
-                                    toast({
-                                      title: 'Download resumed',
-                                      description: `${fileName} download has been resumed successfully`,
-                                    });
-                                  }
-                                } catch (error) {
+                                // Resume download - you might need to implement proper resume logic
+                                // For now, we'll update status back to downloading
+                                const downloads = await storage.getDownloads();
+                                const downloadToResume = downloads.find(d => d.id === download.id);
+                                if (downloadToResume) {
+                                  downloadToResume.status = 'downloading';
+                                  await storage.saveDownload(downloadToResume);
+                                  queryClient.invalidateQueries({ queryKey: ['downloads'] });
                                   toast({
-                                    variant: 'destructive',
-                                    title: 'Resume failed',
-                                    description: error instanceof Error ? error.message : 'Failed to resume download',
+                                    title: 'Download resumed',
+                                    description: 'The download has been resumed',
                                   });
                                 }
                               }}

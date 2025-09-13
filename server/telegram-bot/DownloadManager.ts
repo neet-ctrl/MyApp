@@ -10,10 +10,6 @@ interface DownloadOptions {
   timeout?: number;
   headers?: Record<string, string>;
   progressCallback?: (progress: DownloadProgress) => void;
-  resumeDownload?: boolean;
-  downloadId?: string;
-  onPartialProgress?: (info: { downloadId: string; downloadedBytes: number; totalBytes?: number; filePath: string; status: 'downloading' | 'paused' | 'completed' | 'failed' }) => void;
-  onStatusChange?: (info: { downloadId: string; status: 'downloading' | 'resuming' | 'paused' | 'completed' | 'failed'; error?: string }) => void;
 }
 
 interface DownloadProgress {
@@ -32,15 +28,7 @@ interface DownloadResult {
 }
 
 export class DownloadManager {
-  private activeDownloads: Map<string, {
-    url: string;
-    outputPath: string;
-    startTime: number;
-    resumeFromByte?: number;
-    totalSize?: number;
-    abortController: AbortController;
-    writeStream: fs.WriteStream;
-  }> = new Map();
+  private activeDownloads: Map<string, any> = new Map();
   private downloadPaths: Map<string, string> = new Map();
 
   constructor() {
@@ -61,7 +49,7 @@ export class DownloadManager {
     try {
       console.log('🌐 Starting direct URL download:', url);
 
-      const downloadId = options.downloadId || this.generateDownloadId();
+      const downloadId = this.generateDownloadId();
       const filename = options.filename || this.extractFilenameFromUrl(url);
       const outputPath = path.join(options.outputPath, filename);
 
@@ -71,16 +59,8 @@ export class DownloadManager {
         fs.mkdirSync(dir, { recursive: true });
       }
 
-      // Check for resumable download
-      let resumeFromByte = 0;
-      if (options.resumeDownload && fs.existsSync(outputPath)) {
-        const stats = fs.statSync(outputPath);
-        resumeFromByte = stats.size;
-        console.log(`📥 Resuming download from byte ${resumeFromByte}`);
-      }
-
-      // Start download (with resume support)
-      const result = await this.performDownload(url, outputPath, options, downloadId, resumeFromByte);
+      // Start download
+      const result = await this.performDownload(url, outputPath, options, downloadId);
       
       return result;
 
@@ -88,7 +68,7 @@ export class DownloadManager {
       console.error('❌ Direct download error:', error);
       return {
         success: false,
-        error: (error as Error).message || 'Unknown error'
+        error: error.message
       };
     }
   }
@@ -97,8 +77,7 @@ export class DownloadManager {
     url: string, 
     outputPath: string, 
     options: DownloadOptions, 
-    downloadId: string,
-    resumeFromByte: number = 0
+    downloadId: string
   ): Promise<DownloadResult> {
     
     const maxRetries = options.maxRetries || 3;
@@ -107,61 +86,24 @@ export class DownloadManager {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`📥 Download attempt ${attempt}/${maxRetries} for: ${path.basename(outputPath)}`);
-        if (resumeFromByte > 0) {
-          console.log(`📥 Resuming from byte ${resumeFromByte}`);
-        }
 
-        // Prepare headers for range request (resumable download)
-        const headers: Record<string, string> = {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          ...options.headers
-        };
-
-        // Add Range header for resumable download
-        if (resumeFromByte > 0) {
-          headers['Range'] = `bytes=${resumeFromByte}-`;
-        }
-
-        const abortController = new AbortController();
-        
         const response = await axios({
           method: 'GET',
           url: url,
           responseType: 'stream',
           timeout: timeout,
-          signal: abortController.signal,
-          headers
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            ...options.headers
+          }
         });
 
-        // Handle resume response codes
-        if (resumeFromByte > 0 && response.status === 200) {
-          // Server doesn't support range requests, restart from beginning
-          console.log('⚠️ Server does not support range requests, restarting download');
-          if (fs.existsSync(outputPath)) {
-            fs.unlinkSync(outputPath);
-          }
-          resumeFromByte = 0;
-        }
-
-        const contentLength = parseInt(response.headers['content-length'] || '0');
-        const totalSize = resumeFromByte > 0 ? resumeFromByte + contentLength : contentLength;
-        let downloadedSize = resumeFromByte;
+        const totalSize = parseInt(response.headers['content-length'] || '0');
+        let downloadedSize = 0;
         let lastProgressUpdate = Date.now();
 
-        // Create write stream (append mode for resume)
-        const writeStream = resumeFromByte > 0 
-          ? createWriteStream(outputPath, { flags: 'a' })
-          : createWriteStream(outputPath);
-        
-        this.activeDownloads.set(downloadId, {
-          url,
-          outputPath,
-          startTime: Date.now(),
-          resumeFromByte,
-          totalSize,
-          abortController,
-          writeStream
-        });
+        const writeStream = createWriteStream(outputPath);
+        this.activeDownloads.set(downloadId, { url, outputPath, startTime: Date.now() });
 
         return new Promise((resolve, reject) => {
           response.data.on('data', (chunk: Buffer) => {
@@ -172,7 +114,7 @@ export class DownloadManager {
               const now = Date.now();
               if (now - lastProgressUpdate > 1000) { // Update every second
                 const percentage = Math.round((downloadedSize / totalSize) * 100);
-                const speed = this.calculateSpeed(downloadedSize - resumeFromByte, Date.now() - this.activeDownloads.get(downloadId)?.startTime);
+                const speed = this.calculateSpeed(downloadedSize, Date.now() - this.activeDownloads.get(downloadId)?.startTime);
                 const eta = this.calculateETA(downloadedSize, totalSize, speed);
 
                 options.progressCallback({
@@ -181,15 +123,6 @@ export class DownloadManager {
                   total: totalSize,
                   speed,
                   eta
-                });
-
-                // Persist progress for resumability
-                options.onPartialProgress?.({
-                  downloadId,
-                  downloadedBytes: downloadedSize,
-                  totalBytes: totalSize,
-                  filePath: outputPath,
-                  status: 'downloading'
                 });
 
                 lastProgressUpdate = now;
@@ -201,32 +134,7 @@ export class DownloadManager {
             console.error('❌ Download stream error:', error);
             writeStream.destroy();
             this.activeDownloads.delete(downloadId);
-            
-            // Persist error state
-            const paused = (error as any).code === 'ERR_CANCELED' || error.name === 'CanceledError';
-            options.onPartialProgress?.({ 
-              downloadId, 
-              downloadedBytes: this.getPartialFileSize(outputPath), 
-              totalBytes: totalSize, 
-              filePath: outputPath, 
-              status: paused ? 'paused' : 'failed' 
-            });
-            options.onStatusChange?.({ 
-              downloadId, 
-              status: paused ? 'paused' : 'failed', 
-              error: paused ? undefined : (error as Error).message 
-            });
-            
-            // Handle abort gracefully - don't delete partial file
-            if (paused) {
-              console.log('⏸️ Download aborted (paused)');
-              resolve({
-                success: false,
-                error: 'Download paused'
-              });
-            } else {
-              reject(error);
-            }
+            reject(error);
           });
 
           writeStream.on('error', (error: Error) => {
@@ -239,19 +147,6 @@ export class DownloadManager {
             this.activeDownloads.delete(downloadId);
             console.log('✅ Download completed:', outputPath);
             
-            // Persist completion state
-            options.onPartialProgress?.({ 
-              downloadId, 
-              downloadedBytes: downloadedSize, 
-              totalBytes: totalSize, 
-              filePath: outputPath, 
-              status: 'completed' 
-            });
-            options.onStatusChange?.({ 
-              downloadId, 
-              status: 'completed' 
-            });
-            
             resolve({
               success: true,
               filePath: outputPath,
@@ -263,25 +158,14 @@ export class DownloadManager {
         });
 
       } catch (error) {
-        const errorMsg = (error as Error).message || 'Unknown error';
-        console.error(`❌ Download attempt ${attempt} failed:`, errorMsg);
+        console.error(`❌ Download attempt ${attempt} failed:`, error.message);
         
         if (attempt === maxRetries) {
           this.activeDownloads.delete(downloadId);
           return {
             success: false,
-            error: errorMsg
+            error: error.message
           };
-        }
-
-        // For resume attempts, check if partial file is corrupted
-        if (resumeFromByte > 0 && fs.existsSync(outputPath)) {
-          const stats = fs.statSync(outputPath);
-          if (stats.size < resumeFromByte) {
-            console.log('⚠️ Partial file appears corrupted, restarting download');
-            fs.unlinkSync(outputPath);
-            resumeFromByte = 0;
-          }
         }
 
         // Wait before retry
@@ -442,27 +326,19 @@ export class DownloadManager {
   async retryFailedDownload(url: string, originalPath: string, options: DownloadOptions): Promise<DownloadResult> {
     console.log('🔄 Retrying failed download:', url);
     
-    // Try to resume download instead of restarting
+    // Remove incomplete file if exists
     if (fs.existsSync(originalPath)) {
-      const stats = fs.statSync(originalPath);
-      if (stats.size > 0) {
-        console.log(`📥 Attempting to resume download from ${stats.size} bytes`);
-        options.resumeDownload = true;
-        return this.downloadDirectUrl(url, options);
-      } else {
-        // File is empty, remove it
-        try {
-          fs.unlinkSync(originalPath);
-        } catch (error) {
-          console.error('Error removing empty file:', error);
-        }
+      try {
+        fs.unlinkSync(originalPath);
+      } catch (error) {
+        console.error('Error removing incomplete file:', error);
       }
     }
     
     return this.downloadDirectUrl(url, options);
   }
 
-  getActiveDownloads(): Array<{ id: string; url: string; outputPath: string; startTime: number; resumeFromByte?: number; totalSize?: number }> {
+  getActiveDownloads(): Array<{ id: string; url: string; outputPath: string; startTime: number }> {
     return Array.from(this.activeDownloads.entries()).map(([id, info]) => ({
       id,
       ...info
@@ -496,103 +372,5 @@ export class DownloadManager {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     return `${hours}h ${minutes}m`;
-  }
-
-  // Resume functionality
-  async resumeDownload(downloadId: string, url: string, outputPath: string, options: DownloadOptions): Promise<DownloadResult> {
-    console.log('🔄 Resuming download:', downloadId);
-    
-    options.resumeDownload = true;
-    options.downloadId = downloadId;
-    
-    return this.downloadDirectUrl(url, options);
-  }
-
-  async pauseDownload(downloadId: string): Promise<boolean> {
-    const entry = this.activeDownloads.get(downloadId);
-    if (entry) {
-      console.log('⏸️ Pausing download:', downloadId);
-      entry.abortController.abort();
-      entry.writeStream.close();
-      this.activeDownloads.delete(downloadId);
-      return true;
-    }
-    return false;
-  }
-
-  getPartialFileSize(filePath: string): number {
-    try {
-      if (fs.existsSync(filePath)) {
-        const stats = fs.statSync(filePath);
-        return stats.size;
-      }
-      return 0;
-    } catch (error) {
-      console.error('Error checking partial file size:', error);
-      return 0;
-    }
-  }
-
-  isDownloadResumable(filePath: string, totalSize?: number): boolean {
-    if (!fs.existsSync(filePath)) return false;
-    
-    const partialSize = this.getPartialFileSize(filePath);
-    if (partialSize === 0) return false;
-    
-    // If we know the total size, check if partial file is not already complete
-    if (totalSize && partialSize >= totalSize) return false;
-    
-    return true;
-  }
-
-  async checkServerSupportsResume(url: string): Promise<boolean> {
-    try {
-      const response = await axios.head(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-      });
-      
-      return response.headers['accept-ranges'] === 'bytes';
-    } catch (error) {
-      console.error('Error checking server resume support:', error);
-      return false;
-    }
-  }
-
-  async initializeAutoResume(
-    pending: Array<{ downloadId: string; url: string; filePath: string; totalSize?: number }>,
-    optionsFactory: (p: { downloadId: string; url: string; filePath: string; totalSize?: number }) => DownloadOptions
-  ): Promise<void> {
-    console.log('🔄 Initializing auto-resume for', pending.length, 'downloads...');
-    
-    for (const p of pending) {
-      try {
-        const resumable = this.isDownloadResumable(p.filePath, p.totalSize);
-        const serverSupports = await this.checkServerSupportsResume(p.url);
-        
-        if (resumable && serverSupports) {
-          console.log(`📥 Auto-resuming download: ${path.basename(p.filePath)}`);
-          const opts = { ...optionsFactory(p), resumeDownload: true, downloadId: p.downloadId };
-          await this.resumeDownload(p.downloadId, p.url, p.filePath, opts);
-        } else {
-          console.log(`⚠️ Cannot resume download: ${path.basename(p.filePath)} (resumable: ${resumable}, server supports: ${serverSupports})`);
-          optionsFactory(p).onStatusChange?.({ 
-            downloadId: p.downloadId, 
-            status: 'failed', 
-            error: 'Cannot resume - file corrupted or server does not support range requests' 
-          });
-        }
-      } catch (e) {
-        console.error(`❌ Failed to auto-resume download ${p.downloadId}:`, (e as Error).message);
-        optionsFactory(p).onStatusChange?.({ 
-          downloadId: p.downloadId, 
-          status: 'failed', 
-          error: (e as Error).message 
-        });
-      }
-    }
-    
-    console.log('✅ Auto-resume initialization complete');
   }
 }

@@ -4,26 +4,19 @@ import { z } from "zod";
 
 // Database tables
 export const downloads = pgTable("downloads", {
-  id: serial("id").primaryKey(), // Keep existing primary key type
-  downloadId: varchar("download_id").notNull().unique(), // Unique identifier for resume functionality
-  userId: varchar("user_id").default(''), // Made optional with default
-  messageId: integer("message_id").default(0), // Made optional with default
-  originalFilename: varchar("original_filename").default('unknown'), // Made optional with default
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  messageId: integer("message_id").notNull(),
+  originalFilename: varchar("original_filename").notNull(),
   filePath: varchar("file_path"),
   url: text("url"),
-  fileType: varchar("file_type").default('file'), // Made optional with default
-  fileSize: integer("file_size").default(0),
-  downloadedBytes: integer("downloaded_bytes").default(0), // Track partial progress
-  status: varchar("status").notNull().default("pending"), // pending, downloading, paused, completed, failed, resuming
+  fileType: varchar("file_type").notNull(),
+  fileSize: integer("file_size"),
+  status: varchar("status").notNull().default("pending"), // pending, downloading, completed, failed
   progress: integer("progress").default(0),
-  speed: integer("speed").default(0), // Download speed in bytes/sec
-  eta: integer("eta").default(0), // Estimated time remaining in seconds
-  isResumable: boolean("is_resumable").default(false), // Whether server supports resume
-  resumeSupported: boolean("resume_supported").default(false), // Whether the URL supports HTTP Range requests
-  lastResumeAttempt: timestamp("last_resume_attempt"),
   error: text("error"),
   downloadDate: timestamp("download_date").defaultNow(),
-  updateDate: timestamp("update_date").defaultNow(),
+  updateDate: timestamp("update_date"),
 });
 
 export const pendingMessages = pgTable("pending_messages", {
@@ -156,24 +149,15 @@ export const messageSchema = z.object({
 });
 
 export const downloadItemSchema = z.object({
-  id: z.union([z.string(), z.number()]).transform(val => String(val)), // Accept both types, convert to string
-  downloadId: z.string(), // Primary identifier for resume functionality
+  id: z.string(),
   messageId: z.number(),
   chatId: z.string(),
   fileName: z.string(),
   fileSize: z.number(),
-  downloadedBytes: z.number().default(0), // Track partial progress
   progress: z.number(),
-  status: z.enum(['pending', 'downloading', 'paused', 'completed', 'failed', 'resuming']),
+  status: z.enum(['pending', 'downloading', 'completed', 'failed', 'cancelled', 'paused']),
+  downloadPath: z.string().optional(),
   speed: z.number().optional(),
-  eta: z.number().optional(),
-  isResumable: z.boolean().optional(), // Whether this download can be resumed
-  resumeSupported: z.boolean().optional(), // Whether the server supports HTTP Range requests
-  lastResumeAttempt: z.date().optional(),
-  error: z.string().optional(),
-  downloadDate: z.date().optional(),
-  filePath: z.string().optional(),
-  url: z.string().optional(),
 });
 
 export const searchParamsSchema = z.object({
