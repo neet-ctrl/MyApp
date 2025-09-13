@@ -18,6 +18,8 @@ rsync -av \
   --exclude='dist/' \
   --exclude='temp-telegram-live-sender/' \
   --exclude='attached_assets/' \
+  --exclude='.git/' \
+  --exclude='.config/' \
   --exclude='*.gif' \
   --exclude='*.jpg' \
   --exclude='*.png' \
@@ -43,6 +45,8 @@ echo "   • node_modules/"
 echo "   • dist/"
 echo "   • temp-telegram-live-sender/"
 echo "   • attached_assets/"
+echo "   • .git/"
+echo "   • .config/"
 echo "   • Media files (.gif, .jpg, .png, .mp4)"
 echo ""
 echo "✅ Included everything else:"
@@ -51,7 +55,6 @@ echo "   • Session files (.session, .session-journal)"
 echo "   • Configuration files"
 echo "   • bot_source/ directory"
 echo "   • logs/, tmp/, downloads/ directories"
-echo "   • .config/ directory"
 echo "   • Lock files and all other project files"
 echo ""
 echo "✨ Archive ready for download or sharing!"
