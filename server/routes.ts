@@ -2799,13 +2799,11 @@ if __name__ == "__main__":
       let resolvedFromEntity, resolvedToEntity;
       
       try {
-        // CRITICAL: Use the session string from the frontend instead of database lookup
-        // The live cloning system uses a hardcoded session, not stored instances
-        const defaultSessionString = '1BVtsOLABux3cdf9iA7_7csD0HjZ-vqy3pQUfbynyLah5ZQQNGCTgc6ao1FOFHur4mvJkRsrzS3KKi65RNXczTxtlxpNIkqoIQvN0ILt2kPp9dUcCuIn8ZlFftx63derTrb_LS6TdeZ4Ly3cI26C_E14TUvhlWNHwB_zDZ1mvpvluQb9EhodVRsWSAQimUWNIrKp9stJum7amnoLzCSdqAydjsfTXej1KZQ1TfxX79yAb-DPIw2kzFWf6Mk9ScDlTeGJg6qRQkiDOHiRrUnrzle1REurAN_4h9qWahhR1ffbreGvOYVDip35Uya4Kn4YGmJM0vtGLq3HoEico3umwBrO6GOc0oxU=';
-        
-        if (!defaultSessionString) {
+        // Get current session string from the live cloning status or instance
+        const instance = await storage.getLiveCloningInstance(instanceId);
+        if (!instance || !instance.sessionString) {
           return res.status(400).json({ 
-            error: 'No valid session found. Please check the session configuration.' 
+            error: 'No valid session found for this instance. Please test your session first.' 
           });
         }
 
@@ -2816,7 +2814,7 @@ if __name__ == "__main__":
         const { TelegramClient } = require('telegram');
         
         const client = new TelegramClient(
-          new StringSession(defaultSessionString),
+          new StringSession(instance.sessionString),
           parseInt(telegramConfig.api_id),
           telegramConfig.api_hash,
           {
@@ -2898,15 +2896,13 @@ if __name__ == "__main__":
         });
       }
 
-      // CRITICAL: Write ONLY to entities.json (single source of truth for perfect sync)
-      // No database writes - entities.json is the authoritative source for both web and Python
+      // CRITICAL: Write ONLY to config.json (single source of truth for perfect sync)
+      // No database writes - config.json is the authoritative source for both web and Python
       try {
-        const configPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'plugins', 'jsons', 'entities.json');
+        const configPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
         
         if (!fs.existsSync(configPath)) {
-          // Create entities.json if it doesn't exist
-          const initialData = { "entities": [] };
-          fs.writeFileSync(configPath, JSON.stringify(initialData, null, 2));
+          return res.status(500).json({ error: 'Configuration file not found' });
         }
         
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -2930,11 +2926,11 @@ if __name__ == "__main__":
         // Add new entity pair in exact Python format [[sourceId, targetId]]
         entityPairs.push([fromId, toId]);
         
-        // Save to entities.json (single source of truth)
+        // Save to config.json (single source of truth)
         config.entities = entityPairs;
         fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
         
-        console.log(`✅ Added entity link to entities.json: ${fromId} → ${toId}`);
+        console.log(`✅ Added entity link to config.json: ${fromId} → ${toId}`);
         console.log(`📝 Total entity links: ${entityPairs.length}`, entityPairs);
         
         // Create response in format expected by frontend
@@ -2970,10 +2966,10 @@ if __name__ == "__main__":
     try {
       const { instanceId } = req.params;
       
-      // CRITICAL: Read entity links directly from entities.json (same source as Python bot)
+      // CRITICAL: Read entity links directly from config.json (same source as Python bot)
       // This ensures 100% synchronization between web and Telegram interfaces
       try {
-        const configPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'plugins', 'jsons', 'entities.json');
+        const configPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
         
         if (!fs.existsSync(configPath)) {
           return res.json({ links: [] });
@@ -2991,14 +2987,14 @@ if __name__ == "__main__":
           isActive: true
         }));
         
-        console.log(`📖 Read ${links.length} entity links directly from entities.json:`, entityPairs);
+        console.log(`📖 Read ${links.length} entity links directly from config.json:`, entityPairs);
         res.json({ links });
         
       } catch (configError: any) {
-        console.error('❌ Error reading from entities.json:', configError);
-        // No fallback - entities.json is the single source of truth
+        console.error('❌ Error reading from config.json:', configError);
+        // No fallback - config.json is the single source of truth
         return res.status(500).json({ 
-          error: `Failed to read entity links: ${configError.message}. Please check entities configuration file.` 
+          error: `Failed to read entity links: ${configError.message}. Please check configuration file.` 
         });
       }
     } catch (error) {
@@ -3074,8 +3070,8 @@ if __name__ == "__main__":
     try {
       const { id } = req.params;
       
-      // CRITICAL: Read directly from entities.json to match Telegram unlink behavior  
-      const configPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'plugins', 'jsons', 'entities.json');
+      // CRITICAL: Read directly from config.json to match Telegram unlink behavior
+      const configPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
       
       if (!fs.existsSync(configPath)) {
         return res.status(404).json({ error: 'Configuration file not found' });
@@ -3099,7 +3095,7 @@ if __name__ == "__main__":
       const filteredPairs = entityPairs.filter((pair: any[]) => pair[0] !== sourceEntity);
       const removedCount = originalCount - filteredPairs.length;
       
-      // Update entities.json with remaining entity pairs
+      // Update config.json with remaining entity pairs
       config.entities = filteredPairs;
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
       
