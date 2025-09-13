@@ -175,4 +175,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:5000/api/downloads || exit 1
 
 # Use the startup script
-CMD ["/app/start.s  that download h"]
+CMD ["/app/start.sh"]
