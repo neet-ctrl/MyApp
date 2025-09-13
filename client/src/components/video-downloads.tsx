@@ -1094,12 +1094,30 @@ export function VideoDownloads() {
                               variant="ghost"
                               size="sm"
                               onClick={async () => {
-                                await downloadManager.pauseDownload(download.id);
-                                queryClient.invalidateQueries({ queryKey: ['downloads'] });
-                                toast({
-                                  title: 'Download paused',
-                                  description: 'The download has been paused instantly',
-                                });
+                                try {
+                                  // Update download status to paused
+                                  const downloads = await storage.getDownloads();
+                                  const downloadToPause = downloads.find(d => d.id === download.id);
+                                  if (downloadToPause) {
+                                    downloadToPause.status = 'paused';
+                                    await storage.saveDownload(downloadToPause);
+                                    
+                                    // Call the DownloadManager pause functionality
+                                    await downloadManager.pauseDownload(downloadToPause.downloadId);
+                                    
+                                    queryClient.invalidateQueries({ queryKey: ['downloads'] });
+                                    toast({
+                                      title: 'Download paused',
+                                      description: 'The download has been paused and can be resumed later',
+                                    });
+                                  }
+                                } catch (error) {
+                                  toast({
+                                    variant: 'destructive',
+                                    title: 'Pause failed',
+                                    description: error instanceof Error ? error.message : 'Failed to pause download',
+                                  });
+                                }
                               }}
                               className="h-6 w-6 p-0 text-yellow-500 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-950"
                               data-testid={`pause-${download.id}`}
@@ -1111,17 +1129,38 @@ export function VideoDownloads() {
                               variant="ghost"
                               size="sm"
                               onClick={async () => {
-                                // Resume download - you might need to implement proper resume logic
-                                // For now, we'll update status back to downloading
-                                const downloads = await storage.getDownloads();
-                                const downloadToResume = downloads.find(d => d.id === download.id);
-                                if (downloadToResume) {
-                                  downloadToResume.status = 'downloading';
-                                  await storage.saveDownload(downloadToResume);
-                                  queryClient.invalidateQueries({ queryKey: ['downloads'] });
+                                try {
+                                  // Update status to resuming
+                                  const downloads = await storage.getDownloads();
+                                  const downloadToResume = downloads.find(d => d.id === download.id);
+                                  if (downloadToResume) {
+                                    downloadToResume.status = 'resuming';
+                                    await storage.saveDownload(downloadToResume);
+                                    queryClient.invalidateQueries({ queryKey: ['downloads'] });
+
+                                    // Resume the download with proper range request support
+                                    const dataProvider = (onProgress: (progress: number, speed: number) => void) => {
+                                      return telegramManager.downloadFile(downloadToResume.messageId, downloadToResume.chatId, onProgress);
+                                    };
+
+                                    const fileName = await downloadManager.resumeDownloadWithProgress(
+                                      downloadToResume,
+                                      dataProvider,
+                                      (progress, speed) => {
+                                        queryClient.invalidateQueries({ queryKey: ['downloads'] });
+                                      }
+                                    );
+
+                                    toast({
+                                      title: 'Download resumed',
+                                      description: `${fileName} download has been resumed successfully`,
+                                    });
+                                  }
+                                } catch (error) {
                                   toast({
-                                    title: 'Download resumed',
-                                    description: 'The download has been resumed',
+                                    variant: 'destructive',
+                                    title: 'Resume failed',
+                                    description: error instanceof Error ? error.message : 'Failed to resume download',
                                   });
                                 }
                               }}

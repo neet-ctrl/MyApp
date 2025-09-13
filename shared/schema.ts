@@ -4,15 +4,15 @@ import { z } from "zod";
 
 // Database tables
 export const downloads = pgTable("downloads", {
-  id: serial("id").primaryKey(),
+  id: serial("id").primaryKey(), // Keep existing primary key type
   downloadId: varchar("download_id").notNull().unique(), // Unique identifier for resume functionality
-  userId: varchar("user_id").notNull(),
-  messageId: integer("message_id").notNull(),
-  originalFilename: varchar("original_filename").notNull(),
+  userId: varchar("user_id").default(''), // Made optional with default
+  messageId: integer("message_id").default(0), // Made optional with default
+  originalFilename: varchar("original_filename").default('unknown'), // Made optional with default
   filePath: varchar("file_path"),
   url: text("url"),
-  fileType: varchar("file_type").notNull(),
-  fileSize: integer("file_size"),
+  fileType: varchar("file_type").default('file'), // Made optional with default
+  fileSize: integer("file_size").default(0),
   downloadedBytes: integer("downloaded_bytes").default(0), // Track partial progress
   status: varchar("status").notNull().default("pending"), // pending, downloading, paused, completed, failed, resuming
   progress: integer("progress").default(0),
@@ -23,7 +23,7 @@ export const downloads = pgTable("downloads", {
   lastResumeAttempt: timestamp("last_resume_attempt"),
   error: text("error"),
   downloadDate: timestamp("download_date").defaultNow(),
-  updateDate: timestamp("update_date"),
+  updateDate: timestamp("update_date").defaultNow(),
 });
 
 export const pendingMessages = pgTable("pending_messages", {
@@ -156,8 +156,8 @@ export const messageSchema = z.object({
 });
 
 export const downloadItemSchema = z.object({
-  id: z.string(),
-  downloadId: z.string(), // Unique identifier for resume functionality
+  id: z.union([z.string(), z.number()]).transform(val => String(val)), // Accept both types, convert to string
+  downloadId: z.string(), // Primary identifier for resume functionality
   messageId: z.number(),
   chatId: z.string(),
   fileName: z.string(),
