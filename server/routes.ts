@@ -190,6 +190,60 @@ export async function registerRoutes(app: Express): Promise<Express> {
     }
   });
 
+  // Serve zip archives from root directory without authorization
+  app.get('/archive/:filename', async (req, res) => {
+    try {
+      const { filename } = req.params;
+      const decodedFilename = decodeURIComponent(filename);
+      
+      // Only allow zip files
+      if (!decodedFilename.endsWith('.zip')) {
+        return res.status(400).json({ error: 'Only zip files are allowed' });
+      }
+      
+      // Only allow project-archive files for security
+      if (!decodedFilename.startsWith('project-archive-')) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      const filePath = path.join(process.cwd(), decodedFilename);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'Archive not found' });
+      }
+
+      // Security check - make sure the path is in the current directory
+      const realPath = path.resolve(filePath);
+      const rootPath = path.resolve(process.cwd());
+      
+      if (!realPath.startsWith(rootPath) || realPath !== path.join(rootPath, decodedFilename)) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const stats = fs.statSync(filePath);
+      
+      // Set headers to force download and avoid authorization issues
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Length', stats.size);
+      res.setHeader('Content-Disposition', `attachment; filename="${decodedFilename}"`);
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Accept-Ranges', 'bytes');
+      
+      const stream = fs.createReadStream(filePath);
+      stream.pipe(res);
+      
+      logger.info(`Served archive: ${decodedFilename} (${stats.size} bytes)`);
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to serve archive: ${errorMessage}`);
+      res.status(500).json({ error: 'Failed to serve archive' });
+    }
+  });
+
   async function getDownloadHistory(downloadsDir: string): Promise<any> {
     const history: any[] = [];
     
