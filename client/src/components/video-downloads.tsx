@@ -159,14 +159,20 @@ export function VideoDownloads() {
 
   const downloadFile = useMutation({
     mutationFn: async ({ message }: { message: Message }) => {
+      const downloadId = `download_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const downloadItem: DownloadItem = {
         id: `${message.chatId}-${message.id}-${Date.now()}`,
+        downloadId,
         messageId: message.id,
         chatId: message.chatId,
         fileName: message.mediaFileName || `${message.mediaType || 'file'}_${message.id}`,
         fileSize: message.mediaSize || 0,
+        downloadedBytes: 0,
         progress: 0,
         status: 'pending',
+        isResumable: false, // Will be updated based on server support
+        resumeSupported: false,
+        downloadDate: new Date(),
       };
 
       await storage.saveDownload(downloadItem);
