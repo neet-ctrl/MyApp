@@ -36,9 +36,9 @@ ENV TG_AUTHORIZED_USER_ID=6956029558
 ENV API_ID=28403662
 ENV API_HASH=079509d4ac7f209a1a58facd00d6ff5a
 ENV BOT_TOKEN=8154976061:AAGrNr6OcdMhFNhV5bCkpGfQAh0FYeJO1gE
-ENV SESSION=/app/bottorrent
-ENV TG_SESSION=/app/bottorrent
-ENV BOT_SESSION=/app/bottorrent
+ENV SESSION=/app/bottorrent.session
+ENV TG_SESSION=/app/bottorrent.session
+ENV BOT_SESSION=/app/bottorrent.session
 ENV TG_DOWNLOAD_PATH=/app/downloads
 ENV PATH_CONFIG=/app/config/config.ini
 ENV PATH_PENDING_MESSAGES=/app/config/pending_messages.json
@@ -59,19 +59,30 @@ ENV FALLBACK_PORT=5000
 RUN mkdir -p /app/downloads/completed \
              /app/downloads/youtube/audio \
              /app/downloads/youtube/videos \
+             /app/downloads/tmp \
+             /app/downloads/links \
              /app/sessions \
              /app/logs \
              /app/tmp/config \
              /app/tmp/downloads/tmp \
              /app/config \
+             /app/config/locale \
              /app/bot_source/live-cloning \
+             /app/bot_source/live-cloning/plugins \
+             /app/bot_source/live-cloning/plugins/jsons \
              /app/bot_source/python-copier \
+             /app/Zip \
     && chmod -R 777 /app/downloads \
     && chmod -R 777 /app/sessions \
     && chmod -R 777 /app/logs \
     && chmod -R 777 /app/tmp \
     && chmod -R 777 /app/config \
-    && chmod -R 777 /app/bot_source
+    && chmod -R 777 /app/bot_source \
+    && chmod -R 777 /app/Zip
+
+# Install Python dependencies for bot_source components
+RUN if [ -f /app/bot_source/live-cloning/requirements.txt ]; then pip3 install -r /app/bot_source/live-cloning/requirements.txt; fi
+RUN if [ -f /app/bot_source/python-copier/requirements.txt ]; then pip3 install -r /app/bot_source/python-copier/requirements.txt; fi
 
 # Expose the app port
 EXPOSE 5000

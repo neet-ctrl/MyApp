@@ -3,7 +3,7 @@
     "api_id": "28403662",
     "api_hash": "079509d4ac7f209a1a58facd00d6ff5a",
     "bot_token": "8154976061:AAGrNr6OcdMhFNhV5bCkpGfQAh0FYeJO1gE",
-    "session": "/app/bottorrent",
+    "session": "/app/bottorrent.session",
     "authorized_user_ids": ["6956029558"]
   },
   "downloads": {
