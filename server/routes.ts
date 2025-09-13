@@ -2896,49 +2896,66 @@ if __name__ == "__main__":
         });
       }
 
-      // Save with resolved entity IDs (just like original Python does)
-      const link = await storage.saveEntityLink({
-        instanceId,
-        fromEntity: resolvedFromEntity.id.toString(),
-        toEntity: resolvedToEntity.id.toString(),
-        isActive: true
-      });
-
-      // CRITICAL: Save entity links to Python bot's config.json file ONLY (exactly like original)
+      // CRITICAL: Write ONLY to config.json (single source of truth for perfect sync)
+      // No database writes - config.json is the authoritative source for both web and Python
       try {
-        const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
+        const configPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
         
-        // Get all entity links for this instance
-        const allLinks = await storage.getEntityLinks(instanceId);
-        
-        // Convert to numeric IDs - ensure we have proper numbers, not strings or usernames
-        const entityPairs = allLinks.map(link => {
-          // Try to parse as numbers first, fallback to original if not a valid number
-          const fromId = !isNaN(Number(link.fromEntity)) ? Number(link.fromEntity) : link.fromEntity;
-          const toId = !isNaN(Number(link.toEntity)) ? Number(link.toEntity) : link.toEntity;
-          return [fromId, toId];
-        });
-        
-        // Update ONLY the main Python config.json file (no entities.json needed)
-        if (fs.existsSync(originalConfigPath)) {
-          const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
-          originalConfig.entities = entityPairs;
-          fs.writeFileSync(originalConfigPath, JSON.stringify(originalConfig, null, 2));
-          console.log(`✅ Updated main config.json with ${entityPairs.length} entity links:`, entityPairs);
-        } else {
-          console.error('❌ Main config.json not found at:', originalConfigPath);
+        if (!fs.existsSync(configPath)) {
+          return res.status(500).json({ error: 'Configuration file not found' });
         }
+        
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        const entityPairs = config.entities || [];
+        
+        // Convert resolved entities to numeric IDs (exactly like Python bot expects)
+        const fromId = Number(resolvedFromEntity.id);
+        const toId = Number(resolvedToEntity.id);
+        
+        // Check for duplicates before adding
+        const isDuplicate = entityPairs.some((pair: any[]) => 
+          Number(pair[0]) === fromId && Number(pair[1]) === toId
+        );
+        
+        if (isDuplicate) {
+          return res.status(400).json({ 
+            error: `Entity link already exists: ${fromId} → ${toId}` 
+          });
+        }
+        
+        // Add new entity pair in exact Python format [[sourceId, targetId]]
+        entityPairs.push([fromId, toId]);
+        
+        // Save to config.json (single source of truth)
+        config.entities = entityPairs;
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+        
+        console.log(`✅ Added entity link to config.json: ${fromId} → ${toId}`);
+        console.log(`📝 Total entity links: ${entityPairs.length}`, entityPairs);
+        
+        // Create response in format expected by frontend
+        const newLink = {
+          id: entityPairs.length, // Use array length as ID
+          instanceId,
+          fromEntity: fromId.toString(),
+          toEntity: toId.toString(),
+          isActive: true
+        };
         
         // Sync with running bot if active
         if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
           await syncEntityLinksWithBot();
-          console.log(`✅ Synced new entity link with running bot: ${fromEntity} → ${toEntity}`);
+          console.log(`✅ Synced new entity link with running bot: ${fromId} → ${toId}`);
         }
-      } catch (syncError) {
-        console.error('⚠️ Error persisting entity links to Python config:', syncError);
+        
+        res.json({ success: true, link: newLink });
+        
+      } catch (configError: any) {
+        console.error('❌ Error writing to config.json:', configError);
+        return res.status(500).json({ 
+          error: `Failed to save entity link: ${configError.message}` 
+        });
       }
-
-      res.json({ success: true, link });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ error: errorMessage });
@@ -2948,8 +2965,38 @@ if __name__ == "__main__":
   app.get('/api/live-cloning/entity-links/:instanceId', async (req, res) => {
     try {
       const { instanceId } = req.params;
-      const links = await storage.getEntityLinks(instanceId);
-      res.json({ links });
+      
+      // CRITICAL: Read entity links directly from config.json (same source as Python bot)
+      // This ensures 100% synchronization between web and Telegram interfaces
+      try {
+        const configPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
+        
+        if (!fs.existsSync(configPath)) {
+          return res.json({ links: [] });
+        }
+        
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        const entityPairs = config.entities || [];
+        
+        // Convert the Python format [[sourceId, targetId]] to the frontend format
+        const links = entityPairs.map((pair: any[], index: number) => ({
+          id: index + 1, // Generate sequential IDs for frontend
+          instanceId,
+          fromEntity: pair[0].toString(),
+          toEntity: pair[1].toString(),
+          isActive: true
+        }));
+        
+        console.log(`📖 Read ${links.length} entity links directly from config.json:`, entityPairs);
+        res.json({ links });
+        
+      } catch (configError: any) {
+        console.error('❌ Error reading from config.json:', configError);
+        // No fallback - config.json is the single source of truth
+        return res.status(500).json({ 
+          error: `Failed to read entity links: ${configError.message}. Please check configuration file.` 
+        });
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ error: errorMessage });
@@ -3022,46 +3069,70 @@ if __name__ == "__main__":
   app.delete('/api/live-cloning/entity-links/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const deleted = await storage.deleteEntityLink(parseInt(id));
       
-      if (deleted) {
-        // CRITICAL: Update main config.json file ONLY after deletion
-        try {
-          const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
-          
-          // Get remaining entity links after deletion
-          if (liveCloningStatus.instanceId) {
-            const allLinks = await storage.getEntityLinks(liveCloningStatus.instanceId);
-            
-            // Convert to numeric IDs - ensure we have proper numbers, not strings or usernames
-            const entityPairs = allLinks.map(link => {
-              const fromId = !isNaN(Number(link.fromEntity)) ? Number(link.fromEntity) : link.fromEntity;
-              const toId = !isNaN(Number(link.toEntity)) ? Number(link.toEntity) : link.toEntity;
-              return [fromId, toId];
-            });
-            
-            // Update ONLY the main Python config.json file
-            if (fs.existsSync(originalConfigPath)) {
-              const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
-              originalConfig.entities = entityPairs;
-              fs.writeFileSync(originalConfigPath, JSON.stringify(originalConfig, null, 2));
-              console.log(`✅ Updated main config.json after deletion: ${entityPairs.length} entity links remaining:`, entityPairs);
+      // CRITICAL: Read directly from config.json to match Telegram unlink behavior
+      const configPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
+      
+      if (!fs.existsSync(configPath)) {
+        return res.status(404).json({ error: 'Configuration file not found' });
+      }
+      
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      const entityPairs = config.entities || [];
+      
+      // Find the entity link to delete by ID (ID is 1-based index)
+      const linkIndex = parseInt(id) - 1;
+      if (linkIndex < 0 || linkIndex >= entityPairs.length) {
+        return res.status(404).json({ error: 'Entity link not found' });
+      }
+      
+      const targetPair = entityPairs[linkIndex];
+      const sourceEntity = targetPair[0];
+      
+      // CRITICAL: Remove ALL entity pairs with the same source entity (like Telegram unlink)
+      // This matches exactly how the Telegram "unlink" command works
+      const originalCount = entityPairs.length;
+      const filteredPairs = entityPairs.filter((pair: any[]) => pair[0] !== sourceEntity);
+      const removedCount = originalCount - filteredPairs.length;
+      
+      // Update config.json with remaining entity pairs
+      config.entities = filteredPairs;
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+      
+      console.log(`🗑️ Unlinked source entity ${sourceEntity}: removed ${removedCount} entity link(s)`);
+      console.log(`📝 Remaining entity links: ${filteredPairs.length}`, filteredPairs);
+      
+      // Also update database to keep it in sync (though config.json is authoritative)
+      try {
+        if (liveCloningStatus.instanceId) {
+          // Remove corresponding database entries for this source entity
+          const dbLinks = await storage.getEntityLinks(liveCloningStatus.instanceId);
+          for (const dbLink of dbLinks) {
+            if (dbLink.fromEntity === sourceEntity.toString()) {
+              await storage.deleteEntityLink(dbLink.id);
             }
           }
-          
-          // Sync with running bot if active
-          if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
-            await syncEntityLinksWithBot();
-            console.log('✅ Synced entity link deletion with running bot');
-          }
-        } catch (syncError) {
-          console.error('⚠️ Error updating Python config after deletion:', syncError);
         }
-        
-        res.json({ success: true, message: 'Entity link deleted' });
-      } else {
-        res.status(404).json({ error: 'Entity link not found' });
+      } catch (dbError) {
+        console.warn('⚠️ Could not sync database deletion, but config.json is updated:', dbError);
       }
+      
+      // Sync with running bot if active
+      if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
+        try {
+          await syncEntityLinksWithBot();
+          console.log('✅ Synced entity unlink with running bot');
+        } catch (syncError) {
+          console.error('⚠️ Error syncing unlink with running bot:', syncError);
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Unlinked source entity ${sourceEntity} (removed ${removedCount} link(s))`,
+        removedCount 
+      });
+      
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ error: errorMessage });
