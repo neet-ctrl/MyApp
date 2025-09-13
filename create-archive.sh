@@ -3,7 +3,7 @@
 
 # Create a temporary directory for the archive
 TEMP_DIR="temp_archive_$(date +%s)"
-ARCHIVE_NAME="project-archive-$(date +%Y%m%d-%H%M%S).tar.gz"
+ARCHIVE_NAME="project-archive-$(date +%Y%m%d-%H%M%S).zip"
 
 echo "📦 Creating project archive..."
 echo "🗂️  Temporary directory: $TEMP_DIR"
@@ -28,9 +28,29 @@ rm -rf "$TEMP_DIR/$TEMP_DIR" 2>/dev/null  # Remove the temp dir copy of itself
 # Remove media files
 find "$TEMP_DIR" -type f \( -name "*.gif" -o -name "*.jpg" -o -name "*.png" -o -name "*.mp4" \) -delete 2>/dev/null
 
-# Create the tar.gz archive
-echo "🔄 Creating TAR.GZ archive..."
-tar -czf "$ARCHIVE_NAME" -C "$TEMP_DIR" . 2>/dev/null
+# Create the ZIP archive using Node.js
+echo "🔄 Creating ZIP archive using Node.js..."
+node -e "
+const fs = require('fs');
+const path = require('path');
+const archiver = require('archiver');
+
+const output = fs.createWriteStream('$ARCHIVE_NAME');
+const archive = archiver('zip', { zlib: { level: 9 } });
+
+output.on('close', function() {
+  console.log('✅ ZIP created: ' + archive.pointer() + ' total bytes');
+});
+
+archive.on('error', function(err) {
+  console.error('❌ ZIP creation failed:', err);
+  process.exit(1);
+});
+
+archive.pipe(output);
+archive.directory('$TEMP_DIR', false);
+archive.finalize();
+" 2>/dev/null
 
 # Clean up temporary directory
 echo "🧹 Cleaning up temporary directory..."
@@ -62,4 +82,4 @@ echo "   • bot_source/ directory"
 echo "   • logs/, tmp/, downloads/ directories"
 echo "   • Lock files and all other project files"
 echo ""
-echo "✨ Archive ready for download or sharing!"
+echo "✨ ZIP archive ready for download or sharing!"
