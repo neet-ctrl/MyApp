@@ -69,23 +69,11 @@ RUN cat requirements.txt > unified_requirements.txt && \
 # Copy the entire application code
 COPY . .
 
-# Create comprehensive directory structure for Railway volumes
-# This supports all components: Node.js app, Python bots, GramJS, sessions, downloads
+# Create essential directory structure for Railway volumes (cleaned up)
 RUN mkdir -p /app/data/downloads/completed \
-             /app/data/downloads/tmp \
-             /app/data/downloads/youtube/audio \
-             /app/data/downloads/youtube/videos \
-             /app/data/downloads/torrents \
-             /app/data/downloads/links \
-             /app/data/downloads/archives \
-             /app/data/downloads/documents \
-             /app/data/downloads/images \
-             /app/data/downloads/audio \
-             /app/data/downloads/videos \
              /app/data/sessions \
              /app/data/logs \
              /app/data/tmp/config \
-             /app/data/tmp/downloads/tmp \
              /app/tmp \
              /app/logs \
              /app/sessions \
@@ -113,16 +101,8 @@ RUN cat > /app/start.sh << 'EOF'
 seed_volume() {
     echo "🌱 Seeding persistent volume..."
     
-    # Create all necessary directories
+    # Create essential directories only
     mkdir -p /app/data/downloads/completed \
-             /app/data/downloads/tmp \
-             /app/data/downloads/youtube/audio \
-             /app/data/downloads/youtube/videos \
-             /app/data/downloads/archives \
-             /app/data/downloads/documents \
-             /app/data/downloads/images \
-             /app/data/downloads/audio \
-             /app/data/downloads/videos \
              /app/data/sessions \
              /app/data/logs \
              /app/data/tmp/config

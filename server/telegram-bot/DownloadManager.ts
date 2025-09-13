@@ -36,13 +36,13 @@ export class DownloadManager {
   }
 
   private initializePathMappings(): void {
-    // Define download paths based on file types/patterns
-    this.downloadPaths.set('video', 'downloads/video');
-    this.downloadPaths.set('audio', 'downloads/audio');
-    this.downloadPaths.set('image', 'downloads/images');
-    this.downloadPaths.set('document', 'downloads/documents');
-    this.downloadPaths.set('archive', 'downloads/archives');
-    this.downloadPaths.set('default', 'downloads/misc');
+    // Define download paths - simplified structure (all files go to completed)
+    this.downloadPaths.set('video', 'downloads/completed');
+    this.downloadPaths.set('audio', 'downloads/completed');
+    this.downloadPaths.set('image', 'downloads/completed');
+    this.downloadPaths.set('document', 'downloads/completed');
+    this.downloadPaths.set('archive', 'downloads/completed');
+    this.downloadPaths.set('default', 'downloads/completed');
   }
 
   async downloadDirectUrl(url: string, options: DownloadOptions): Promise<DownloadResult> {
