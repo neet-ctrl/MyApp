@@ -130,6 +130,49 @@ export function Settings() {
     },
   });
 
+  // Fetch bot statuses
+  const { data: mainBotStatus } = useQuery({
+    queryKey: ['bot-status', 'main'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/bot/status');
+        if (!response.ok) return null;
+        return response.json();
+      } catch {
+        return null;
+      }
+    },
+    refetchInterval: 5000,
+  });
+
+  const { data: pythonBotStatus } = useQuery({
+    queryKey: ['bot-status', 'python'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/python-bot/status');
+        if (!response.ok) return null;
+        return response.json();
+      } catch {
+        return null;
+      }
+    },
+    refetchInterval: 5000,
+  });
+
+  const { data: nodeBotStatus } = useQuery({
+    queryKey: ['bot-status', 'node'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/node-bot/status');
+        if (!response.ok) return null;
+        return response.json();
+      } catch {
+        return null;
+      }
+    },
+    refetchInterval: 5000,
+  });
+
 
 
   // Fetch storage information

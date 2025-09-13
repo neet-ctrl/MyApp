@@ -212,7 +212,7 @@ export class BotManager {
     try {
       return await ytdl.getInfo(url);
     } catch (error) {
-      throw new Error(`Failed to get YouTube info: ${error.message}`);
+      throw new Error(`Failed to get YouTube info: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

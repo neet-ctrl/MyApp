@@ -15,6 +15,8 @@ import ytdl from 'ytdl-core';
 import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import { createBotManager, getBotManager, destroyBotManager } from './telegram-bot/BotManager';
+import type { BotManager } from './telegram-bot/BotManager';
 import { configReader } from '../shared/config-reader';
 import { z } from 'zod';
 import { createTelegramClient, testTelegramSession } from './telegram-client-factory';
@@ -52,6 +54,9 @@ let jsCopierStatus = {
   currentUserInfo: undefined as { id: number; username: string; firstName: string; } | undefined,
   logs: [] as string[]
 };
+
+// Node.js Telegram Bot Management
+let nodeBotManager: BotManager | null = null;
 
 // Live Cloning Management
 let liveCloningProcess: ChildProcess | null = null;
