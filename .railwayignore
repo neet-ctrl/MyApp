@@ -1,0 +1,44 @@
+# Dependencies - Railway will install these
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build artifacts
+dist/
+build/
+.next/
+out/
+
+# Large archive files
+project-archive-*.zip
+temp_archive_*
+Zip/
+*.zip
+*.tar.gz
+*.rar
+
+# Development files
+.git/
+.vscode/
+.vs_code/
+README.md
+.env*
+.DS_Store
+
+# Data directories (will be mounted as Railway volumes)
+downloads/
+logs/
+tmp/
+attached_assets/
+
+# Session files (sensitive - will be handled via volume)
+*.session*
+sessions/
+
+# Cache and temp
+.cache/
+.temp/
+.nyc_output/
+coverage/
