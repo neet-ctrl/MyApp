@@ -24,18 +24,8 @@ RUN npx update-browserslist-db@latest --force
 COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
 
-# Copy EVERYTHING from workspace (primary copy first)
+# Copy EVERYTHING from workspace exactly as it is
 COPY . .
-
-# Explicitly copy required subfolders/files to ensure paths match env
-COPY tmp/ /app/tmp/
-COPY config/ /app/config/
-COPY bot_source/ /app/bot_source/
-COPY sessions/ /app/sessions/
-COPY downloads/ /app/downloads/
-COPY logs/ /app/logs/
-COPY bottorrent.session /app/bottorrent.session
-COPY tmp/live_cloning_persistent_settings.json /app/tmp/live_cloning_persistent_settings.json
 
 # Verify critical files (debug step)
 RUN echo "=== VERIFYING ALL FILES COPIED ===" && \
