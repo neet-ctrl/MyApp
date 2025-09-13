@@ -6,3 +6,5 @@ youtube_dl
 configparser
 python-dotenv
 telethon
+telethon
+tgcrypto

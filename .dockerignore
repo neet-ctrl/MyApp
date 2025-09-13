@@ -19,6 +19,8 @@ README.md
 .vs_code
 .next
 .cache
+.pythonlibs
+.local
 .upm
 
 
