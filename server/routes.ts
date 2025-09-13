@@ -5817,10 +5817,17 @@ export async function startLiveCloningService(): Promise<void> {
     console.log('📋 Loaded persistent settings for auto-start:', persistentSettings);
     
     // Check if we have a valid session string from environment or config
-    const sessionString = process.env.LIVE_CLONING_SESSION || persistentSettings.sessionString;
+    let sessionString = process.env.LIVE_CLONING_SESSION || persistentSettings.sessionString;
+    
+    // Fallback to hardcoded session (same as used by entity creation endpoint)
     if (!sessionString) {
-      console.log('⚠️ No session string found for auto-start. Please configure live cloning session.');
-      return;
+      sessionString = "1BVtsOLABux3cdf9iA7_7csD0HjZ-vqy3pQUfbynyLah5ZQQNGCTgc6ao1FOFHur4mvJkRsrzS3KKi65RNXczTxtlxpNIkqoIQvN0ILt2kPp9dUcCuIn8ZlFftx63derTrb_LS6TdeZ4Ly3cI26C_E14TUvhlWNHwB_zDZ1mvpvluQb9EhodVRsWSAQimUWNIrKp9stJum7amnoLzCSdqAydjsfTXej1KZQ1TfxX79yAb-DPIw2kzFWf6Mk9ScDlTeGJg6qRQkiDOHiRrUnrzle1REurAN_4h9qWahhR1ffbreGvOYVDip35Uya4Kn4YGmJM0vtGLq3HoEico3umwBrO6GOc0oxU=";
+      console.log('Using hardcoded session string for auto-start');
+      
+      // Save the session to persistent settings for future use
+      persistentSettings.sessionString = sessionString;
+      fs.writeFileSync(persistentConfigPath, JSON.stringify(persistentSettings, null, 2));
+      console.log('💾 Saved session string to persistent settings');
     }
     
     // Stop existing process if running
