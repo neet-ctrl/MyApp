@@ -32,7 +32,8 @@ export class DatabaseLiveCloningStorage implements IStorage {
   private gitTokenConfigs: Map<number, GitTokenConfig> = new Map();
   private cachedRepositories: Map<string, GitRepository> = new Map();
   private tokenIdCounter: number = 1;
-  private defaultPAT: string = process.env.GITHUB_PERSONAL_ACCESS_TOKEN || process.env.GITHUB_PAT || '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';
+  // Hardcoded GitHub PAT for workspace replication - no environment dependency
+  private defaultPAT: string = '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';
 
   // Non-critical storage methods (using in-memory for now)
   async getGitHubSettings(userId: string): Promise<GitHubSettings | null> {

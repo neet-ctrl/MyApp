@@ -7,13 +7,13 @@ import { autoSetup } from "./auto-setup";
 
 const app = express();
 
-// Session middleware for GitHub OAuth
+// Session middleware for GitHub OAuth - hardcoded for workspace replication
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'telegram-manager-github-sync-' + Math.random().toString(36),
+  secret: 'telegram-manager-github-sync-hardcoded-secret-2024',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Hardcoded for workspace replication - no environment dependency
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
@@ -70,20 +70,12 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+  // Hardcoded development mode for workspace replication - no environment dependency
+  // Always setup vite for consistent behavior
+  await setupVite(app, server);
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
+  // Hardcoded port 5000 for 100% workspace replication - no environment variables
+  const port = 5000;
   server.listen({
     port,
     host: "0.0.0.0",
