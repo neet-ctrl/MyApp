@@ -28,17 +28,7 @@ README.md
 .DS_Store
 
 # Data directories (will be mounted as Railway volumes)
-downloads/
-logs/
-tmp/
 attached_assets/
 
-# Session files (sensitive - will be handled via volume)
-*.session*
-sessions/
 
-# Cache and temp
-.cache/
-.temp/
-.nyc_output/
-coverage/
+

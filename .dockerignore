@@ -21,25 +21,10 @@ README.md
 .cache
 .upm
 
-# CRITICAL SECURITY: Exclude ALL authentication and session files
-*.session
-*.session-journal
-sessions/
-config/config.ini
-tmp/config/config.ini
-tmp/live_cloning_persistent_settings.json
-bot_source/live-cloning/config.json
-bot_source/live-cloning/live_cloner.session
-bot_source/live-cloning/temp_session.session
 
-# Data directories that will be mounted as volumes
-downloads/
-logs/
-tmp/
 
 # Archive and temp files
 Zip/
 attached_assets/
 temp_archive_*
 project-archive-*.zip
-*.tmp
