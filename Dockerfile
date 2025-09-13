@@ -24,18 +24,20 @@ RUN npx update-browserslist-db@latest --force
 COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
 
-# Copy EVERYTHING from workspace - EXPLICIT COPIES to ensure all files reach Railway
+# Copy EVERYTHING from workspace (primary copy first)
 COPY . .
-COPY ./tmp/ /app/tmp/
-COPY ./config/ /app/config/
-COPY ./bot_source/ /app/bot_source/
-COPY ./sessions/ /app/sessions/ 2>/dev/null || echo "sessions directory not found"
-COPY ./downloads/ /app/downloads/ 2>/dev/null || echo "downloads directory not found"
-COPY ./logs/ /app/logs/ 2>/dev/null || echo "logs directory not found"
-COPY ./bottorrent.session /app/bottorrent.session 2>/dev/null || echo "bottorrent.session not found"
-COPY ./tmp/live_cloning_persistent_settings.json /app/tmp/live_cloning_persistent_settings.json
 
-# Verify EVERY critical file is copied (debug step)
+# Explicitly copy required subfolders/files to ensure paths match env
+COPY tmp/ /app/tmp/
+COPY config/ /app/config/
+COPY bot_source/ /app/bot_source/
+COPY sessions/ /app/sessions/
+COPY downloads/ /app/downloads/
+COPY logs/ /app/logs/
+COPY bottorrent.session /app/bottorrent.session
+COPY tmp/live_cloning_persistent_settings.json /app/tmp/live_cloning_persistent_settings.json
+
+# Verify critical files (debug step)
 RUN echo "=== VERIFYING ALL FILES COPIED ===" && \
     ls -la /app/tmp/ && \
     echo "=== Settings file ===" && \
@@ -73,7 +75,7 @@ ENV TG_DL_TIMEOUT=3600
 ENV APP_LANGUAGE=en_EN
 ENV FALLBACK_PORT=5000
 
-# Create exact folder structure as workspace - NO volumes needed
+# Create exact folder structure as workspace
 RUN mkdir -p /app/downloads/completed \
              /app/downloads/youtube/audio \
              /app/downloads/youtube/videos \
