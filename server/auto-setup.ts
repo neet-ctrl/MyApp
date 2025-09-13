@@ -43,16 +43,6 @@ async function createDirectories(): Promise<void> {
   const directories = [
     './downloads',
     './downloads/completed',
-    './downloads/youtube',
-    './downloads/youtube/videos',
-    './downloads/youtube/audio',
-    './downloads/temp',
-    './downloads/torrents',
-    './downloads/documents',
-    './downloads/images',
-    './downloads/videos',
-    './downloads/audio',
-    './downloads/archives',
     './sessions',
     './logs'
   ];
