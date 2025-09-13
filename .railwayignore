@@ -11,24 +11,21 @@ build/
 .next/
 out/
 
-# Large archive files
-project-archive-*.zip
-temp_archive_*
-Zip/
-*.zip
-*.tar.gz
-*.rar
-
-# Development files
+# Only exclude Replit-specific files
 .git/
 .vscode/
 .vs_code/
-README.md
 .env*
 .DS_Store
 
-# Data directories (will be mounted as Railway volumes)
-attached_assets/
+# Include ALL workspace files and folders for exact replication:
+# - tmp/ (needed for configurations)
+# - downloads/ (needed for workspace structure)  
+# - sessions/ (needed for all session files)
+# - config/ (needed for bot configurations)
+# - bot_source/ (needed for Python components)
+# - logs/ (needed for logging)
+# - attached_assets/ (include user assets)
 
 
 
