@@ -1,0 +1,25 @@
+{
+  "api_id": 28403662,
+  "api_hash": "079509d4ac7f209a1a58facd00d6ff5a",
+  "bot_enabled": true,
+  "filter_words": true,
+  "add_signature": false,
+  "signature": "Final testbbb",
+  "entities": [
+    [
+      8154976061,
+      7634388518
+    ],
+    [
+      7521656991,
+      7634388518
+    ],
+    [
+      7521656991,
+      4949360302
+    ]
+  ],
+  "filters": [],
+  "auto_started": true,
+  "instance_id": "live_cloning_auto_1757788370546"
+}
