@@ -115,42 +115,6 @@ export const liveCloningMessages = pgTable("live_cloning_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Upload Jobs for persistent GitHub uploads
-export const uploadJobs = pgTable("upload_jobs", {
-  id: varchar("id").primaryKey(), // UUID
-  userId: varchar("user_id").notNull(),
-  status: varchar("status").notNull(), // 'pending', 'processing', 'completed', 'failed', 'paused'
-  type: varchar("type").notNull(), // 'github_sync', 'git_control'
-  targetRepo: varchar("target_repo").notNull(), // owner/repo
-  targetPath: text("target_path"), // base path in repo
-  totalFiles: integer("total_files").notNull(),
-  processedFiles: integer("processed_files").default(0).notNull(),
-  failedFiles: integer("failed_files").default(0).notNull(),
-  progress: integer("progress").default(0).notNull(), // 0-100
-  errorMessage: text("error_message"),
-  metadata: jsonb("metadata"), // Additional job-specific data
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  startedAt: timestamp("started_at"),
-  completedAt: timestamp("completed_at"),
-});
-
-export const uploadJobFiles = pgTable("upload_job_files", {
-  id: serial("id").primaryKey(),
-  jobId: varchar("job_id").notNull(),
-  filePath: text("file_path").notNull(),
-  fileName: text("file_name").notNull(),
-  fileSize: integer("file_size").notNull(),
-  content: text("content").notNull(), // base64 or text content
-  encoding: varchar("encoding").notNull(), // 'base64' or 'utf8'
-  status: varchar("status").notNull(), // 'pending', 'uploading', 'completed', 'failed'
-  retryCount: integer("retry_count").default(0).notNull(),
-  errorMessage: text("error_message"),
-  commitSha: text("commit_sha"), // GitHub commit SHA after successful upload
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
 // Zod schemas for validation
 export const telegramSessionSchema = z.object({
   sessionString: z.string(),
@@ -394,10 +358,6 @@ export const insertEntityLinkSchema = createInsertSchema(entityLinks).omit({ id:
 export const insertWordFilterSchema = createInsertSchema(wordFilters).omit({ id: true, createdAt: true });
 export const insertLiveCloningMessageSchema = createInsertSchema(liveCloningMessages).omit({ id: true, createdAt: true });
 
-// Upload Job insert schemas
-export const insertUploadJobSchema = createInsertSchema(uploadJobs).omit({ createdAt: true, updatedAt: true, startedAt: true, completedAt: true });
-export const insertUploadJobFileSchema = createInsertSchema(uploadJobFiles).omit({ id: true, createdAt: true, updatedAt: true });
-
 // Git Control insert schemas
 export const secureTokenSchema = z.object({
   label: z.string().min(1, "Label is required").max(100),
@@ -418,10 +378,6 @@ export type EntityLink = typeof entityLinks.$inferSelect;
 export type WordFilter = typeof wordFilters.$inferSelect;
 export type LiveCloningMessage = typeof liveCloningMessages.$inferSelect;
 
-// Upload Job types
-export type UploadJob = typeof uploadJobs.$inferSelect;
-export type UploadJobFile = typeof uploadJobFiles.$inferSelect;
-
 export type InsertDownload = z.infer<typeof insertDownloadSchema>;
 export type InsertPendingMessage = z.infer<typeof insertPendingMessageSchema>;
 export type InsertBotSession = z.infer<typeof insertBotSessionSchema>;
@@ -434,10 +390,6 @@ export type InsertLiveCloningInstance = z.infer<typeof insertLiveCloningInstance
 export type InsertEntityLink = z.infer<typeof insertEntityLinkSchema>;
 export type InsertWordFilter = z.infer<typeof insertWordFilterSchema>;
 export type InsertLiveCloningMessage = z.infer<typeof insertLiveCloningMessageSchema>;
-
-// Upload Job insert types
-export type InsertUploadJob = z.infer<typeof insertUploadJobSchema>;
-export type InsertUploadJobFile = z.infer<typeof insertUploadJobFileSchema>;
 
 export type TelegramSession = z.infer<typeof telegramSessionSchema>;
 export type Chat = z.infer<typeof chatSchema>;

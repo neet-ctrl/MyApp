@@ -383,51 +383,6 @@ export default function GitControl() {
     },
   });
 
-  // Background upload job mutations
-  const createUploadJobMutation = useMutation({
-    mutationFn: async ({ type, targetRepo, targetPath, files, metadata }: {
-      type: 'github_sync' | 'git_control';
-      targetRepo: string;
-      targetPath?: string;
-      files: Array<{
-        filePath: string;
-        fileName: string;
-        fileSize: number;
-        content: string;
-        encoding: 'base64' | 'utf8';
-      }>;
-      metadata?: any;
-    }) => {
-      return await apiRequest('/api/upload-jobs', 'POST', {
-        type,
-        targetRepo,
-        targetPath,
-        files,
-        metadata
-      });
-    },
-    onSuccess: (data: any) => {
-      toast({
-        title: 'Background Upload Started',
-        description: `Upload job created with ID: ${data.job.id}. Files will upload in the background.`,
-      });
-      // Refresh repository contents after a brief delay
-      setTimeout(() => {
-        queryClient.invalidateQueries({ 
-          queryKey: ['/api/git-control/repos', selectedRepo?.owner.login, selectedRepo?.name, 'contents', currentPath] 
-        });
-      }, 3000);
-    },
-    onError: (error: any) => {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.response?.data?.error || 'Failed to create upload job',
-      });
-    },
-  });
-
-  // Legacy single file upload (using background system)
   const uploadFileMutation = useMutation({
     mutationFn: async ({ owner, repo, path, content, message }: { 
       owner: string; 
@@ -436,25 +391,31 @@ export default function GitControl() {
       content: string; 
       message: string; 
     }) => {
-      // Use background upload system for single files too
-      const files = [{
-        filePath: path,
-        fileName: path.split('/').pop() || 'file',
-        fileSize: new Blob([content]).size,
-        content: btoa(content), // Convert to base64
-        encoding: 'base64' as const,
-      }];
-
-      return await createUploadJobMutation.mutateAsync({
-        type: 'git_control',
-        targetRepo: `${owner}/${repo}`,
-        files,
-        metadata: { commitMessage: message }
+      const encodedPath = encodePath(path);
+      const defaultBranch = selectedRepo?.default_branch || 'main';
+      return apiRequest(`/api/git-control/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodedPath}`, 'PUT', {
+        message,
+        content,
+        branch: selectedBranch || defaultBranch
       });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/git-control/repos', selectedRepo?.owner.login, selectedRepo?.name, 'contents', currentPath] 
+      });
       setShowUploadDialog(false);
       setUploadForm({ fileName: '', content: '', commitMessage: '', selectedFiles: null });
+      toast({
+        title: 'Success',
+        description: 'File uploaded successfully',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.response?.data?.error || 'Failed to upload file',
+      });
     },
   });
 
@@ -505,43 +466,36 @@ export default function GitControl() {
     if (!selectedRepo) return;
     
     const fileArray = Array.from(files);
-    
-    try {
-      // Prepare files for background upload
-      const uploadFiles = await Promise.all(
-        fileArray.map(async (file) => {
-          const content = await readFileContent(file);
-          const filePath = file.webkitRelativePath || file.name;
-          
-          return {
-            filePath,
-            fileName: file.name,
-            fileSize: file.size,
-            content: isBinaryFile(file) ? content : btoa(content), // Ensure base64 encoding
-            encoding: 'base64' as const,
-          };
-        })
-      );
+    let uploadCount = 0;
+    let errorCount = 0;
 
-      // Start background upload job
-      await createUploadJobMutation.mutateAsync({
-        type: 'git_control',
-        targetRepo: `${selectedRepo.owner.login}/${selectedRepo.name}`,
-        files: uploadFiles,
-        metadata: { 
-          commitMessage: `Upload folder: ${fileArray[0]?.webkitRelativePath?.split('/')[0] || 'files'}`,
-          folderName: fileArray[0]?.webkitRelativePath?.split('/')[0] || 'files'
-        }
-      });
+    for (const file of fileArray) {
+      try {
+        const content = await readFileContent(file);
 
-    } catch (error) {
-      console.error('Error preparing folder upload:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to prepare folder upload',
-      });
+        // Use the file's webkitRelativePath to maintain folder structure
+        const filePath = file.webkitRelativePath || file.name;
+        
+        await uploadFileMutation.mutateAsync({
+          owner: selectedRepo.owner.login,
+          repo: selectedRepo.name,
+          path: filePath,
+          content,
+          message: `Upload folder: ${file.webkitRelativePath?.split('/')[0] || 'files'}`
+        });
+        
+        uploadCount++;
+      } catch (error) {
+        console.error(`Error uploading ${file.name}:`, error);
+        errorCount++;
+      }
     }
+
+    toast({
+      title: uploadCount > 0 ? 'Success' : 'Error',
+      description: `Uploaded ${uploadCount} files${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
+      variant: errorCount > 0 && uploadCount === 0 ? 'destructive' : 'default'
+    });
   };
 
   const handleFileAction = async (action: string, file: any) => {
