@@ -130,33 +130,7 @@ export function Settings() {
     },
   });
 
-  // Fetch bot statuses
-  const { data: mainBotStatus } = useQuery({
-    queryKey: ['bot-status', 'main'],
-    queryFn: async () => {
-      const response = await fetch('/api/bot/status');
-      return response.json();
-    },
-    refetchInterval: 5000,
-  });
 
-  const { data: pythonBotStatus } = useQuery({
-    queryKey: ['bot-status', 'python'],
-    queryFn: async () => {
-      const response = await fetch('/api/python-bot/status');
-      return response.json();
-    },
-    refetchInterval: 5000,
-  });
-
-  const { data: nodeBotStatus } = useQuery({
-    queryKey: ['bot-status', 'node'],
-    queryFn: async () => {
-      const response = await fetch('/api/node-bot/status');
-      return response.json();
-    },
-    refetchInterval: 5000,
-  });
 
   // Fetch storage information
   useEffect(() => {
@@ -443,38 +417,8 @@ export function Settings() {
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground mb-3 block">Bot Tokens</Label>
                     <div className="space-y-2">
-                      {mainBotStatus?.status?.token && (
-                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded">
-                          <div className="flex-1">
-                            <span className="text-xs font-medium">Main Bot</span>
-                            <div className="text-xs text-muted-foreground">
-                              {mainBotStatus.status.token}
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-6 w-6 p-0"
-                              onClick={() => {
-                                navigator.clipboard.writeText(mainBotStatus.status.token);
-                                toast({
-                                  title: 'Copied',
-                                  description: 'Main bot token copied to clipboard',
-                                });
-                              }}
-                              data-testid="button-copy-main-bot-token"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
-                            <Badge variant={mainBotStatus.status.running ? "default" : "secondary"}>
-                              {mainBotStatus.status.running ? "Active" : "Inactive"}
-                            </Badge>
-                          </div>
-                        </div>
-                      )}
                       
-                      {pythonBotStatus?.status?.api_id && (
+                      {false && (
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded">
                           <div className="flex-1">
                             <span className="text-xs font-medium">Python Bot</span>

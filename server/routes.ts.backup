@@ -9,18 +9,90 @@ declare module 'express-session' {
 }
 // HTTP server is created in server/index.ts, no need to create another one here
 import { storage } from "./storage";
+import TelegramBot from 'node-telegram-bot-api';
 import { logger } from './telegram-bot/logger';
+import { LanguageManager } from './telegram-bot/LanguageTemplates';
 import axios from 'axios';
 import ytdl from 'ytdl-core';
 import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import { createBotManager, getBotManager, destroyBotManager } from './telegram-bot/BotManager';
+import type { BotManager } from './telegram-bot/BotManager';
 import { configReader } from '../shared/config-reader';
+import { MTProtoClient } from './telegram-bot/MTProtoClient';
+import { TelegramForwarder } from './telegram-forwarder';
+import { forwardConfigSchema, type ForwardJob } from '@shared/schema';
 import { z } from 'zod';
 import { createTelegramClient, testTelegramSession } from './telegram-client-factory';
 
+let bot: TelegramBot | null = null;
+let mtprotoClient: MTProtoClient | null = null;
+let botStatus = { running: false, token: '', lastActivity: null as string | null };
+let languageManager = new LanguageManager('en_EN');
+let youtubeLinks: Map<number, string> = new Map();
 
+// Helper functions for download
+const containsUrl = (text: string): boolean => {
+  const urlRegex = /https?:\/\/[^\s]+/;
+  return urlRegex.test(text);
+};
 
+const extractUrls = (text: string): string[] => {
+  const urlRegex = /https?:\/\/[^\s]+/g;
+  return text.match(urlRegex) || [];
+};
+
+const isYouTubeUrl = (url: string): boolean => {
+  return /youtube\.com|youtu\.be/i.test(url);
+};
+
+const sanitizeFilename = (filename: string): string => {
+  return filename
+    .replace(/[<>:"/\\|?*]/g, '')
+    .replace(/\s+/g, '_')
+    .trim()
+    .substring(0, 200);
+};
+
+const ensureDownloadDirs = (): void => {
+  const dirs = [
+    './downloads',
+    './downloads/completed',
+    './downloads/youtube',
+    './downloads/youtube/videos',
+    './downloads/youtube/audio',
+    './downloads/temp',
+    './downloads/torrents',
+    './downloads/documents',
+    './downloads/images',
+    './downloads/videos',
+    './downloads/audio',
+    './downloads/archives',
+  ];
+
+  dirs.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+      logger.debug(`Created directory: ${dir}`);
+    }
+  });
+};
+
+// Node.js Telegram Bot Management
+let nodeBotManager: BotManager | null = null;
+
+// Python Telethon Bot Management
+let pythonBot: ChildProcess | null = null;
+let pythonBotStatus = { 
+  running: false, 
+  apiId: '', 
+  apiHash: '', 
+  botToken: '',
+  authorizedUserId: '',
+  lastActivity: null as string | null,
+  logs: [] as string[]
+};
 
 // Python Copier Management
 let pythonCopier: ChildProcess | null = null;
@@ -62,10 +134,7 @@ if (fs.existsSync(persistentSettingsPath)) {
   try {
     const settingsData = fs.readFileSync(persistentSettingsPath, 'utf-8');
     loadedSettings = JSON.parse(settingsData);
-    console.log('✅ Loaded persistent live cloning settings:', {
-      ...loadedSettings,
-      sessionString: loadedSettings.sessionString ? loadedSettings.sessionString.substring(0, 10) + '...[REDACTED]' : undefined
-    });
+    console.log('✅ Loaded persistent live cloning settings:', loadedSettings);
   } catch (e) {
     console.error('❌ Error loading persistent settings:', e);
   }
@@ -94,6 +163,582 @@ export async function registerRoutes(app: Express): Promise<Express> {
   // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
 
   // Telegram Bot Management API
+  app.post('/api/bot/start', async (req, res) => {
+    try {
+      const { token } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ error: 'Bot token is required' });
+      }
+
+      if (bot) {
+        await bot.stopPolling();
+        bot = null;
+      }
+
+      if (mtprotoClient) {
+        await mtprotoClient.disconnect();
+        mtprotoClient = null;
+      }
+
+      bot = new TelegramBot(token, { polling: true });
+      botStatus = { running: true, token: token.slice(0, 10) + '...', lastActivity: new Date().toISOString() as string | null };
+      
+      // Ensure download directories exist
+      ensureDownloadDirs();
+
+      // Initialize MTProto client for large file downloads
+      try {
+        const apiId = process.env.TG_API_ID || process.env.API_ID;
+        const apiHash = process.env.TG_API_HASH || process.env.API_HASH;
+        
+        if (apiId && apiHash) {
+          logger.info('🔌 Initializing MTProto client for large file support...');
+          mtprotoClient = new MTProtoClient({
+            api_id: parseInt(apiId),
+            api_hash: apiHash,
+          });
+          
+          await mtprotoClient.connect();
+          logger.info('✅ MTProto client initialized - large files up to 2GB supported');
+        } else {
+          logger.warn('⚠️ TG_API_ID/TG_API_HASH not found - large file downloads disabled');
+        }
+      } catch (mtprotoError) {
+        const errorMessage = mtprotoError instanceof Error ? mtprotoError.message : 'Unknown error';
+        logger.warn(`⚠️ MTProto initialization failed: ${errorMessage} - large files will be limited to 20MB`);
+        mtprotoClient = null;
+      }
+
+      // Bot message handlers
+      bot.on('message', async (msg) => {
+        try {
+          botStatus.lastActivity = new Date().toISOString();
+          logger.info(`Received message from user ${msg.from?.id}: ${msg.text || 'media'}`);
+          
+          if (msg.text === '/start' || msg.text === '/help') {
+            const helpMessage = languageManager.template('HELP_MESSAGE');
+            await bot!.sendMessage(msg.chat.id, helpMessage, { parse_mode: 'Markdown' });
+            logger.info(`Sent comprehensive help message to user ${msg.from?.id}`);
+          } else if (msg.text === '/version') {
+            await bot!.sendMessage(msg.chat.id, `🔢 Bot Version: 4.0.9 (Node.js)\n📦 Node.js: ${process.version}\n📱 Telegram Bot API: node-telegram-bot-api\n🎬 YouTube: ytdl-core`);
+            logger.info(`Sent version info to user ${msg.from?.id}`);
+          } else if (msg.text === '/id') {
+            await bot!.sendMessage(msg.chat.id, `🆔 Your User ID: ${msg.from?.id || 'Unknown'}\n💬 Chat ID: ${msg.chat.id}`);
+            logger.info(`Sent ID info to user ${msg.from?.id}`);
+          } else if (msg.text === '/status') {
+            const uptime = process.uptime();
+            const hours = Math.floor(uptime / 3600);
+            const minutes = Math.floor((uptime % 3600) / 60);
+            const secs = Math.floor(uptime % 60);
+            const uptimeFormatted = `${hours}h ${minutes}m ${secs}s`;
+            
+            await bot!.sendMessage(msg.chat.id, 
+              `📊 Bot Status\n\n` +
+              `🟢 Status: Running\n` +
+              `⏰ Uptime: ${uptimeFormatted}\n` +
+              `🕐 Last Activity: ${botStatus.lastActivity}\n` +
+              `📱 Chat ID: ${msg.chat.id}\n` +
+              `👤 User ID: ${msg.from?.id || 'Unknown'}\n\n` +
+              `💡 Ready for downloads!`
+            );
+            logger.info(`Sent status info to user ${msg.from?.id}`);
+          } else if (msg.document || msg.photo || msg.video || msg.audio) {
+            logger.info(`Processing media message from user ${msg.from?.id}`);
+            await handleMediaMessage(msg);
+          } else if (msg.text && containsUrl(msg.text)) {
+            logger.info(`Processing URL message from user ${msg.from?.id}: ${msg.text}`);
+            await handleUrlMessage(msg, msg.text);
+          } else if (msg.text && msg.text.trim()) {
+            await bot!.sendMessage(msg.chat.id, 
+              `Echo: ${msg.text}\n\n` +
+              `Send me files, YouTube URLs, or use /help for the complete guide!`
+            );
+            logger.debug(`Echoed message from user ${msg.from?.id}: ${msg.text}`);
+          } else {
+            logger.warn(`Received undefined or empty message from user ${msg.from?.id}`);
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          logger.error(`Bot message handler error: ${errorMessage}`);
+        }
+      });
+
+      // Add callback query handler for YouTube downloads
+      bot.on('callback_query', async (query) => {
+        try {
+          const data = query.data;
+          if (!data) return;
+
+          logger.info(`Processing callback query: ${data} from user ${query.from.id}`);
+
+          const [linkId, action] = data.split(',');
+          const url = youtubeLinks.get(parseInt(linkId));
+
+          if (!url) {
+            await bot!.answerCallbackQuery(query.id, { text: 'URL not found or expired' });
+            logger.warn(`URL not found for linkId: ${linkId}`);
+            return;
+          }
+
+          await bot!.answerCallbackQuery(query.id, { 
+            text: `Starting ${action === 'V' ? 'video' : 'audio'} download...` 
+          });
+
+          if (action === 'V') {
+            logger.info(`Starting video download for URL: ${url}`);
+            await downloadYouTubeVideo(url, query.from.id, query.message?.chat.id);
+          } else if (action === 'A') {
+            logger.info(`Starting audio download for URL: ${url}`);
+            await downloadYouTubeAudio(url, query.from.id, query.message?.chat.id);
+          }
+
+          youtubeLinks.delete(parseInt(linkId));
+
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          logger.error(`Callback query error: ${errorMessage}`);
+          
+          // Try to answer the callback query even if there's an error
+          try {
+            await bot!.answerCallbackQuery(query.id, { text: 'Error processing request' });
+          } catch (answerError) {
+            logger.error(`Failed to answer callback query: ${answerError}`);
+          }
+        }
+      });
+
+      bot.on('error', (error) => {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        logger.error(`Bot error: ${errorMessage}`);
+        botStatus.running = false;
+      });
+
+      logger.info(`🚀 Simple Telegram Bot started successfully with token: ${token.slice(0, 10)}...`);
+      res.json({ success: true, status: botStatus });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to start bot: ${errorMessage}`);
+      res.status(500).json({ error: 'Failed to start bot' });
+    }
+  });
+
+  app.post('/api/bot/stop', async (req, res) => {
+    try {
+      if (bot) {
+        await bot.stopPolling();
+        bot = null;
+        logger.info('✅ Simple Telegram Bot stopped successfully');
+      }
+      
+      if (mtprotoClient) {
+        await mtprotoClient.disconnect();
+        mtprotoClient = null;
+        logger.info('✅ MTProto client disconnected');
+      }
+      
+      botStatus = { running: false, token: '', lastActivity: null };
+      res.json({ success: true, status: botStatus });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to stop bot: ${errorMessage}`);
+      res.status(500).json({ error: 'Failed to stop bot' });
+    }
+  });
+
+  app.get('/api/bot/status', (req, res) => {
+    res.json({ status: botStatus });
+  });
+
+  // Download handler functions
+  async function handleUrlMessage(msg: any, text: string): Promise<void> {
+    const urls = extractUrls(text);
+    
+    for (const url of urls) {
+      if (isYouTubeUrl(url)) {
+        await handleYouTubeUrl(msg, url);
+      } else {
+        await handleDirectDownload(msg, url);
+      }
+    }
+  }
+
+  async function handleYouTubeUrl(msg: any, url: string): Promise<void> {
+    try {
+      const linkId = Date.now();
+      youtubeLinks.set(linkId, url);
+
+      const keyboard = {
+        inline_keyboard: [[
+          { text: '🎥 Video', callback_data: `${linkId},V` },
+          { text: '🎵 Audio', callback_data: `${linkId},A` }
+        ]]
+      };
+
+      await bot!.sendMessage(msg.chat.id, '🎬 YouTube link detected!\n\nChoose your preferred download option:', {
+        reply_markup: keyboard
+      });
+      logger.info(`Sent YouTube options to user ${msg.from?.id}`);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`YouTube URL error: ${errorMessage}`);
+      await bot!.sendMessage(msg.chat.id, `❌ Failed to process YouTube URL: ${errorMessage}`);
+    }
+  }
+
+  async function downloadYouTubeVideo(url: string, userId: number, chatId?: number): Promise<void> {
+    try {
+      if (!chatId) return;
+
+      logger.info(`Starting YouTube video download with yt-dlp: ${url}`);
+      await bot!.sendMessage(chatId, '🎥 Starting YouTube video download with yt-dlp...');
+
+      // Use yt-dlp with full path for better reliability
+      const { spawn } = require('child_process');
+      const ytdlpPath = '/home/runner/workspace/.pythonlibs/bin/yt-dlp';
+      
+      logger.info(`Using yt-dlp at: ${ytdlpPath}`);
+      
+      // Create directory structure
+      const baseDir = './downloads/youtube/videos';
+      if (!fs.existsSync(baseDir)) {
+        fs.mkdirSync(baseDir, { recursive: true });
+      }
+      
+      const outputTemplate = path.join(baseDir, '%(uploader)s', '%(title)s.%(ext)s');
+      logger.info(`Output template: ${outputTemplate}`);
+      
+      // Download with yt-dlp directly
+      const downloadProcess = spawn(ytdlpPath, [
+        '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+        '--merge-output-format', 'mp4',
+        '-o', outputTemplate,
+        '--no-playlist',
+        '--retries', '10',
+        '--socket-timeout', '60',
+        '--print', 'after_move:filepath',
+        url
+      ], {
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+      
+      let outputPath = '';
+      
+      downloadProcess.stdout.on('data', (data: Buffer) => {
+        const output = data.toString();
+        logger.info(`yt-dlp stdout: ${output}`);
+        if (output.includes('.mp4')) {
+          outputPath = output.trim();
+        }
+      });
+      
+      downloadProcess.stderr.on('data', (data: Buffer) => {
+        const error = data.toString();
+        logger.info(`yt-dlp stderr: ${error}`);
+      });
+      
+      downloadProcess.on('close', async (code: number) => {
+        logger.info(`yt-dlp process finished with code: ${code}`);
+        if (code === 0) {
+          const fileName = outputPath ? path.basename(outputPath) : 'video';
+          logger.info(`✅ Video download completed: ${fileName}`);
+          await bot!.sendMessage(chatId, `✅ Video download completed!\n📁 File: ${fileName}\n🎬 Downloaded with yt-dlp (no size limits)`);
+        } else {
+          logger.error(`❌ yt-dlp failed with code: ${code}`);
+          await bot!.sendMessage(chatId, `❌ Video download failed. Please try again or check the URL.`);
+        }
+      });
+      
+      downloadProcess.on('error', async (error: Error) => {
+        logger.error(`❌ yt-dlp process error: ${error.message}`);
+        await bot!.sendMessage(chatId, `❌ Download process failed: ${error.message}`);
+      });
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`YouTube video download error: ${errorMessage}`);
+      if (chatId) {
+        await bot!.sendMessage(chatId, `❌ Video download failed: ${errorMessage}`);
+      }
+    }
+  }
+
+  async function downloadYouTubeAudio(url: string, userId: number, chatId?: number): Promise<void> {
+    try {
+      if (!chatId) return;
+
+      logger.info(`Starting YouTube audio download with yt-dlp: ${url}`);
+      await bot!.sendMessage(chatId, '🎵 Starting YouTube audio download with yt-dlp...');
+
+      // Use yt-dlp with full path for better reliability
+      const { spawn } = require('child_process');
+      const ytdlpPath = '/home/runner/workspace/.pythonlibs/bin/yt-dlp';
+      
+      logger.info(`Using yt-dlp at: ${ytdlpPath}`);
+      
+      // Create directory structure
+      const baseDir = './downloads/youtube/audio';
+      if (!fs.existsSync(baseDir)) {
+        fs.mkdirSync(baseDir, { recursive: true });
+      }
+      
+      const outputTemplate = path.join(baseDir, '%(uploader)s', '%(title)s.%(ext)s');
+      logger.info(`Output template: ${outputTemplate}`);
+      
+      // Download with yt-dlp directly
+      const downloadProcess = spawn(ytdlpPath, [
+        '-f', 'bestaudio/best',
+        '-x', '--audio-format', 'mp3',
+        '--audio-quality', '320K',
+        '-o', outputTemplate,
+        '--no-playlist',
+        '--retries', '10',
+        '--socket-timeout', '60',
+        '--print', 'after_move:filepath',
+        url
+      ], {
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+      
+      let outputPath = '';
+      
+      downloadProcess.stdout.on('data', (data: Buffer) => {
+        const output = data.toString();
+        logger.info(`yt-dlp stdout: ${output}`);
+        if (output.includes('.mp3')) {
+          outputPath = output.trim();
+        }
+      });
+      
+      downloadProcess.stderr.on('data', (data: Buffer) => {
+        const error = data.toString();
+        logger.info(`yt-dlp stderr: ${error}`);
+      });
+      
+      downloadProcess.on('close', async (code: number) => {
+        logger.info(`yt-dlp process finished with code: ${code}`);
+        if (code === 0) {
+          const fileName = outputPath ? path.basename(outputPath) : 'audio';
+          logger.info(`✅ Audio download completed: ${fileName}`);
+          await bot!.sendMessage(chatId, `✅ Audio download completed!\n📁 File: ${fileName}\n🎵 Downloaded with yt-dlp (no size limits)`);
+        } else {
+          logger.error(`❌ yt-dlp failed with code: ${code}`);
+          await bot!.sendMessage(chatId, `❌ Audio download failed. Please try again or check the URL.`);
+        }
+      });
+      
+      downloadProcess.on('error', async (error: Error) => {
+        logger.error(`❌ yt-dlp process error: ${error.message}`);
+        await bot!.sendMessage(chatId, `❌ Download process failed: ${error.message}`);
+      });
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`YouTube audio download error: ${errorMessage}`);
+      if (chatId) {
+        await bot!.sendMessage(chatId, `❌ Audio download failed: ${errorMessage}`);
+      }
+    }
+  }
+
+  async function handleDirectDownload(msg: any, url: string): Promise<void> {
+    try {
+      logger.info(`Starting direct download: ${url}`);
+      await bot!.sendMessage(msg.chat.id, `📥 Starting direct download: ${url}`);
+
+      const response = await axios({
+        method: 'GET',
+        url: url,
+        responseType: 'stream',
+        timeout: 30000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
+
+      const filename = extractFilenameFromUrl(url);
+      const outputPath = path.join('./downloads/completed', filename);
+      const writeStream = fs.createWriteStream(outputPath);
+
+      response.data.pipe(writeStream);
+
+      writeStream.on('finish', async () => {
+        logger.info(`Download completed: ${filename}`);
+        await bot!.sendMessage(msg.chat.id, `✅ Download completed: ${filename}\n📁 Location: ${outputPath}`);
+      });
+
+      writeStream.on('error', async (error) => {
+        logger.error(`Download failed: ${error.message}`);
+        await bot!.sendMessage(msg.chat.id, `❌ Download failed: ${error.message}`);
+      });
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Direct download error: ${errorMessage}`);
+      await bot!.sendMessage(msg.chat.id, `❌ Download failed: ${errorMessage}`);
+    }
+  }
+
+  async function handleMediaMessage(msg: any): Promise<void> {
+    try {
+      let fileId: string | undefined;
+      let fileName: string = '';
+
+      if (msg.document) {
+        fileId = msg.document.file_id;
+        fileName = msg.document.file_name || `document_${Date.now()}`;
+      } else if (msg.photo) {
+        fileId = msg.photo[msg.photo.length - 1].file_id;
+        fileName = `photo_${Date.now()}.jpg`;
+      } else if (msg.video) {
+        fileId = msg.video.file_id;
+        fileName = `video_${Date.now()}.mp4`;
+      } else if (msg.audio) {
+        fileId = msg.audio.file_id;
+        fileName = msg.audio.title || `audio_${Date.now()}.mp3`;
+      }
+
+      if (!fileId || !fileName) {
+        await bot!.sendMessage(msg.chat.id, '❌ Could not process this media type');
+        return;
+      }
+
+      logger.info(`Processing media file: ${fileName}`);
+      await bot!.sendMessage(msg.chat.id, `📥 Downloading: ${fileName}`);
+
+      await downloadTelegramFile(fileId, fileName, msg.chat.id);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Media download error: ${errorMessage}`);
+      await bot!.sendMessage(msg.chat.id, `❌ Media download failed: ${errorMessage}`);
+    }
+  }
+
+  async function downloadTelegramFile(fileId: string, fileName: string, chatId: number): Promise<void> {
+    try {
+      const fileInfo = await bot!.getFile(fileId);
+      const fileSize = fileInfo.file_size || 0;
+      
+      logger.info(`File size: ${fileSize} bytes (${Math.round(fileSize / 1024 / 1024)} MB)`);
+      
+      // Check if file exceeds Bot API limit (20MB) - use MTProto for large files
+      if (fileSize > 20 * 1024 * 1024) {
+        logger.info(`File too large for Bot API, using MTProto: ${Math.round(fileSize / 1024 / 1024)} MB`);
+        
+        if (!mtprotoClient || !mtprotoClient.isConnected()) {
+          await bot!.sendMessage(chatId, 
+            `⚠️ MTProto client not connected\n` +
+            `🔄 Cannot download files over 20MB\n` +
+            `✨ Restart the bot to enable large file downloads`
+          );
+          return;
+        }
+        
+        try {
+          await bot!.sendMessage(chatId, 
+            `🚀 Large file detected (${Math.round(fileSize / 1024 / 1024)} MB)\n` +
+            `🔍 Downloading via MTProto API (up to 2GB supported)\n` +
+            `⏳ This may take a while...`
+          );
+          
+          // Use MTProto for large files
+          const outputPath = await mtprotoClient.downloadFile(
+            { file_id: fileId },
+            fileName,
+            (progress) => {
+              if (progress % 25 === 0) { // Report every 25%
+                logger.info(`Download progress: ${progress}%`);
+              }
+            }
+          );
+          
+          await bot!.sendMessage(chatId, 
+            `✅ Large file downloaded: ${fileName}\n` +
+            `📁 Saved to downloads folder\n` +
+            `💾 Size: ${Math.round(fileSize / 1024 / 1024)} MB\n` +
+            `✨ Via MTProto API (unlimited size support)`
+          );
+          
+        } catch (mtprotoError) {
+          const errorMessage = mtprotoError instanceof Error ? mtprotoError.message : 'Unknown error';
+          logger.error(`MTProto download failed: ${errorMessage}`);
+          await bot!.sendMessage(chatId, 
+            `❌ MTProto download failed: ${errorMessage}\n` +
+            `🔄 File too large for this method\n` +
+            `✨ Try using the Python bot for this file`
+          );
+        }
+        return;
+      }
+      
+      // Use Bot API for small files (under 20MB)
+      const fullToken = (bot as any)?.token || '';
+      const fileUrl = `https://api.telegram.org/file/bot${fullToken}/${fileInfo.file_path}`;
+
+      const response = await axios({
+        method: 'GET',
+        url: fileUrl,
+        responseType: 'stream',
+        timeout: 300000, // 5 minutes timeout
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
+
+      const outputPath = path.join('./downloads/completed', fileName);
+      const writeStream = fs.createWriteStream(outputPath);
+
+      response.data.pipe(writeStream);
+
+      writeStream.on('finish', async () => {
+        logger.info(`Telegram file download completed: ${fileName}`);
+        await bot!.sendMessage(chatId, 
+          `✅ File downloaded: ${fileName}\n` +
+          `📁 Saved to downloads folder\n` +
+          `💾 Size: ${Math.round(fileSize / 1024 / 1024)} MB\n` +
+          `🤖 Via Bot API (small file)`
+        );
+      });
+
+      writeStream.on('error', async (error) => {
+        logger.error(`Telegram file download failed: ${error.message}`);
+        await bot!.sendMessage(chatId, `❌ Media download failed: ${error.message}`);
+      });
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Telegram file download error: ${errorMessage}`);
+      
+      if (errorMessage.includes('file is too big')) {
+        await bot!.sendMessage(chatId, 
+          `❌ File too large\n` +
+          `🔄 Try restarting the bot to enable MTProto support\n` +
+          `✨ MTProto supports up to 2GB files`
+        );
+      } else {
+        await bot!.sendMessage(chatId, `❌ Download failed: ${errorMessage}`);
+      }
+    }
+  }
+
+  function extractFilenameFromUrl(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname;
+      let filename = path.basename(pathname);
+      
+      if (!filename || filename === '/' || !filename.includes('.')) {
+        filename = `download_${Date.now()}.bin`;
+      }
+      
+      return sanitizeFilename(filename);
+    } catch (error) {
+      return `download_${Date.now()}.bin`;
+    }
+  }
+
   // Add API endpoints for download management
   app.get('/api/downloads', async (req, res) => {
     try {
@@ -326,8 +971,139 @@ export async function registerRoutes(app: Express): Promise<Express> {
     return downloads;
   }
 
+  app.post('/api/bot/send-message', async (req, res) => {
+    try {
+      const { chatId, message } = req.body;
+      
+      if (!bot || !botStatus.running) {
+        return res.status(400).json({ error: 'Bot is not running' });
+      }
+
+      await bot.sendMessage(chatId, message);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      res.status(500).json({ error: 'Failed to send message' });
+    }
+  });
 
   // Python Telethon Bot Management API
+  app.post('/api/python-bot/start', async (req, res) => {
+    try {
+      // Load configuration from file instead of hardcoded values
+      const telegramConfig = configReader.getTelegramConfig();
+      const downloadsConfig = configReader.getDownloadsConfig();
+      const featuresConfig = configReader.getFeaturesConfig();
+      const systemConfig = configReader.getSystemConfig();
+      const pathsConfig = configReader.getPathsConfig();
+      
+      const { botToken, authorizedUserId } = req.body;
+      
+      // Use config file values as defaults, allow override from request
+      const finalBotToken = botToken || telegramConfig.bot_token;
+      const finalAuthorizedUserId = authorizedUserId || telegramConfig.authorized_user_ids.join(',');
+
+      if (pythonBot) {
+        pythonBot.kill();
+        pythonBot = null;
+      }
+
+      const botPath = path.join(process.cwd(), 'bot_source', 'main.py');
+      const configDir = path.join(process.cwd(), 'tmp', 'config');
+      const downloadDir = path.resolve(process.cwd(), downloadsConfig.base_path.replace('./', ''));
+      
+      // Create directories if they don't exist
+      fs.mkdirSync(configDir, { recursive: true });
+      fs.mkdirSync(downloadDir, { recursive: true });
+      
+      // Use configuration file values instead of hardcoded values
+      const env = {
+        ...process.env,
+        TG_API_ID: telegramConfig.api_id,
+        TG_API_HASH: telegramConfig.api_hash,
+        TG_BOT_TOKEN: finalBotToken,
+        TG_AUTHORIZED_USER_ID: finalAuthorizedUserId,
+        TG_DOWNLOAD_PATH: downloadDir,
+        TG_MAX_PARALLEL: featuresConfig.max_parallel.toString(),
+        TG_PROGRESS_DOWNLOAD: featuresConfig.progress_download.toString(),
+        APP_LANGUAGE: systemConfig.language,
+        PATH_CONFIG: path.resolve(process.cwd(), pathsConfig.config.replace('./', '')),
+        PATH_PENDING_MESSAGES: path.resolve(process.cwd(), pathsConfig.pending_messages.replace('./', '')),
+        PATH_DOWNLOAD_FILES: path.resolve(process.cwd(), pathsConfig.download_files.replace('./', ''))
+      };
+
+      pythonBot = spawn('python3', [botPath], { env });
+      pythonBotStatus = {
+        running: true,
+        apiId: telegramConfig.api_id.slice(0, 3) + '***', // Hidden for security  
+        apiHash: telegramConfig.api_hash.slice(0, 8) + '***', // Hidden for security
+        botToken: finalBotToken.slice(0, 10) + '...',
+        authorizedUserId: finalAuthorizedUserId,
+        lastActivity: new Date().toISOString(),
+        logs: []
+      };
+
+      pythonBot.stdout?.on('data', (data) => {
+        const log = data.toString();
+        pythonBotStatus.logs.push(`[STDOUT] ${new Date().toISOString()}: ${log}`);
+        if (pythonBotStatus.logs.length > 100) {
+          pythonBotStatus.logs = pythonBotStatus.logs.slice(-50);
+        }
+        console.log('Python Bot STDOUT:', log);
+      });
+
+      pythonBot.stderr?.on('data', (data) => {
+        const log = data.toString();
+        pythonBotStatus.logs.push(`[STDERR] ${new Date().toISOString()}: ${log}`);
+        if (pythonBotStatus.logs.length > 100) {
+          pythonBotStatus.logs = pythonBotStatus.logs.slice(-50);
+        }
+        console.error('Python Bot STDERR:', log);
+      });
+
+      pythonBot.on('close', (code) => {
+        console.log(`Python bot process exited with code ${code}`);
+        pythonBotStatus.running = false;
+        pythonBot = null;
+      });
+
+      res.json({ success: true, status: pythonBotStatus });
+    } catch (error) {
+      console.error('Failed to start Python bot:', error);
+      res.status(500).json({ error: 'Failed to start Python bot' });
+    }
+  });
+
+  app.post('/api/python-bot/stop', async (req, res) => {
+    try {
+      if (pythonBot) {
+        pythonBot.kill();
+        pythonBot = null;
+      }
+      pythonBotStatus = { 
+        running: false, 
+        apiId: '', 
+        apiHash: '', 
+        botToken: '',
+        authorizedUserId: '',
+        lastActivity: null,
+        logs: []
+      };
+      res.json({ success: true, status: pythonBotStatus });
+    } catch (error) {
+      console.error('Failed to stop Python bot:', error);
+      res.status(500).json({ error: 'Failed to stop Python bot' });
+    }
+  });
+
+  app.get('/api/python-bot/status', (req, res) => {
+    res.json({ status: pythonBotStatus });
+  });
+
+  app.get('/api/python-bot/logs', (req, res) => {
+    res.json({ logs: pythonBotStatus.logs });
+  });
+
   // Python Copier Management API
   app.post('/api/python-copier/start', async (req, res) => {
     try {
@@ -2984,6 +3760,157 @@ if __name__ == "__main__":
   });
 
   // Store for active forwarding jobs
+  const forwardJobs = new Map<string, Partial<ForwardJob>>();
+
+  // Telegram Forwarder API endpoints
+  app.post('/api/telegram/start-forwarding', async (req, res) => {
+    try {
+      // Validate the request body - now includes session info
+      const requestData = forwardConfigSchema.extend({
+        sessionString: z.string().min(1, "Session string is required"),
+        apiId: z.number().min(1, "API ID is required"),
+        apiHash: z.string().min(1, "API Hash is required"),
+      }).parse(req.body);
+      
+      const { sessionString, apiId, apiHash, ...config } = requestData;
+
+      const jobId = await TelegramForwarder.startForwarding(
+        config,
+        sessionString,
+        apiId,
+        apiHash,
+        (jobId: string, update: Partial<ForwardJob>) => {
+          // Update the job in our store
+          const existingJob = forwardJobs.get(jobId) || {};
+          forwardJobs.set(jobId, { ...existingJob, ...update });
+          
+          // Here you could also emit to WebSocket clients for real-time updates
+          logger.info(`Job ${jobId} updated: ${JSON.stringify(update)}`);
+        }
+      );
+
+      // Initialize job in our store
+      const initialJob: Partial<ForwardJob> = {
+        id: jobId,
+        config,
+        status: 'running',
+        currentOffset: config.offsetFrom,
+        progress: 0,
+        logs: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      forwardJobs.set(jobId, initialJob);
+
+      res.json({ 
+        success: true, 
+        jobId,
+        job: initialJob
+      });
+
+    } catch (error) {
+      logger.error(`Failed to start forwarding: ${error instanceof Error ? error.message : String(error)}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ 
+        error: 'Failed to start forwarding', 
+        details: errorMessage 
+      });
+    }
+  });
+
+  app.post('/api/telegram/stop-forwarding', async (req, res) => {
+    try {
+      const { jobId } = req.body;
+      
+      if (!jobId) {
+        return res.status(400).json({ error: 'Job ID is required' });
+      }
+
+      await TelegramForwarder.stopForwarding(jobId);
+
+      // Update job status in our store
+      const existingJob = forwardJobs.get(jobId);
+      if (existingJob) {
+        existingJob.status = 'paused';
+        existingJob.updatedAt = new Date().toISOString();
+        forwardJobs.set(jobId, existingJob);
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Forwarding stopped successfully'
+      });
+
+    } catch (error) {
+      logger.error(`Failed to stop forwarding: ${error instanceof Error ? error.message : String(error)}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ 
+        error: 'Failed to stop forwarding', 
+        details: errorMessage 
+      });
+    }
+  });
+
+  app.get('/api/telegram/forwarding-jobs', (req, res) => {
+    try {
+      const jobs = Array.from(forwardJobs.values()).map(job => ({
+        ...job,
+        // Get fresh status and logs from the forwarder
+        ...TelegramForwarder.getJobStatus(job.id || ''),
+      }));
+
+      res.json({ jobs });
+
+    } catch (error) {
+      logger.error(`Failed to get forwarding jobs: ${error instanceof Error ? error.message : String(error)}`);
+      res.status(500).json({ 
+        error: 'Failed to get forwarding jobs',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.get('/api/telegram/forwarding-job/:jobId', (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const job = forwardJobs.get(jobId);
+      
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      // Get fresh status and logs from the forwarder
+      const freshStatus = TelegramForwarder.getJobStatus(jobId);
+      const updatedJob = { ...job, ...freshStatus };
+
+      res.json({ job: updatedJob });
+
+    } catch (error) {
+      logger.error(`Failed to get forwarding job: ${error instanceof Error ? error.message : String(error)}`);
+      res.status(500).json({ 
+        error: 'Failed to get forwarding job',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.get('/api/telegram/forwarding-job/:jobId/logs', (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const logs = TelegramForwarder.getJobLogs(jobId);
+
+      res.json({ logs });
+
+    } catch (error) {
+      logger.error(`Failed to get forwarding job logs: ${error instanceof Error ? error.message : String(error)}`);
+      res.status(500).json({ 
+        error: 'Failed to get forwarding job logs',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // GitHub PAT and Sync Routes
   
   // Helper function to get GitHub PAT token

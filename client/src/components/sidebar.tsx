@@ -33,7 +33,6 @@ interface SidebarProps {
 
 const navigationItems = [
   { id: 'python-script', label: '🐍 Python Script Mode', icon: Code2 },
-  { id: 'python-bot', label: '🐍 Python Telethon Bot', icon: Bot },
   { id: 'python-copier', label: '🐍 Python Copier', icon: Forward },
   { id: 'js-copier', label: '⚡ JS Copier', icon: Forward },
   { id: 'live-cloning', label: '⚡ Live Cloning', icon: Zap },
@@ -43,9 +42,7 @@ const navigationItems = [
   { id: 'date-range', label: 'Date Range', icon: CalendarRange },
   { id: 'similarity', label: 'Similarity Search', icon: GitCompare },
   { id: 'downloads', label: 'Download', icon: Download },
-  { id: 'forwarder', label: 'Forwarder ⏩', icon: Forward },
   { id: 'file-manager', label: '📁 File Manager', icon: Files },
-  { id: 'bot-management', label: '🤖 Node js Bot', icon: Bot },
   { id: 'github-sync', label: '🐙 GitHub Sync', icon: Github },
   { id: 'git-control', label: '⚡ Git Control', icon: Github },
   { id: 'settings', label: 'Settings', icon: Settings },

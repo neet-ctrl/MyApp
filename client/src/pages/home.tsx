@@ -7,12 +7,9 @@ import { DateRange } from '@/components/date-range';
 import { VideoDownloads } from '@/components/video-downloads';
 import { Settings } from '@/components/settings';
 import { PythonScriptMain } from '@/components/python-script-main';
-import { BotManagement } from '@/components/bot-management';
-import { PythonBot } from '@/components/python-bot';
 import { PythonCopier } from '@/components/python-copier';
 import { JSCopier } from '@/components/js-copier';
 import { LiveCloning } from '@/components/live-cloning';
-import { Forwarder } from '@/components/forwarder';
 import { GitHubSync } from '@/components/github-sync';
 import GitControl from '@/components/git-control';
 import { AuthModal } from '@/components/auth-modal';
@@ -192,8 +189,6 @@ export default function Home() {
     switch (currentView) {
       case 'python-script':
         return <PythonScriptMain />;
-      case 'python-bot':
-        return <PythonBot />;
       case 'python-copier':
         return <PythonCopier />;
       case 'js-copier':
@@ -212,8 +207,6 @@ export default function Home() {
         return <MessageSearch />; // Reuse MessageSearch component for similarity
       case 'downloads':
         return <VideoDownloads />;
-      case 'forwarder':
-        return <Forwarder />;
       case 'file-manager':
         // Navigate to the downloads page
         return (
@@ -231,8 +224,6 @@ export default function Home() {
             </div>
           </div>
         );
-      case 'bot-management':
-        return <BotManagement />;
       case 'github-sync':
         return <GitHubSync />;
       case 'git-control':
