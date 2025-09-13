@@ -15,7 +15,11 @@ import {
   WordFilter,
   InsertWordFilter,
   LiveCloningMessage,
-  InsertLiveCloningMessage
+  InsertLiveCloningMessage,
+  UploadJob,
+  InsertUploadJob,
+  UploadJobFile,
+  InsertUploadJobFile
 } from "@shared/schema";
 
 export interface IStorage {
@@ -64,6 +68,19 @@ export interface IStorage {
   saveLiveCloningMessage(message: InsertLiveCloningMessage): Promise<LiveCloningMessage>;
   getLiveCloningMessages(instanceId: string): Promise<LiveCloningMessage[]>;
   deleteLiveCloningMessagesByInstance(instanceId: string): Promise<number>;
+  
+  // Upload Jobs Management
+  getUploadJob(jobId: string): Promise<UploadJob | null>;
+  saveUploadJob(job: InsertUploadJob): Promise<UploadJob>;
+  updateUploadJob(jobId: string, updates: Partial<UploadJob>): Promise<UploadJob | null>;
+  listUploadJobs(userId: string): Promise<UploadJob[]>;
+  deleteUploadJob(jobId: string): Promise<boolean>;
+  
+  // Upload Job Files Management
+  getUploadJobFiles(jobId: string): Promise<UploadJobFile[]>;
+  saveUploadJobFile(file: InsertUploadJobFile): Promise<UploadJobFile>;
+  updateUploadJobFile(id: number, updates: Partial<UploadJobFile>): Promise<UploadJobFile | null>;
+  deleteUploadJobFiles(jobId: string): Promise<number>;
 }
 
 export class MemStorage implements IStorage {
@@ -81,6 +98,11 @@ export class MemStorage implements IStorage {
   private entityLinkIdCounter: number = 1;
   private wordFilterIdCounter: number = 1;
   private liveCloningMessageIdCounter: number = 1;
+  
+  // Upload Jobs storage maps
+  private uploadJobs: Map<string, UploadJob> = new Map();
+  private uploadJobFiles: Map<number, UploadJobFile> = new Map();
+  private uploadJobFileIdCounter: number = 1;
 
   constructor() {
     // Backend storage placeholder - main storage is client-side IndexedDB
@@ -333,6 +355,104 @@ export class MemStorage implements IStorage {
     for (const [id, message] of Array.from(this.liveCloningMessages.entries())) {
       if (message.instanceId === instanceId) {
         this.liveCloningMessages.delete(id);
+        deletedCount++;
+      }
+    }
+    return deletedCount;
+  }
+
+  // Upload Jobs Management
+  async getUploadJob(jobId: string): Promise<UploadJob | null> {
+    return this.uploadJobs.get(jobId) || null;
+  }
+
+  async saveUploadJob(job: InsertUploadJob): Promise<UploadJob> {
+    const savedJob: UploadJob = {
+      id: job.id,
+      userId: job.userId,
+      status: job.status,
+      type: job.type,
+      targetRepo: job.targetRepo,
+      targetPath: job.targetPath || null,
+      totalFiles: job.totalFiles || 0,
+      processedFiles: job.processedFiles || 0,
+      failedFiles: job.failedFiles || 0,
+      progress: job.progress || 0,
+      errorMessage: job.errorMessage || null,
+      metadata: job.metadata,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      startedAt: null,
+      completedAt: null,
+    };
+    this.uploadJobs.set(savedJob.id, savedJob);
+    return savedJob;
+  }
+
+  async updateUploadJob(jobId: string, updates: Partial<UploadJob>): Promise<UploadJob | null> {
+    const existingJob = this.uploadJobs.get(jobId);
+    if (!existingJob) return null;
+
+    const updatedJob: UploadJob = {
+      ...existingJob,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.uploadJobs.set(jobId, updatedJob);
+    return updatedJob;
+  }
+
+  async listUploadJobs(userId: string): Promise<UploadJob[]> {
+    return Array.from(this.uploadJobs.values()).filter(job => job.userId === userId);
+  }
+
+  async deleteUploadJob(jobId: string): Promise<boolean> {
+    return this.uploadJobs.delete(jobId);
+  }
+
+  // Upload Job Files Management
+  async getUploadJobFiles(jobId: string): Promise<UploadJobFile[]> {
+    return Array.from(this.uploadJobFiles.values()).filter(file => file.jobId === jobId);
+  }
+
+  async saveUploadJobFile(file: InsertUploadJobFile): Promise<UploadJobFile> {
+    const savedFile: UploadJobFile = {
+      id: this.uploadJobFileIdCounter++,
+      jobId: file.jobId,
+      filePath: file.filePath,
+      fileName: file.fileName,
+      fileSize: file.fileSize,
+      content: file.content,
+      encoding: file.encoding,
+      status: file.status,
+      errorMessage: file.errorMessage || null,
+      retryCount: file.retryCount || 0,
+      commitSha: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.uploadJobFiles.set(savedFile.id, savedFile);
+    return savedFile;
+  }
+
+  async updateUploadJobFile(id: number, updates: Partial<UploadJobFile>): Promise<UploadJobFile | null> {
+    const existingFile = this.uploadJobFiles.get(id);
+    if (!existingFile) return null;
+
+    const updatedFile: UploadJobFile = {
+      ...existingFile,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.uploadJobFiles.set(id, updatedFile);
+    return updatedFile;
+  }
+
+  async deleteUploadJobFiles(jobId: string): Promise<number> {
+    let deletedCount = 0;
+    for (const [id, file] of Array.from(this.uploadJobFiles.entries())) {
+      if (file.jobId === jobId) {
+        this.uploadJobFiles.delete(id);
         deletedCount++;
       }
     }

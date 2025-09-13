@@ -2,9 +2,7 @@ import {
   UploadJob, 
   UploadJobFile,
   InsertUploadJob, 
-  InsertUploadJobFile,
-  uploadJobs,
-  uploadJobFiles
+  InsertUploadJobFile
 } from '@shared/schema';
 import { storage } from './storage';
 import crypto from 'crypto';
@@ -52,58 +50,42 @@ export class UploadJobManager {
       metadata: params.metadata || null,
     };
 
-    // For now, store in memory until database tables are ready
-    // TODO: Replace with actual database storage when tables are migrated
+    // Save job to storage
+    const savedJob = await storage.saveUploadJob(job);
+    
+    // Save job files to storage
+    for (const file of params.files) {
+      await storage.saveUploadJobFile({
+        jobId,
+        filePath: file.filePath,
+        fileName: file.fileName,
+        fileSize: file.fileSize,
+        content: file.content,
+        encoding: file.encoding,
+        status: 'pending',
+      });
+    }
     
     console.log(`✅ Created upload job ${jobId} with ${params.files.length} files`);
     
     // Start processing immediately
-    this.processJobAsync(jobId, job, params.files);
+    this.processJobAsync(jobId, savedJob, params.files);
     
-    return {
-      ...job,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      startedAt: null,
-      completedAt: null,
-    };
+    return savedJob;
   }
 
   /**
    * Get upload job status
    */
   async getUploadJob(jobId: string): Promise<UploadJob | null> {
-    // TODO: Replace with database query when tables are ready
-    // For now, return a mock status based on processing state
-    
-    const isProcessing = this.processingJobs.has(jobId);
-    
-    return {
-      id: jobId,
-      userId: 'default-user',
-      status: isProcessing ? 'processing' : 'completed',
-      type: 'github_sync',
-      targetRepo: 'unknown/repo',
-      targetPath: null,
-      totalFiles: 0,
-      processedFiles: 0,
-      failedFiles: 0,
-      progress: isProcessing ? 50 : 100,
-      errorMessage: null,
-      metadata: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      startedAt: new Date(),
-      completedAt: isProcessing ? null : new Date(),
-    };
+    return await storage.getUploadJob(jobId);
   }
 
   /**
    * List upload jobs for a user
    */
   async listUploadJobs(userId: string): Promise<UploadJob[]> {
-    // TODO: Replace with database query when tables are ready
-    return [];
+    return await storage.listUploadJobs(userId);
   }
 
   /**
@@ -111,15 +93,42 @@ export class UploadJobManager {
    */
   async cancelUploadJob(jobId: string): Promise<boolean> {
     this.processingJobs.delete(jobId);
+    
+    // Update job status in storage
+    const updated = await storage.updateUploadJob(jobId, { 
+      status: 'cancelled',
+      completedAt: new Date()
+    });
+    
     console.log(`❌ Cancelled upload job ${jobId}`);
-    return true;
+    return updated !== null;
   }
 
   /**
    * Resume a paused or failed upload job
    */
   async resumeUploadJob(jobId: string): Promise<boolean> {
-    // TODO: Implement resume logic when database is ready
+    const job = await storage.getUploadJob(jobId);
+    if (!job) return false;
+    
+    // Update job status to processing
+    await storage.updateUploadJob(jobId, { 
+      status: 'processing',
+      startedAt: new Date()
+    });
+    
+    // Get job files and restart processing
+    const files = await storage.getUploadJobFiles(jobId);
+    const fileParams = files.map(f => ({
+      filePath: f.filePath,
+      fileName: f.fileName,
+      fileSize: f.fileSize,
+      content: f.content,
+      encoding: f.encoding as 'base64' | 'utf8'
+    }));
+    
+    this.processJobAsync(jobId, job, fileParams);
+    
     console.log(`🔄 Resuming upload job ${jobId}`);
     return true;
   }
@@ -245,14 +254,26 @@ export class UploadJobManager {
     totalFiles: number;
     errors: string[];
   }> {
-    const isProcessing = this.processingJobs.has(jobId);
+    const job = await storage.getUploadJob(jobId);
+    if (!job) {
+      return {
+        status: 'not_found',
+        progress: 0,
+        processedFiles: 0,
+        totalFiles: 0,
+        errors: ['Job not found'],
+      };
+    }
+    
+    const files = await storage.getUploadJobFiles(jobId);
+    const failedFiles = files.filter(f => f.status === 'failed');
     
     return {
-      status: isProcessing ? 'processing' : 'completed',
-      progress: isProcessing ? 50 : 100,
-      processedFiles: isProcessing ? 5 : 10,
-      totalFiles: 10,
-      errors: [],
+      status: job.status,
+      progress: job.progress,
+      processedFiles: job.processedFiles,
+      totalFiles: job.totalFiles,
+      errors: failedFiles.map(f => f.errorMessage || 'Unknown error'),
     };
   }
 }

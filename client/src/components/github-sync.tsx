@@ -420,17 +420,28 @@ export function GitHubSync() {
     },
   });
 
-  // Upload files to GitHub (Node.js method)
+  // Background upload job mutation (persistent uploads)
   const syncMutation = useMutation({
-    mutationFn: async (syncData: { files: {path: string, content: string, encoding: string}[]; repoFullName: string; targetPath?: string }) => {
-      const response = await apiRequest('POST', '/api/github/sync', syncData);
-      return await response.json();
+    mutationFn: async (uploadData: { 
+      type: 'github_sync'; 
+      targetRepo: string; 
+      targetPath?: string; 
+      files: Array<{
+        filePath: string;
+        fileName: string;
+        fileSize: number;
+        content: string;
+        encoding: 'base64' | 'utf8';
+      }>; 
+      metadata?: any 
+    }) => {
+      return await apiRequest('/api/upload-jobs', 'POST', uploadData);
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       setCancelController(null);
       setSyncProgress({
         status: 'completed',
-        message: 'Sync completed successfully!',
+        message: `Background upload started! Job ID: ${data.job.id}. Files will upload in the background.`,
         progress: 100,
         filesProcessed: syncProgress.totalFiles,
         totalFiles: syncProgress.totalFiles,
@@ -438,23 +449,24 @@ export function GitHubSync() {
         canCancel: false
       });
       toast({
-        title: 'Sync completed',
-        description: 'Successfully synced workspace to GitHub',
+        title: 'Background Upload Started',
+        description: `Upload job created with ID: ${data.job.id}. Files will upload in the background, you can navigate away safely.`,
+        duration: 8000,
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       setCancelController(null);
       setSyncProgress(prev => ({
         ...prev,
         status: 'error',
-        message: error instanceof Error ? error.message : 'Sync failed',
-        errors: [error instanceof Error ? error.message : 'Unknown error'],
+        message: error.response?.data?.error || 'Failed to create upload job',
+        errors: [error.response?.data?.error || 'Unknown error'],
         canCancel: false
       }));
       toast({
         variant: 'destructive',
-        title: 'Sync failed',
-        description: error instanceof Error ? error.message : 'Unknown error',
+        title: 'Upload job failed',
+        description: error.response?.data?.error || 'Failed to create background upload job',
       });
     },
   });
@@ -883,18 +895,26 @@ export function GitHubSync() {
         currentFile: 'Starting upload...'
       }));
 
-      // Use chunked upload for large file sets to prevent timeouts and memory issues
-      const shouldUseChunkedUpload = filesData.length > 2 || filesData.some(f => f.content.length > 1024 * 1024); // > 1MB content
-      
-      if (shouldUseChunkedUpload) {
-        await handleChunkedUpload(filesData, targetRepo, targetPath.trim(), controller);
-      } else {
-        syncMutation.mutate({
-          files: filesData,
-          repoFullName: targetRepo,
-          targetPath: targetPath.trim(),
-        });
-      }
+      // Convert files to the new background upload format
+      const uploadFiles = filesData.map(file => ({
+        filePath: file.path,
+        fileName: file.path.split('/').pop() || 'file',
+        fileSize: new Blob([file.content]).size,
+        content: file.encoding === 'base64' ? file.content : btoa(file.content), // Ensure base64 encoding
+        encoding: 'base64' as const
+      }));
+
+      // Use background upload system for all uploads (no more chunked handling needed)
+      syncMutation.mutate({
+        type: 'github_sync',
+        targetRepo: targetRepo,
+        targetPath: targetPath.trim() || undefined,
+        files: uploadFiles,
+        metadata: {
+          originalFileCount: selectedFiles.length,
+          uploadMethod: 'github_sync_background'
+        }
+      });
       
     } catch (error) {
       if (error instanceof Error && error.message === 'Upload cancelled') {
