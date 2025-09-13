@@ -1,4 +1,6 @@
-pyaes
-pyasn1
-rsa
-Telethon
+tgcrypto
+telethon
+requests
+python-dotenv
+pillow
+cryptg

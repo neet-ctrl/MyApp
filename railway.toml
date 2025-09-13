@@ -15,9 +15,9 @@ NODE_ENV = "production"
 # PORT will be set by Railway dynamically - don't override
 FALLBACK_PORT = "5000"
 APP_LANGUAGE = "en_EN"
-# Exact hardcoded values from workspace
-TG_API_ID = "28403662"
-TG_API_HASH = "079509d4ac7f209a1a58facd00d6ff5a"
+# Use same defaults as workspace (empty env vars = fallback to API_ID=1, API_HASH='default_hash')
+# TG_API_ID = "28403662"
+# TG_API_HASH = "079509d4ac7f209a1a58facd00d6ff5a"
 TG_BOT_TOKEN = "8154976061:AAGrNr6OcdMhFNhV5bCkpGfQAh0FYeJO1gE"
 TG_AUTHORIZED_USER_ID = "6956029558"
 # Use exact workspace folder structure - no volumes
@@ -42,7 +42,7 @@ SESSION = "/app/bottorrent.session"
 BOT_SESSION = "/app/bottorrent.session"
 LIVE_CLONING_SESSION = "/app/bot_source/live-cloning/live_cloner"
 COPIER_SESSION = "/app/tmp/config/copier"
-# Exact hardcoded paths from workspace configurations
-API_ID = "28403662"
-API_HASH = "079509d4ac7f209a1a58facd00d6ff5a"
+# Use same defaults as workspace (empty env vars = fallback to API_ID=1, API_HASH='default_hash')
+# API_ID = "28403662"
+# API_HASH = "079509d4ac7f209a1a58facd00d6ff5a"
 BOT_TOKEN = "8154976061:AAGrNr6OcdMhFNhV5bCkpGfQAh0FYeJO1gE"
