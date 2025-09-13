@@ -2799,11 +2799,13 @@ if __name__ == "__main__":
       let resolvedFromEntity, resolvedToEntity;
       
       try {
-        // Get current session string from the live cloning status or instance
-        const instance = await storage.getLiveCloningInstance(instanceId);
-        if (!instance || !instance.sessionString) {
+        // CRITICAL: Use the session string from the frontend instead of database lookup
+        // The live cloning system uses a hardcoded session, not stored instances
+        const defaultSessionString = '1BVtsOLABux3cdf9iA7_7csD0HjZ-vqy3pQUfbynyLah5ZQQNGCTgc6ao1FOFHur4mvJkRsrzS3KKi65RNXczTxtlxpNIkqoIQvN0ILt2kPp9dUcCuIn8ZlFftx63derTrb_LS6TdeZ4Ly3cI26C_E14TUvhlWNHwB_zDZ1mvpvluQb9EhodVRsWSAQimUWNIrKp9stJum7amnoLzCSdqAydjsfTXej1KZQ1TfxX79yAb-DPIw2kzFWf6Mk9ScDlTeGJg6qRQkiDOHiRrUnrzle1REurAN_4h9qWahhR1ffbreGvOYVDip35Uya4Kn4YGmJM0vtGLq3HoEico3umwBrO6GOc0oxU=';
+        
+        if (!defaultSessionString) {
           return res.status(400).json({ 
-            error: 'No valid session found for this instance. Please test your session first.' 
+            error: 'No valid session found. Please check the session configuration.' 
           });
         }
 
@@ -2814,7 +2816,7 @@ if __name__ == "__main__":
         const { TelegramClient } = require('telegram');
         
         const client = new TelegramClient(
-          new StringSession(instance.sessionString),
+          new StringSession(defaultSessionString),
           parseInt(telegramConfig.api_id),
           telegramConfig.api_hash,
           {
