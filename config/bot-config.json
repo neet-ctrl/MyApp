@@ -2,17 +2,17 @@
   "telegram": {
     "api_id": "28403662",
     "api_hash": "079509d4ac7f209a1a58facd00d6ff5a",
-    "bot_token": "8154976061:AAGryZFYIb5fu6OlCVFMAlWgiu6M8J9j_1o",
-    "session": "/app/data/sessions/bottorrent",
+    "bot_token": "8154976061:AAGrNr6OcdMhFNhV5bCkpGfQAh0FYeJO1gE",
+    "session": "/app/bottorrent",
     "authorized_user_ids": ["6956029558"]
   },
   "downloads": {
-    "base_path": "/app/data/downloads",
-    "youtube_audio_folder": "/app/data/downloads/youtube/audio",
-    "youtube_video_folder": "/app/data/downloads/youtube/videos",
-    "completed_folder": "/app/data/downloads/completed",
-    "temp_folder": "/app/data/downloads/tmp",
-    "links_folder": "/app/data/downloads/links"
+    "base_path": "/app/downloads",
+    "youtube_audio_folder": "/app/downloads/youtube/audio",
+    "youtube_video_folder": "/app/downloads/youtube/videos",
+    "completed_folder": "/app/downloads/completed",
+    "temp_folder": "/app/downloads/tmp",
+    "links_folder": "/app/downloads/links"
   },
   "features": {
     "enabled_unzip": true,
@@ -41,8 +41,8 @@
     "permissions_file": "755"
   },
   "paths": {
-    "config": "/app/data/tmp/config/config.ini",
-    "pending_messages": "/app/data/tmp/config/pending_messages.json",
-    "download_files": "/app/data/tmp/config/download_files.json"
+    "config": "/app/config/config.ini",
+    "pending_messages": "/app/config/pending_messages.json",
+    "download_files": "/app/config/download_files.json"
   }
 }
