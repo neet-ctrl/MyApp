@@ -61,25 +61,9 @@ let nodeBotManager: BotManager | null = null;
 // Live Cloning Management
 let liveCloningProcess: ChildProcess | null = null;
 // Load persistent settings if available
-const persistentSettingsPath = path.join(process.cwd(), 'tmp', 'live_cloning_persistent_settings.json');
+const persistentSettingsPath = path.join(process.cwd(), 'config', 'live_cloning_persistent_settings.json');
 let loadedSettings: any = {};
 
-// DEBUG: Add detailed logging to debug Railway deployment
-console.log('🔍 DEBUG: process.cwd():', process.cwd());
-console.log('🔍 DEBUG: persistentSettingsPath:', persistentSettingsPath);
-console.log('🔍 DEBUG: File exists check:', fs.existsSync(persistentSettingsPath));
-
-// Check what's in tmp directory
-try {
-  const tmpDir = path.join(process.cwd(), 'tmp');
-  console.log('🔍 DEBUG: tmp directory exists:', fs.existsSync(tmpDir));
-  if (fs.existsSync(tmpDir)) {
-    const files = fs.readdirSync(tmpDir);
-    console.log('🔍 DEBUG: Files in tmp directory:', files);
-  }
-} catch (e) {
-  console.log('🔍 DEBUG: Error reading tmp directory:', e);
-}
 
 if (fs.existsSync(persistentSettingsPath)) {
   try {
@@ -1970,7 +1954,7 @@ if __name__ == "__main__":
         };
         
         // Store in a persistent config that survives restarts
-        const persistentConfigPath = path.join(process.cwd(), 'tmp', 'live_cloning_persistent_settings.json');
+        const persistentConfigPath = path.join(process.cwd(), 'config', 'live_cloning_persistent_settings.json');
         fs.writeFileSync(persistentConfigPath, JSON.stringify(settingsToStore, null, 2));
         
         // Also update the actual bot config file that the Python bot reads
@@ -2108,7 +2092,7 @@ if __name__ == "__main__":
         // Try to get from persistent settings file if not in env (same as startLiveCloningService)
         if (!sessionString) {
           try {
-            const persistentSettingsPath = path.join(process.cwd(), 'tmp', 'live_cloning_persistent_settings.json');
+            const persistentSettingsPath = path.join(process.cwd(), 'config', 'live_cloning_persistent_settings.json');
             if (fs.existsSync(persistentSettingsPath)) {
               const persistentSettings = JSON.parse(fs.readFileSync(persistentSettingsPath, 'utf8'));
               sessionString = persistentSettings.sessionString;
@@ -2649,7 +2633,7 @@ if __name__ == "__main__":
       });
 
       // Persist session string for 24/7 auto-start functionality
-      const persistentConfigPath = path.join(process.cwd(), 'tmp', 'live_cloning_persistent_settings.json');
+      const persistentConfigPath = path.join(process.cwd(), 'config', 'live_cloning_persistent_settings.json');
       try {
         let existingSettings = {};
         if (fs.existsSync(persistentConfigPath)) {
@@ -4958,7 +4942,7 @@ export async function startLiveCloningService(): Promise<void> {
     console.log('🚀 Starting Live Cloning service for 24/7 always-running architecture...');
     
     // Check if we have a valid session and persistent settings
-    const persistentConfigPath = path.join(process.cwd(), 'tmp', 'live_cloning_persistent_settings.json');
+    const persistentConfigPath = path.join(process.cwd(), 'config', 'live_cloning_persistent_settings.json');
     if (!fs.existsSync(persistentConfigPath)) {
       console.log('⚠️ No persistent Live Cloning settings found, skipping auto-start');
       return;

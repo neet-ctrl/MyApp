@@ -31,7 +31,7 @@ COPY . .
 RUN echo "=== VERIFYING ALL FILES COPIED ===" && \
     ls -la /app/tmp/ && \
     echo "=== Settings file ===" && \
-    ls -la /app/tmp/live_cloning_persistent_settings.json && \
+    ls -la /app/config/live_cloning_persistent_settings.json && \
     echo "=== Config files ===" && \
     ls -la /app/config/ 2>/dev/null || echo "config missing" && \
     ls -la /app/bot_source/ 2>/dev/null || echo "bot_source missing" && \
