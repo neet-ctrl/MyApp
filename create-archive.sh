@@ -76,11 +76,10 @@ echo "📄 Archive name: $ARCHIVE_NAME"
 # Create temporary directory
 mkdir -p "$TEMP_DIR"
 
-# Copy all files except the specified exclusions
+# Copy all files except the specified exclusions (ignore .gitignore)
 rsync -av \
   --exclude='node_modules/' \
   --exclude='dist/' \
-  --exclude='temp-telegram-live-sender/' \
   --exclude='attached_assets/' \
   --exclude='*.gif' \
   --exclude='*.jpg' \
@@ -105,7 +104,6 @@ echo ""
 echo "🚫 Excluded items:"
 echo "   • node_modules/"
 echo "   • dist/"
-echo "   • temp-telegram-live-sender/"
 echo "   • attached_assets/"
 echo "   • Media files (.gif, .jpg, .png, .mp4)"
 echo ""
@@ -114,7 +112,9 @@ echo "   • All source code (client/, server/, shared/)"
 echo "   • Session files (.session, .session-journal)"
 echo "   • Configuration files"
 echo "   • bot_source/ directory"
-echo "   • Lock files and dependencies info"
-echo "   • All other project files"
+echo "   • temp-telegram-live-sender/ directory"
+echo "   • logs/, tmp/, downloads/ directories"
+echo "   • .config/ directory"
+echo "   • Lock files and all other project files"
 echo ""
 echo "✨ Archive ready for download or sharing!"</new_str>
