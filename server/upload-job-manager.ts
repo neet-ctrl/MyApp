@@ -152,6 +152,12 @@ export class UploadJobManager {
     try {
       console.log(`🚀 Starting background upload job ${jobId} with ${files.length} files`);
       
+      // Update job status to processing
+      await storage.updateUploadJob(jobId, { 
+        status: 'processing',
+        startedAt: new Date()
+      });
+      
       let processedCount = 0;
       let failedCount = 0;
 
@@ -159,7 +165,7 @@ export class UploadJobManager {
         try {
           console.log(`📤 Uploading file: ${file.fileName} (${Math.round(file.fileSize / 1024)}KB)`);
           
-          // Simulate upload process
+          // Upload the file to GitHub
           await this.uploadSingleFile({
             targetRepo: job.targetRepo,
             filePath: file.filePath,
@@ -170,6 +176,13 @@ export class UploadJobManager {
           
           processedCount++;
           const progress = Math.round((processedCount / files.length) * 100);
+          
+          // Update job progress in storage
+          await storage.updateUploadJob(jobId, {
+            processedFiles: processedCount,
+            progress,
+          });
+          
           console.log(`✅ Uploaded ${file.fileName} - Progress: ${progress}%`);
           
           // Add small delay to prevent rate limiting
@@ -178,13 +191,32 @@ export class UploadJobManager {
         } catch (error) {
           failedCount++;
           console.error(`❌ Failed to upload ${file.fileName}:`, error);
+          
+          // Update failed count in storage
+          await storage.updateUploadJob(jobId, {
+            failedFiles: failedCount,
+          });
         }
       }
+      
+      // Mark job as completed
+      await storage.updateUploadJob(jobId, {
+        status: failedCount > 0 ? 'completed_with_errors' : 'completed',
+        completedAt: new Date(),
+        progress: 100,
+      });
       
       console.log(`🎉 Upload job ${jobId} completed: ${processedCount} successful, ${failedCount} failed`);
       
     } catch (error) {
       console.error(`💥 Upload job ${jobId} failed:`, error);
+      
+      // Mark job as failed in storage
+      await storage.updateUploadJob(jobId, {
+        status: 'failed',
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        completedAt: new Date(),
+      });
     } finally {
       this.processingJobs.delete(jobId);
     }
