@@ -59,10 +59,12 @@ interface SyncProgress {
   canCancel?: boolean;
 }
 
-// File size constants (in bytes) - Increased for better large file support
-const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB per file
-const MAX_TOTAL_SIZE = 5 * 1024 * 1024 * 1024; // 5GB total
-const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB chunks for processing
+// File size constants (in bytes) - Optimized for stability and memory
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB per file (reduced for stability)
+const MAX_TOTAL_SIZE = 500 * 1024 * 1024; // 500MB total (reduced for stability)
+const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks (much smaller for memory management)
+const PROCESSING_DELAY = 200; // Delay between file processing (ms)
+const MEMORY_CLEANUP_INTERVAL = 3; // Cleanup every 3 files
 
 // Utility functions for file processing
 const validateFiles = (files: File[]): { valid: boolean; errors: string[] } => {
@@ -150,29 +152,55 @@ const processLargeFileInChunks = async (
   path: string, 
   isBinary: boolean
 ): Promise<{path: string, content: string, encoding: string}> => {
-  const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunks
+  const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB chunks (much smaller for stability)
   const chunks: string[] = [];
   let offset = 0;
   
-  while (offset < file.size) {
-    const chunk = file.slice(offset, offset + CHUNK_SIZE);
-    
-    try {
+  // Add abort controller for cleanup
+  const abortController = new AbortController();
+  
+  try {
+    while (offset < file.size && !abortController.signal.aborted) {
+      const chunk = file.slice(offset, offset + CHUNK_SIZE);
+      
+      // Use requestIdleCallback to prevent browser lockup
+      await new Promise<void>(resolve => {
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(() => resolve(), { timeout: 100 });
+        } else {
+          setTimeout(resolve, 10);
+        }
+      });
+      
+      if (abortController.signal.aborted) break;
+      
       const chunkContent = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         
         reader.onload = () => {
-          const result = reader.result;
-          if (isBinary && typeof result === 'string') {
-            // For binary chunks, extract base64 content
-            const base64Content = result.includes(',') ? result.split(',')[1] : result;
-            resolve(base64Content);
-          } else {
-            resolve(result?.toString() || '');
+          try {
+            const result = reader.result;
+            if (isBinary && typeof result === 'string') {
+              const base64Content = result.includes(',') ? result.split(',')[1] : result;
+              resolve(base64Content);
+            } else {
+              resolve(result?.toString() || '');
+            }
+          } catch (e) {
+            reject(e);
           }
         };
         
         reader.onerror = () => reject(new Error(`Failed to read chunk at offset ${offset}`));
+        reader.onabort = () => reject(new Error('File reading aborted'));
+        
+        // Set up emergency cleanup
+        const cleanup = () => {
+          if (reader.readyState !== FileReader.DONE) {
+            reader.abort();
+          }
+        };
+        window.addEventListener('emergency-cleanup', cleanup, { once: true });
         
         if (isBinary) {
           reader.readAsDataURL(chunk);
@@ -184,30 +212,51 @@ const processLargeFileInChunks = async (
       chunks.push(chunkContent);
       offset += CHUNK_SIZE;
       
-      // Add small delay and memory cleanup between chunks
-      if (chunks.length % 5 === 0) { // Every 5 chunks (50MB)
-        await new Promise(resolve => setTimeout(resolve, 50));
+      // Aggressive memory cleanup every 2 chunks (4MB)
+      if (chunks.length % 2 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         if (typeof (window as any).gc === 'function') {
-          (window as any).gc();
+          try {
+            (window as any).gc();
+          } catch (e) {
+            console.warn('GC failed:', e);
+          }
+        }
+        
+        // Check memory usage (approximate)
+        if (performance && 'memory' in performance) {
+          const memory = (performance as any).memory;
+          if (memory.usedJSHeapSize > memory.totalJSHeapSize * 0.8) {
+            console.warn('High memory usage detected, slowing down...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
         }
       }
-      
-    } catch (error) {
-      throw new Error(`Failed to process large file ${file.name}: ${error}`);
     }
+    
+    if (abortController.signal.aborted) {
+      throw new Error('File processing was aborted due to memory constraints');
+    }
+    
+    // Combine all chunks
+    const content = chunks.join('');
+    
+    // Clear chunks array to free memory
+    chunks.length = 0;
+    
+    return {
+      path,
+      content,
+      encoding: isBinary ? 'base64' : 'utf8'
+    };
+    
+  } catch (error) {
+    // Emergency cleanup
+    abortController.abort();
+    chunks.length = 0;
+    throw new Error(`Failed to process large file ${file.name}: ${error}`);
   }
-  
-  // Combine all chunks
-  const content = chunks.join('');
-  
-  // Clear chunks array to free memory
-  chunks.length = 0;
-  
-  return {
-    path,
-    content,
-    encoding: isBinary ? 'base64' : 'utf8'
-  };
 };
 
 const processFilesInBatches = async (
@@ -220,36 +269,100 @@ const processFilesInBatches = async (
   // Sort files by size to process smaller files first
   const sortedFiles = [...files].sort((a, b) => a.size - b.size);
   
-  for (let i = 0; i < sortedFiles.length; i++) {
-    const file = sortedFiles[i];
-    onProgress?.(i, sortedFiles.length, file.name);
-    
-    try {
-      console.log(`Processing file ${i + 1}/${sortedFiles.length}: ${file.name} (${Math.round(file.size / 1024 / 1024 * 100) / 100}MB)`);
-      
-      const result = await processFileChunked(file);
-      results.push(result);
-      
-      // Aggressive memory management after each file
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Force garbage collection if available
-      if (typeof (window as any).gc === 'function') {
-        (window as any).gc();
-      }
-      
-      // For very large files, add extra delay
-      if (file.size > 100 * 1024 * 1024) { // > 100MB
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-      
-    } catch (error) {
-      console.error(`Failed to process file ${file.name}:`, error);
-      throw new Error(`Failed to process file ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
+  // Emergency abort controller
+  const abortController = new AbortController();
   
-  return results;
+  // Listen for emergency cleanup
+  const emergencyCleanup = () => {
+    abortController.abort();
+    results.length = 0;
+  };
+  window.addEventListener('emergency-cleanup', emergencyCleanup, { once: true });
+  
+  try {
+    for (let i = 0; i < sortedFiles.length; i++) {
+      if (abortController.signal.aborted) {
+        throw new Error('File processing was aborted');
+      }
+      
+      const file = sortedFiles[i];
+      onProgress?.(i, sortedFiles.length, file.name);
+      
+      try {
+        console.log(`Processing file ${i + 1}/${sortedFiles.length}: ${file.name} (${Math.round(file.size / 1024 / 1024 * 100) / 100}MB)`);
+        
+        // Check memory before processing each file
+        if (performance && 'memory' in performance) {
+          const memory = (performance as any).memory;
+          if (memory.usedJSHeapSize > memory.totalJSHeapSize * 0.7) {
+            console.warn('High memory usage, triggering cleanup before processing file...');
+            
+            // Force aggressive cleanup
+            if (typeof (window as any).gc === 'function') {
+              (window as any).gc();
+            }
+            
+            // Wait longer to let memory settle
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+        
+        const result = await processFileChunked(file);
+        results.push(result);
+        
+        // Progressive memory management based on file count
+        const delayTime = Math.min(PROCESSING_DELAY * (i + 1), 1000); // Increase delay as we process more files
+        await new Promise(resolve => setTimeout(resolve, delayTime));
+        
+        // Memory cleanup every few files
+        if ((i + 1) % MEMORY_CLEANUP_INTERVAL === 0) {
+          console.log(`Performing memory cleanup after ${i + 1} files...`);
+          
+          // Multiple garbage collection attempts
+          if (typeof (window as any).gc === 'function') {
+            for (let gc = 0; gc < 3; gc++) {
+              try {
+                (window as any).gc();
+                await new Promise(resolve => setTimeout(resolve, 100));
+              } catch (e) {
+                console.warn('GC attempt failed:', e);
+              }
+            }
+          }
+          
+          // Clear any unused variables
+          if (results.length > 10) {
+            console.log('Large result set detected, consider chunked upload...');
+          }
+        }
+        
+        // Extra delay for larger files to prevent browser lockup
+        if (file.size > 10 * 1024 * 1024) { // > 10MB
+          const extraDelay = Math.min(file.size / (1024 * 1024) * 50, 2000); // 50ms per MB, max 2s
+          await new Promise(resolve => setTimeout(resolve, extraDelay));
+        }
+        
+      } catch (error) {
+        console.error(`Failed to process file ${file.name}:`, error);
+        
+        // Try emergency cleanup before failing
+        if (typeof (window as any).gc === 'function') {
+          try {
+            (window as any).gc();
+          } catch (e) {
+            console.warn('Emergency GC failed:', e);
+          }
+        }
+        
+        throw new Error(`Failed to process file ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+    
+    return results;
+    
+  } finally {
+    window.removeEventListener('emergency-cleanup', emergencyCleanup);
+  }
 };
 
 interface GitHubSettings {
@@ -710,7 +823,7 @@ export function GitHubSync() {
     targetPath: string,
     controller: AbortController
   ) => {
-    const CHUNK_SIZE = 2; // Files per chunk - very conservative for stability
+    const CHUNK_SIZE = 1; // Process one file at a time for maximum stability
     const chunks = [];
     
     // Split files into chunks
@@ -721,57 +834,123 @@ export function GitHubSync() {
     let totalFilesUploaded = 0;
     let totalErrors: string[] = [];
     
-    for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
-      if (controller.signal.aborted) {
-        throw new Error('Upload cancelled');
-      }
-      
-      const chunk = chunks[chunkIndex];
-      
-      setSyncProgress(prev => ({
-        ...prev,
-        message: `Uploading chunk ${chunkIndex + 1} of ${chunks.length}...`,
-        progress: 50 + Math.round((chunkIndex / chunks.length) * 50), // 50-100% for upload
-        currentFile: `Chunk ${chunkIndex + 1}: ${chunk.length} files`
-      }));
-      
-      try {
-        const response = await fetch('/api/github/sync-chunked', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            files: chunk,
-            repoFullName: targetRepo,
-            targetPath,
-            chunkIndex,
-            totalChunks: chunks.length
-          })
+    // Emergency cleanup function
+    const emergencyCleanup = () => {
+      controller.abort();
+      totalErrors.length = 0;
+      chunks.length = 0;
+    };
+    window.addEventListener('emergency-cleanup', emergencyCleanup, { once: true });
+    
+    try {
+      for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+        if (controller.signal.aborted) {
+          throw new Error('Upload cancelled');
+        }
+        
+        const chunk = chunks[chunkIndex];
+        
+        // Memory check before each upload
+        if (performance && 'memory' in performance) {
+          const memory = (performance as any).memory;
+          if (memory.usedJSHeapSize > memory.totalJSHeapSize * 0.8) {
+            console.warn('High memory usage before upload, forcing cleanup...');
+            
+            if (typeof (window as any).gc === 'function') {
+              for (let gc = 0; gc < 2; gc++) {
+                try {
+                  (window as any).gc();
+                  await new Promise(resolve => setTimeout(resolve, 200));
+                } catch (e) {
+                  console.warn('GC failed:', e);
+                }
+              }
+            }
+          }
+        }
+        
+        setSyncProgress(prev => ({
+          ...prev,
+          message: `Uploading file ${chunkIndex + 1} of ${chunks.length}...`,
+          progress: 50 + Math.round((chunkIndex / chunks.length) * 50), // 50-100% for upload
+          currentFile: chunk[0]?.path || `File ${chunkIndex + 1}`
+        }));
+        
+        // Use requestIdleCallback to prevent browser lockup
+        await new Promise<void>(resolve => {
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => resolve(), { timeout: 500 });
+          } else {
+            setTimeout(resolve, 50);
+          }
         });
         
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || `Chunk ${chunkIndex + 1} failed`);
+        try {
+          const response = await fetch('/api/github/sync-chunked', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              files: chunk,
+              repoFullName: targetRepo,
+              targetPath,
+              chunkIndex,
+              totalChunks: chunks.length
+            }),
+            signal: controller.signal // Add abort signal to fetch
+          });
+          
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || `File ${chunkIndex + 1} failed`);
+          }
+          
+          const result = await response.json();
+          totalFilesUploaded += result.filesUploaded || 0;
+          if (result.errors) {
+            totalErrors.push(...result.errors);
+          }
+          
+          // Memory cleanup after every upload
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          if (typeof (window as any).gc === 'function' && chunkIndex % 2 === 0) {
+            try {
+              (window as any).gc();
+            } catch (e) {
+              console.warn('GC after upload failed:', e);
+            }
+          }
+          
+        } catch (error) {
+          if (controller.signal.aborted) {
+            throw new Error('Upload cancelled');
+          }
+          
+          const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+          totalErrors.push(`File ${chunkIndex + 1}: ${errorMsg}`);
+          
+          // Continue with other files even if one fails
+          console.error(`Failed to upload chunk ${chunkIndex + 1}:`, error);
         }
         
-        const result = await response.json();
-        totalFilesUploaded += result.filesUploaded || 0;
-        if (result.errors) {
-          totalErrors.push(...result.errors);
-        }
-        
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-        totalErrors.push(`Chunk ${chunkIndex + 1}: ${errorMsg}`);
+        // Progressive delay to prevent overwhelming the browser
+        const delay = Math.min(50 + (chunkIndex * 10), 500);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
+      
+    } finally {
+      window.removeEventListener('emergency-cleanup', emergencyCleanup);
     }
     
-    // Final update
+    // Final cleanup and update
+    chunks.length = 0; // Clear chunks array
     setCancelController(null);
+    
     setSyncProgress({
       status: totalErrors.length === 0 ? 'completed' : 'error',
-      message: totalErrors.length === 0 ? 'All chunks uploaded successfully!' : `Upload completed with errors`,
+      message: totalErrors.length === 0 ? 'All files uploaded successfully!' : `Upload completed with errors`,
       progress: 100,
       filesProcessed: totalFilesUploaded,
       totalFiles: filesData.length,
@@ -779,16 +958,25 @@ export function GitHubSync() {
       canCancel: false
     });
     
+    // Final memory cleanup
+    if (typeof (window as any).gc === 'function') {
+      try {
+        (window as any).gc();
+      } catch (e) {
+        console.warn('Final GC failed:', e);
+      }
+    }
+    
     if (totalErrors.length === 0) {
       toast({
-        title: 'Chunked sync completed',
-        description: `Successfully uploaded ${totalFilesUploaded} files in ${chunks.length} chunks`,
+        title: 'Sync completed successfully',
+        description: `Successfully uploaded ${totalFilesUploaded} files without any crashes!`,
       });
     } else {
       toast({
         variant: 'destructive',
-        title: 'Sync completed with errors',
-        description: `${totalFilesUploaded} files uploaded, ${totalErrors.length} errors occurred`,
+        title: 'Upload completed with some errors',
+        description: `${totalFilesUploaded} files uploaded, ${totalErrors.length} files had errors`,
       });
     }
   };
