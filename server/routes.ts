@@ -2799,22 +2799,34 @@ if __name__ == "__main__":
       let resolvedFromEntity, resolvedToEntity;
       
       try {
-        // Get current session string from the live cloning status or instance
-        const instance = await storage.getLiveCloningInstance(instanceId);
-        if (!instance || !instance.sessionString) {
-          return res.status(400).json({ 
-            error: 'No valid session found for this instance. Please test your session first.' 
-          });
+        // Get current session string using same logic as startLiveCloningService
+        let sessionString = process.env.LIVE_CLONING_SESSION;
+        
+        // Try to get from persistent settings file if not in env (same as startLiveCloningService)
+        if (!sessionString) {
+          try {
+            const persistentSettingsPath = path.join(process.cwd(), 'tmp', 'live_cloning_persistent_settings.json');
+            if (fs.existsSync(persistentSettingsPath)) {
+              const persistentSettings = JSON.parse(fs.readFileSync(persistentSettingsPath, 'utf8'));
+              sessionString = persistentSettings.sessionString;
+            }
+          } catch (settingsError) {
+            console.log('Could not read persistent settings for session');
+          }
+        }
+        
+        // Fallback to hardcoded session (same as used by Python live cloning service)
+        if (!sessionString) {
+          sessionString = "1BVtsOLABux3cdf9iA7_7csD0HjZ-vqy3pQUfbynyLah5ZQQNGCTgc6ao1FOFHur4mvJkRsrzS3KKi65RNXczTxtlxpNIkqoIQvN0ILt2kPp9dUcCuIn8ZlFftx63derTrb_LS6TdeZ4Ly3cI26C_E14TUvhlWNHwB_zDZ1mvpvluQb9EhodVRsWSAQimUWNIrKp9stJum7amnoLzCSdqAydjsfTXej1KZQ1TfxX79yAb-DPIw2kzFWf6Mk9ScDlTeGJg6qRQkiDOHiRrUnrzle1REurAN_4h9qWahhR1ffbreGvOYVDip35Uya4Kn4YGmJM0vtGLq3HoEico3umwBrO6GOc0oxU=";
+          console.log('Using hardcoded session string for entity resolution');
         }
 
         const telegramConfig = configReader.getTelegramConfig();
         
         // Create temporary client for entity resolution
-        const { StringSession } = require('telegram/sessions');
-        const { TelegramClient } = require('telegram');
         
         const client = new TelegramClient(
-          new StringSession(instance.sessionString),
+          new StringSession(sessionString),
           parseInt(telegramConfig.api_id),
           telegramConfig.api_hash,
           {
@@ -2827,68 +2839,103 @@ if __name__ == "__main__":
           }
         );
 
-        await client.connect();
-        
-        // Resolve both entities like original Python code does
+        let clientConnected = false;
         try {
-          console.log(`🔍 Resolving source entity: ${fromEntity}`);
-          resolvedFromEntity = await client.getEntity(fromEntity);
-          console.log(`✅ Source entity resolved: ${resolvedFromEntity.id} (${resolvedFromEntity.title || resolvedFromEntity.firstName || 'Unknown'})`);
+          await client.connect();
+          clientConnected = true;
+          console.log('✅ Connected to Telegram for entity resolution');
           
-          console.log(`🔍 Resolving target entity: ${toEntity}`);
-          resolvedToEntity = await client.getEntity(toEntity);
-          console.log(`✅ Target entity resolved: ${resolvedToEntity.id} (${resolvedToEntity.title || resolvedToEntity.firstName || 'Unknown'})`);
+          // First, sync dialogs to ensure entities are available
+          console.log('📥 Syncing dialogs to ensure entities are loaded...');
+          const dialogs = await client.getDialogs();
+          console.log(`✅ Synced ${dialogs.length} dialogs`);
           
-        } catch (entityError: any) {
-          console.error('❌ Entity resolution failed, trying dialog sync...', entityError.message);
-          
-          // Fallback: Get dialogs to sync entities (like Python "Sync" command)
+          // Resolve both entities like original Python code does
           try {
-            console.log('📥 Syncing dialogs to find entities...');
-            const dialogs = await client.getDialogs();
-            console.log(`Found ${dialogs.length} dialogs, searching for entities...`);
+            console.log(`🔍 Resolving source entity: ${fromEntity}`);
+            resolvedFromEntity = await client.getEntity(fromEntity);
+            const fromEntityName = (resolvedFromEntity as any).title || (resolvedFromEntity as any).firstName || 'Unknown';
+            console.log(`✅ Source entity resolved: ${resolvedFromEntity.id} (${fromEntityName})`);
             
-            // Try to find entities in dialogs
+            console.log(`🔍 Resolving target entity: ${toEntity}`);
+            resolvedToEntity = await client.getEntity(toEntity);
+            const toEntityName = (resolvedToEntity as any).title || (resolvedToEntity as any).firstName || 'Unknown';
+            console.log(`✅ Target entity resolved: ${resolvedToEntity.id} (${toEntityName})`);
+            
+          } catch (entityError: any) {
+            console.error('❌ Direct entity resolution failed, searching in dialogs...', entityError.message);
+            
+            // Fallback: Search in already synced dialogs
+            console.log('🔍 Searching for entities in synced dialogs...');
+            
+            // Try to find entities in dialogs with better matching logic
             for (const dialog of dialogs) {
               if (dialog.entity) {
                 const entityId = dialog.entity.id.toString();
-                const entityUsername = dialog.entity.username;
-                const entityTitle = dialog.entity.title || dialog.entity.firstName;
+                const entityUsername = (dialog.entity as any).username || '';
+                const entityTitle = (dialog.entity as any).title || (dialog.entity as any).firstName || '';
                 
-                // Match source entity
-                if (!resolvedFromEntity && (
-                  entityId === fromEntity.toString() || 
-                  entityId === fromEntity.toString().replace('-100', '') ||
-                  entityUsername === fromEntity.replace('@', '') ||
-                  entityTitle === fromEntity
-                )) {
-                  resolvedFromEntity = dialog.entity;
-                  console.log(`✅ Found source entity in dialogs: ${resolvedFromEntity.id}`);
+                // Enhanced matching for source entity
+                if (!resolvedFromEntity) {
+                  const fromStr = fromEntity.toString();
+                  if (
+                    entityId === fromStr || 
+                    entityId === fromStr.replace('-100', '') ||
+                    entityId === fromStr.replace('-', '') ||
+                    (entityUsername && (entityUsername === fromStr.replace('@', '') || '@' + entityUsername === fromStr)) ||
+                    (entityTitle && entityTitle.toLowerCase() === fromStr.toLowerCase())
+                  ) {
+                    resolvedFromEntity = dialog.entity;
+                    console.log(`✅ Found source entity in dialogs: ${resolvedFromEntity.id} (${entityTitle})`);
+                  }
                 }
                 
-                // Match target entity
-                if (!resolvedToEntity && (
-                  entityId === toEntity.toString() || 
-                  entityId === toEntity.toString().replace('-100', '') ||
-                  entityUsername === toEntity.replace('@', '') ||
-                  entityTitle === toEntity
-                )) {
-                  resolvedToEntity = dialog.entity;
-                  console.log(`✅ Found target entity in dialogs: ${resolvedToEntity.id}`);
+                // Enhanced matching for target entity
+                if (!resolvedToEntity) {
+                  const toStr = toEntity.toString();
+                  if (
+                    entityId === toStr || 
+                    entityId === toStr.replace('-100', '') ||
+                    entityId === toStr.replace('-', '') ||
+                    (entityUsername && (entityUsername === toStr.replace('@', '') || '@' + entityUsername === toStr)) ||
+                    (entityTitle && entityTitle.toLowerCase() === toStr.toLowerCase())
+                  ) {
+                    resolvedToEntity = dialog.entity;
+                    console.log(`✅ Found target entity in dialogs: ${resolvedToEntity.id} (${entityTitle})`);
+                  }
+                }
+                
+                // Break early if both found
+                if (resolvedFromEntity && resolvedToEntity) {
+                  break;
                 }
               }
             }
             
             if (!resolvedFromEntity || !resolvedToEntity) {
-              throw new Error(`Could not resolve entities. Source: ${!!resolvedFromEntity}, Target: ${!!resolvedToEntity}. Make sure the bot is joined to both chats and try the Sync command.`);
+              const missingEntities = [];
+              if (!resolvedFromEntity) missingEntities.push(`source: ${fromEntity}`);
+              if (!resolvedToEntity) missingEntities.push(`target: ${toEntity}`);
+              
+              throw new Error(
+                `Could not resolve entities: ${missingEntities.join(', ')}. ` +
+                `Make sure the bot account is joined to both chats. ` +
+                `Try using exact chat IDs (numbers) instead of usernames if possible.`
+              );
             }
-            
-          } catch (dialogError: any) {
-            throw new Error(`Failed to resolve entities: ${entityError.message}. Dialog sync failed: ${dialogError.message}. Please ensure the bot is joined to both chats.`);
+          }
+          
+        } finally {
+          // Always disconnect the client if it was connected
+          if (clientConnected) {
+            try {
+              await client.disconnect();
+              console.log('✅ Disconnected from Telegram');
+            } catch (disconnectError) {
+              console.error('⚠️ Error disconnecting from Telegram:', disconnectError);
+            }
           }
         }
-        
-        await client.disconnect();
         
       } catch (resolutionError: any) {
         return res.status(400).json({ 
@@ -5769,10 +5816,10 @@ export async function startLiveCloningService(): Promise<void> {
     const persistentSettings = JSON.parse(fs.readFileSync(persistentConfigPath, 'utf8'));
     console.log('📋 Loaded persistent settings for auto-start:', persistentSettings);
     
-    // Check if we have a valid session string from environment or config - HARDCODED DEFAULT
-    const sessionString = process.env.LIVE_CLONING_SESSION || persistentSettings.sessionString || "1BVtsOLABux3cdf9iA7_7csD0HjZ-vqy3pQUfbynyLah5ZQQNGCTgc6ao1FOFHur4mvJkRsrzS3KKi65RNXczTxtlxpNIkqoIQvN0ILt2kPp9dUcCuIn8ZlFftx63derTrb_LS6TdeZ4Ly3cI26C_E14TUvhlWNHwB_zDZ1mvpvluQb9EhodVRsWSAQimUWNIrKp9stJum7amnoLzCSdqAydjsfTXej1KZQ1TfxX79yAb-DPIw2kzFWf6Mk9ScDlTeGJg6qRQkiDOHiRrUnrzle1REurAN_4h9qWahhR1ffbreGvOYVDip35Uya4Kn4YGmJM0vtGLq3HoEico3umwBrO6GOc0oxU=";
+    // Check if we have a valid session string from environment or config
+    const sessionString = process.env.LIVE_CLONING_SESSION || persistentSettings.sessionString;
     if (!sessionString) {
-      console.log('⚠️ No session string found for auto-start. Using hardcoded session.');
+      console.log('⚠️ No session string found for auto-start. Please configure live cloning session.');
       return;
     }
     
