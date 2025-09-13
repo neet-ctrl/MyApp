@@ -23,6 +23,7 @@ rm -rf "$TEMP_DIR/dist" 2>/dev/null
 rm -rf "$TEMP_DIR/attached_assets" 2>/dev/null
 rm -rf "$TEMP_DIR/.git" 2>/dev/null
 rm -rf "$TEMP_DIR/.config" 2>/dev/null
+rm -rf "$TEMP_DIR/temp" 2>/dev/null
 rm -rf "$TEMP_DIR/$TEMP_DIR" 2>/dev/null  # Remove the temp dir copy of itself
 
 # Remove media files
@@ -72,6 +73,7 @@ echo "   • dist/"
 echo "   • attached_assets/"
 echo "   • .git/"
 echo "   • .config/"
+echo "   • temp/"
 echo "   • Media files (.gif, .jpg, .png, .mp4)"
 echo ""
 echo "✅ Included everything else:"
