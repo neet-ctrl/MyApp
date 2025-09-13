@@ -430,16 +430,13 @@ export async function registerRoutes(app: Express): Promise<Express> {
       // Write config file
       fs.writeFileSync(configPath, finalConfigContent);
 
-      // Hardcoded environment for workspace replication - no process.env dependency
       const env = {
+        ...process.env,
         TG_API_ID: telegramConfig.api_id,
         TG_API_HASH: telegramConfig.api_hash,
         CONFIG_PATH: configPath,
         CONFIG_DIR: configDir,
-        STRING_SESSION: sessionString,
-        NODE_ENV: 'production',
-        PYTHONPATH: '/usr/local/lib/python3.11/site-packages',
-        PATH: '/usr/local/bin:/usr/bin:/bin'
+        STRING_SESSION: sessionString
       };
 
       // Initialize last forwarding log
@@ -1714,14 +1711,12 @@ if __name__ == "__main__":
       const telegramConfig = configReader.getTelegramConfig();
       const liveClonerPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'live_cloner.py');
       
-      // Test session using the live cloner script - hardcoded env for workspace replication
+      // Test session using the live cloner script
       const testProcess = spawn('python3', [liveClonerPath, '--session', sessionString, '--test-session'], {
         env: {
+          ...process.env,
           TG_API_ID: telegramConfig.api_id,
           TG_API_HASH: telegramConfig.api_hash,
-          NODE_ENV: 'production',
-          PYTHONPATH: '/usr/local/lib/python3.11/site-packages',
-          PATH: '/usr/local/bin:/usr/bin:/bin'
         },
         cwd: path.dirname(liveClonerPath)
       });
@@ -1811,14 +1806,12 @@ if __name__ == "__main__":
       // Write config file
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      // Start live cloning process - hardcoded env for workspace replication
+      // Start live cloning process
       liveCloningProcess = spawn('python3', [liveClonerPath, '--session', sessionString, '--config', configPath], {
         env: {
+          ...process.env,
           TG_API_ID: telegramConfig.api_id,
           TG_API_HASH: telegramConfig.api_hash,
-          NODE_ENV: 'production',
-          PYTHONPATH: '/usr/local/lib/python3.11/site-packages',
-          PATH: '/usr/local/bin:/usr/bin:/bin'
         },
         cwd: path.dirname(liveClonerPath)
       });
@@ -2089,8 +2082,8 @@ if __name__ == "__main__":
       let resolvedFromEntity, resolvedToEntity;
       
       try {
-        // Hardcoded session string for workspace replication
-        let sessionString = "1BVtsOLABux3cdf9iA7_7csD0HjZ-vqy3pQUfbynyLah5ZQQNGCTgc6ao1FOFHur4mvJkRsrzS3KKi65RNXczTxtlxpNIkqoIQvN0ILt2kPp9dUcCuIn8ZlFftx63derTrb_LS6TdeZ4Ly3cI26C_E14TUvhlWNHwB_zDZ1mvpvluQb9EhodVRsWSAQimUWNIrKp9stJum7amnoLzCSdqAydjsfTXej1KZQ1TfxX79yAb-DPIw2kzFWf6Mk9ScDlTeGJg6qRQkiDOHiRrUnrzle1REurAN_4h9qWahhR1ffbreGvOYVDip35Uya4Kn4YGmJM0vtGLq3HoEico3umwBrO6GOc0oxU=";
+        // Get current session string using same logic as startLiveCloningService
+        let sessionString = process.env.LIVE_CLONING_SESSION;
         
         // Try to get from persistent settings file if not in env (same as startLiveCloningService)
         if (!sessionString) {
@@ -3724,14 +3717,10 @@ if __name__ == "__main__":
       try {
         writeFileSync(scriptPath, processedCode);
         
-        // Execute Python script - hardcoded env for workspace replication
+        // Execute Python script
         const pythonProcess = spawn('python3', [scriptPath], {
           stdio: ['pipe', 'pipe', 'pipe'],
-          env: {
-            NODE_ENV: 'production',
-            PYTHONPATH: '/usr/local/lib/python3.11/site-packages',
-            PATH: '/usr/local/bin:/usr/bin:/bin'
-          }
+          env: { ...process.env }
         });
         
         let output = '';
@@ -4959,8 +4948,8 @@ export async function startLiveCloningService(): Promise<void> {
     const persistentSettings = JSON.parse(fs.readFileSync(persistentConfigPath, 'utf8'));
     console.log('📋 Loaded persistent settings for auto-start:', persistentSettings);
     
-    // Use hardcoded session string for workspace replication
-    let sessionString = persistentSettings.sessionString || "1BVtsOLABux3cdf9iA7_7csD0HjZ-vqy3pQUfbynyLah5ZQQNGCTgc6ao1FOFHur4mvJkRsrzS3KKi65RNXczTxtlxpNIkqoIQvN0ILt2kPp9dUcCuIn8ZlFftx63derTrb_LS6TdeZ4Ly3cI26C_E14TUvhlWNHwB_zDZ1mvpvluQb9EhodVRsWSAQimUWNIrKp9stJum7amnoLzCSdqAydjsfTXej1KZQ1TfxX79yAb-DPIw2kzFWf6Mk9ScDlTeGJg6qRQkiDOHiRrUnrzle1REurAN_4h9qWahhR1ffbreGvOYVDip35Uya4Kn4YGmJM0vtGLq3HoEico3umwBrO6GOc0oxU=";
+    // Check if we have a valid session string from environment or config
+    let sessionString = process.env.LIVE_CLONING_SESSION || persistentSettings.sessionString;
     
     // Fallback to hardcoded session (same as used by entity creation endpoint)
     if (!sessionString) {
@@ -5065,15 +5054,13 @@ export async function startLiveCloningService(): Promise<void> {
       
       console.log('🔄 Starting Live Cloning Python process for 24/7 operation...');
       
-      // Start live cloning process - hardcoded env for workspace replication
+      // Start live cloning process
       liveCloningProcess = spawn('python3', [liveClonerPath, '--session', sessionString, '--config', configPath], {
         env: {
+          ...process.env,
           TG_API_ID: telegramConfig.api_id,
           TG_API_HASH: telegramConfig.api_hash,
-          LIVE_CLONING_INSTANCE_ID: instanceId,
-          NODE_ENV: 'production',
-          PYTHONPATH: '/usr/local/lib/python3.11/site-packages',
-          PATH: '/usr/local/bin:/usr/bin:/bin'
+          LIVE_CLONING_INSTANCE_ID: instanceId
         },
         cwd: path.dirname(liveClonerPath)
       });

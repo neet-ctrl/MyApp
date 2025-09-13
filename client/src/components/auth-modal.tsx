@@ -26,11 +26,10 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [sessionCheckInterval, setSessionCheckInterval] = useState<NodeJS.Timeout | null>(null);
-  // Hardcoded credentials for workspace replication - no environment dependency
   const [credentials, setCredentials] = useState({
-    apiId: '28403662',
-    apiHash: '079509d4ac7f209a1a58facd00d6ff5a',
-    phoneNumber: '+917352013479',
+    apiId: import.meta.env.VITE_TELEGRAM_API_ID || '28403662',
+    apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '079509d4ac7f209a1a58facd00d6ff5a',
+    phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '+917352013479',
     code: '',
     password: '',
   });
@@ -140,14 +139,13 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     clearSessionCheck();
 
     try {
-      // Hardcoded default session string for workspace replication
-      const predefinedSessionString = "1BQAWZmxvcmEud2ViLnRlbGVncmFtLm9yZwG7IS3tNY2BsIDLeDQnewXF0dZ7iEc231dYk/8TDX83hkgf7EwJ8HvdsqxWr/Dyb8oeEIe6+H9MAgI4yPaGs0IgIsdLQozbCnlNF7NDC+q5iC+JlpLbAF2PIiZ3nHvetmRyadZpTsVSLFgSG1BdvVUx2J65VHdkbJTk9V0hj2Wq3ucMrBNGJB6oCSrnSqWCD5mmtxKdFDV6p+6Fj1d0gbnmBOkhV0Ud+V6NRHDup/j6rREt/lJTO8gXowmd2dLt1piiQrmD3fU+zKEFf4Mv0GllJYYKY9aVxQjjhowXM8GdKnX0DLxOFVcqSk7sOkCn14ocdtYK4ffhRgJdgu241XriLA==";
+      const predefinedSessionString = import.meta.env.VITE_DEFAULT_SESSION_STRING || "1BQAWZmxvcmEud2ViLnRlbGVncmFtLm9yZwG7IS3tNY2BsIDLeDQnewXF0dZ7iEc231dYk/8TDX83hkgf7EwJ8HvdsqxWr/Dyb8oeEIe6+H9MAgI4yPaGs0IgIsdLQozbCnlNF7NDC+q5iC+JlpLbAF2PIiZ3nHvetmRyadZpTsVSLFgSG1BdvVUx2J65VHdkbJTk9V0hj2Wq3ucMrBNGJB6oCSrnSqWCD5mmtxKdFDV6p+6Fj1d0gbnmBOkhV0Ud+V6NRHDup/j6rREt/lJTO8gXowmd2dLt1piiQrmD3fU+zKEFf4Mv0GllJYYKY9aVxQjjhowXM8GdKnX0DLxOFVcqSk7sOkCn14ocdtYK4ffhRgJdgu241XriLA==";
       
       const sessionData: TelegramSession = {
         sessionString: predefinedSessionString,
-        apiId: parseInt('28403662'),
-        apiHash: '079509d4ac7f209a1a58facd00d6ff5a',
-        phoneNumber: '+917352013479',
+        apiId: parseInt(import.meta.env.VITE_TELEGRAM_API_ID || '28403662'),
+        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '079509d4ac7f209a1a58facd00d6ff5a',
+        phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '+917352013479',
         userId: 'default-user',
         firstName: 'Default',
         lastName: 'User',
@@ -166,8 +164,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   // Handler for using custom session string
   const handleSessionHistoryClick = () => {
     const password = prompt('Enter password for session history:');
-    // Hardcoded session history password for workspace replication
-    if (password === 'Sh@090609') {
+    if (password === (import.meta.env.VITE_SESSION_HISTORY_PASSWORD || 'Sh@090609')) {
       setShowSessionHistory(true);
     } else if (password !== null) {
       setError('Incorrect password');
@@ -192,8 +189,8 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     try {
       const sessionData: TelegramSession = {
         sessionString: customSessionString.trim(),
-        apiId: parseInt('28403662'),
-        apiHash: '079509d4ac7f209a1a58facd00d6ff5a',
+        apiId: parseInt(import.meta.env.VITE_TELEGRAM_API_ID || '28403662'),
+        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '079509d4ac7f209a1a58facd00d6ff5a',
         phoneNumber: "custom-session",
         userId: 'custom-user',
         firstName: 'Custom',
@@ -320,11 +317,10 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     if (!loading) {
       clearSessionCheck();
       setStep('login-options');
-      // Reset to hardcoded credentials for workspace replication
       setCredentials({
-        apiId: '28403662',
-        apiHash: '079509d4ac7f209a1a58facd00d6ff5a',
-        phoneNumber: '+917352013479',
+        apiId: import.meta.env.VITE_TELEGRAM_API_ID || '28403662',
+        apiHash: import.meta.env.VITE_TELEGRAM_API_HASH || '079509d4ac7f209a1a58facd00d6ff5a',
+        phoneNumber: import.meta.env.VITE_TELEGRAM_PHONE || '+917352013479',
         code: '',
         password: '',
       });

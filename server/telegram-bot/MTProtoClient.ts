@@ -23,7 +23,7 @@ export class MTProtoClient {
       api_id: config.api_id,
       api_hash: config.api_hash,
       storageOptions: {
-        path: path.resolve(process.cwd(), 'downloads/session.json'), // Works in both workspace and Railway
+        path: path.resolve('./downloads/session.json'),
       },
     });
 
@@ -54,7 +54,7 @@ export class MTProtoClient {
 
   private async loadSession(): Promise<void> {
     try {
-      const sessionPath = path.resolve(process.cwd(), 'downloads/session.json'); // Works in both workspace and Railway
+      const sessionPath = path.resolve('./downloads/session.json');
       if (fs.existsSync(sessionPath)) {
         const sessionData = fs.readFileSync(sessionPath, 'utf8');
         this.session = JSON.parse(sessionData);
@@ -67,7 +67,7 @@ export class MTProtoClient {
 
   private async saveSession(): Promise<void> {
     try {
-      const sessionPath = path.resolve(process.cwd(), 'downloads/session.json'); // Works in both workspace and Railway
+      const sessionPath = path.resolve('./downloads/session.json');
       fs.writeFileSync(sessionPath, JSON.stringify(this.session, null, 2));
       logger.debug('💾 MTProto session saved');
     } catch (error) {

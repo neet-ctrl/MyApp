@@ -71,8 +71,7 @@ export class MemStorage implements IStorage {
   private gitTokenConfigs: Map<number, GitTokenConfig> = new Map();
   private cachedRepositories: Map<string, GitRepository> = new Map();
   private tokenIdCounter: number = 1;
-  // Hardcoded GitHub PAT for workspace replication - no environment dependency
-  private defaultPAT: string = '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';
+  private defaultPAT: string = process.env.GITHUB_PERSONAL_ACCESS_TOKEN || process.env.GITHUB_PAT || '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';
   
   // Live Cloning storage maps
   private liveCloningInstances: Map<string, LiveCloningInstance> = new Map();
