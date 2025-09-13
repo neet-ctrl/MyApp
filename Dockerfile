@@ -24,8 +24,26 @@ RUN npx update-browserslist-db@latest --force
 COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
 
-# Copy the entire workspace exactly as it is
+# Copy EVERYTHING from workspace - EXPLICIT COPIES to ensure all files reach Railway
 COPY . .
+COPY ./tmp/ /app/tmp/
+COPY ./config/ /app/config/
+COPY ./bot_source/ /app/bot_source/
+COPY ./sessions/ /app/sessions/ 2>/dev/null || echo "sessions directory not found"
+COPY ./downloads/ /app/downloads/ 2>/dev/null || echo "downloads directory not found"
+COPY ./logs/ /app/logs/ 2>/dev/null || echo "logs directory not found"
+COPY ./bottorrent.session /app/bottorrent.session 2>/dev/null || echo "bottorrent.session not found"
+COPY ./tmp/live_cloning_persistent_settings.json /app/tmp/live_cloning_persistent_settings.json
+
+# Verify EVERY critical file is copied (debug step)
+RUN echo "=== VERIFYING ALL FILES COPIED ===" && \
+    ls -la /app/tmp/ && \
+    echo "=== Settings file ===" && \
+    ls -la /app/tmp/live_cloning_persistent_settings.json && \
+    echo "=== Config files ===" && \
+    ls -la /app/config/ 2>/dev/null || echo "config missing" && \
+    ls -la /app/bot_source/ 2>/dev/null || echo "bot_source missing" && \
+    echo "=== END VERIFICATION ==="
 
 # Set production environment with all hardcoded values from workspace
 ENV NODE_ENV=production
