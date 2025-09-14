@@ -1703,69 +1703,6 @@ if __name__ == "__main__":
   // Live Cloning Management API (Telegram Live Sender)
   // =====================================================
 
-  // Test session string for live cloning
-  app.post('/api/live-cloning/test-session', async (req, res) => {
-    try {
-      const { sessionString } = req.body;
-      
-      if (!sessionString) {
-        return res.status(400).json({ error: 'Session string is required' });
-      }
-
-      const telegramConfig = configReader.getTelegramConfig();
-      const liveClonerPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'live_cloner.py');
-      
-      // Test session using the live cloner script
-      const testProcess = spawn('python3', [liveClonerPath, '--session', sessionString, '--test-session'], {
-        env: {
-          ...process.env,
-          TG_API_ID: telegramConfig.api_id,
-          TG_API_HASH: telegramConfig.api_hash,
-        },
-        cwd: path.dirname(liveClonerPath)
-      });
-
-      let output = '';
-      let errorOutput = '';
-      
-      testProcess.stdout?.on('data', (data) => {
-        output += data.toString();
-      });
-      
-      testProcess.stderr?.on('data', (data) => {
-        errorOutput += data.toString();
-      });
-      
-      testProcess.on('close', (code) => {
-        try {
-          if (code === 0 && output) {
-            const result = JSON.parse(output.trim());
-            if (result.success) {
-              liveCloningStatus.sessionValid = true;
-              liveCloningStatus.currentUserInfo = result.userInfo;
-              res.json(result);
-            } else {
-              res.status(400).json(result);
-            }
-          } else {
-            res.status(500).json({ 
-              success: false, 
-              error: errorOutput || 'Session test failed' 
-            });
-          }
-        } catch (parseError) {
-          res.status(500).json({ 
-            success: false, 
-            error: 'Failed to parse session test result' 
-          });
-        }
-      });
-      
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      res.status(500).json({ success: false, error: errorMessage });
-    }
-  });
 
   // Start live cloning bot
   app.post('/api/live-cloning/start', async (req, res) => {
