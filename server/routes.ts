@@ -216,6 +216,45 @@ export async function registerRoutes(app: Express): Promise<Express> {
   });
 
   // =====================================================
+  // Console Logs API
+  // =====================================================
+  
+  // Get console logs with pagination
+  app.get('/api/console-logs', async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 100;
+      const offset = parseInt(req.query.offset as string) || 0;
+      const level = req.query.level as string;
+      
+      let logs;
+      if (level) {
+        logs = await storage.getConsoleLogsByLevel(level, limit);
+      } else {
+        logs = await storage.getConsoleLogs(limit, offset);
+      }
+      
+      res.json(logs);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to get console logs: ${errorMessage}`);
+      res.status(500).json({ error: 'Failed to get console logs' });
+    }
+  });
+
+  // Clear old console logs
+  app.delete('/api/console-logs/old', async (req, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 7;
+      const deletedCount = await storage.clearOldConsoleLogs(days);
+      res.json({ message: `Deleted ${deletedCount} old console logs`, deletedCount });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to clear old console logs: ${errorMessage}`);
+      res.status(500).json({ error: 'Failed to clear old console logs' });
+    }
+  });
+
+  // =====================================================
   // Telegram Bot Management API
   // Add API endpoints for download management
   app.get('/api/downloads', async (req, res) => {

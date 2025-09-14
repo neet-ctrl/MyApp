@@ -328,7 +328,7 @@ export default function TextMemoPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch all memos
+  // Fetch all memos with aggressive performance optimizations
   const { data: memos = [], isLoading } = useQuery({
     queryKey: ['/api/text-memos'],
     queryFn: async () => {
@@ -339,6 +339,11 @@ export default function TextMemoPage() {
       const data = await response.json();
       return Array.isArray(data) ? data : [];
     },
+    staleTime: 30 * 1000, // 30 seconds cache
+    gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   // Create memo mutation

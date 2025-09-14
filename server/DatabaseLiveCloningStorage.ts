@@ -5,6 +5,7 @@ import {
   liveCloningInstances,
   liveCloningMessages,
   textMemos,
+  consoleLogs,
   type EntityLink,
   type InsertEntityLink,
   type WordFilter,
@@ -15,6 +16,8 @@ import {
   type InsertLiveCloningMessage,
   type TextMemo,
   type InsertTextMemo,
+  type ConsoleLog,
+  type InsertConsoleLog,
   type GitHubSettings,
   type InsertGitHubSettings,
   type GitTokenConfig,
@@ -22,7 +25,7 @@ import {
   type GitRepository,
   type InsertGitRepository
 } from '@shared/schema';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, lt } from 'drizzle-orm';
 import { IStorage } from './storage';
 
 /**
@@ -355,6 +358,48 @@ export class DatabaseLiveCloningStorage implements IStorage {
     const result = await db
       .delete(liveCloningMessages)
       .where(eq(liveCloningMessages.instanceId, instanceId));
+    
+    return result.rowCount ?? 0;
+  }
+
+  // Console Logs Database Storage (Persistent)
+  async saveConsoleLog(log: InsertConsoleLog): Promise<ConsoleLog> {
+    const [saved] = await db
+      .insert(consoleLogs)
+      .values({
+        ...log,
+        timestamp: new Date(),
+      })
+      .returning();
+    
+    return saved;
+  }
+
+  async getConsoleLogs(limit: number = 100, offset: number = 0): Promise<ConsoleLog[]> {
+    return db
+      .select()
+      .from(consoleLogs)
+      .orderBy(desc(consoleLogs.timestamp))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getConsoleLogsByLevel(level: string, limit: number = 100): Promise<ConsoleLog[]> {
+    return db
+      .select()
+      .from(consoleLogs)
+      .where(eq(consoleLogs.level, level))
+      .orderBy(desc(consoleLogs.timestamp))
+      .limit(limit);
+  }
+
+  async clearOldConsoleLogs(olderThanDays: number): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
+    
+    const result = await db
+      .delete(consoleLogs)
+      .where(lt(consoleLogs.timestamp, cutoffDate));
     
     return result.rowCount ?? 0;
   }

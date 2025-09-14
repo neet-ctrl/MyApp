@@ -17,7 +17,9 @@ import {
   WordFilter,
   InsertWordFilter,
   LiveCloningMessage,
-  InsertLiveCloningMessage
+  InsertLiveCloningMessage,
+  ConsoleLog,
+  InsertConsoleLog
 } from "@shared/schema";
 
 export interface IStorage {
@@ -73,6 +75,12 @@ export interface IStorage {
   saveLiveCloningMessage(message: InsertLiveCloningMessage): Promise<LiveCloningMessage>;
   getLiveCloningMessages(instanceId: string): Promise<LiveCloningMessage[]>;
   deleteLiveCloningMessagesByInstance(instanceId: string): Promise<number>;
+  
+  // Console Logs Management
+  saveConsoleLog(log: InsertConsoleLog): Promise<ConsoleLog>;
+  getConsoleLogs(limit?: number, offset?: number): Promise<ConsoleLog[]>;
+  getConsoleLogsByLevel(level: string, limit?: number): Promise<ConsoleLog[]>;
+  clearOldConsoleLogs(olderThanDays: number): Promise<number>;
 }
 
 export class MemStorage implements IStorage {
@@ -94,6 +102,10 @@ export class MemStorage implements IStorage {
   private entityLinkIdCounter: number = 1;
   private wordFilterIdCounter: number = 1;
   private liveCloningMessageIdCounter: number = 1;
+  
+  // Console Logs storage maps
+  private consoleLogs: Map<number, ConsoleLog> = new Map();
+  private consoleLogIdCounter: number = 1;
 
   constructor() {
     // Backend storage placeholder - main storage is client-side IndexedDB
@@ -391,6 +403,58 @@ export class MemStorage implements IStorage {
     for (const [id, message] of Array.from(this.liveCloningMessages.entries())) {
       if (message.instanceId === instanceId) {
         this.liveCloningMessages.delete(id);
+        deletedCount++;
+      }
+    }
+    return deletedCount;
+  }
+
+  // Console Logs Management
+  async saveConsoleLog(log: InsertConsoleLog): Promise<ConsoleLog> {
+    const savedLog: ConsoleLog = {
+      id: this.consoleLogIdCounter++,
+      level: log.level,
+      message: log.message,
+      source: log.source || 'application',
+      metadata: log.metadata || null,
+      timestamp: new Date(),
+    };
+    this.consoleLogs.set(savedLog.id, savedLog);
+    return savedLog;
+  }
+
+  async getConsoleLogs(limit: number = 100, offset: number = 0): Promise<ConsoleLog[]> {
+    const logs = Array.from(this.consoleLogs.values())
+      .sort((a, b) => {
+        const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return bTime - aTime;
+      })
+      .slice(offset, offset + limit);
+    return logs;
+  }
+
+  async getConsoleLogsByLevel(level: string, limit: number = 100): Promise<ConsoleLog[]> {
+    const logs = Array.from(this.consoleLogs.values())
+      .filter(log => log.level === level)
+      .sort((a, b) => {
+        const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return bTime - aTime;
+      })
+      .slice(0, limit);
+    return logs;
+  }
+
+  async clearOldConsoleLogs(olderThanDays: number): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
+    
+    let deletedCount = 0;
+    for (const [id, log] of Array.from(this.consoleLogs.entries())) {
+      const logDate = log.timestamp ? new Date(log.timestamp) : new Date(0);
+      if (logDate < cutoffDate) {
+        this.consoleLogs.delete(id);
         deletedCount++;
       }
     }

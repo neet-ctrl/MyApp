@@ -1,9 +1,15 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { createServer } from "http";
+import { WebSocketServer } from "ws";
 import session from "express-session";
 import { registerRoutes, startLiveCloningService } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { autoSetup } from "./auto-setup";
+
+// Global WebSocket server for console logs
+declare global {
+  var consoleWebSocketServer: WebSocketServer | undefined;
+}
 
 const app = express();
 
@@ -58,6 +64,22 @@ app.use((req, res, next) => {
   
   await registerRoutes(app);
   const server = createServer(app);
+  
+  // Setup WebSocket server for real-time console logs
+  const wss = new WebSocketServer({ server, path: '/ws/console' });
+  global.consoleWebSocketServer = wss;
+  
+  wss.on('connection', (ws) => {
+    console.log('Console WebSocket client connected');
+    
+    ws.on('close', () => {
+      console.log('Console WebSocket client disconnected');
+    });
+    
+    ws.on('error', (error) => {
+      console.error('Console WebSocket error:', error);
+    });
+  });
   
   // Auto-start Live Cloning service for always-running architecture
   await startLiveCloningService();
