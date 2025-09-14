@@ -4,6 +4,6 @@
   "bot_enabled": true,
   "sudo": [],
   "filter_words": true,
-  "add_signature": false,
+  "add_signature": true,
   "signature": "Final testbbb"
 }

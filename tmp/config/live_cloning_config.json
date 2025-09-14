@@ -3,7 +3,7 @@
   "api_hash": "079509d4ac7f209a1a58facd00d6ff5a",
   "bot_enabled": true,
   "filter_words": true,
-  "add_signature": false,
+  "add_signature": true,
   "signature": "Final testbbb",
   "entities": [
     [
@@ -19,15 +19,11 @@
       4949360302
     ],
     [
-      2220521672,
-      1698744824
-    ],
-    [
-      4971189003,
-      2644276726
+      2644276726,
+      4679407328
     ]
   ],
   "filters": [],
   "auto_started": true,
-  "instance_id": "live_cloning_auto_1757875827841"
+  "instance_id": "live_cloning_auto_1757878803080"
 }
