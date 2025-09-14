@@ -12,7 +12,7 @@ export interface TelegramClientConfig {
 
 /**
  * Centralized factory function to create TelegramClient instances with consistent
- * connection options using TCPObfuscated on port 443 to avoid ECONNREFUSED errors.
+ * connection options using fallback connections to avoid WebSocket errors.
  */
 export function createTelegramClient(config: TelegramClientConfig): TelegramClient {
   const { apiId, apiHash, sessionString, session } = config;
@@ -20,17 +20,24 @@ export function createTelegramClient(config: TelegramClientConfig): TelegramClie
   // Use provided session or create from session string
   const clientSession = session || new StringSession(sessionString || '');
   
-  logger.info('Creating TelegramClient with TCPObfuscated on port 443');
+  logger.info('Creating TelegramClient with fallback connection options');
   
-  // Force the client to use TCPObfuscated connection on port 443
+  // Use multiple fallback connection options to avoid WebSocket issues
   return new TelegramClient(clientSession, apiId, apiHash, {
-    connectionRetries: 5,
-    retryDelay: 2000,
-    useWSS: true, // Force WebSocket Secure on port 443
-    testServers: false,
-    timeout: 30000,
+    connectionRetries: 10,
+    retryDelay: 1000,
+    timeout: 60000,
     useIPV6: false,
-    proxy: undefined,
+    testServers: false,
+    autoReconnect: true,
+    deviceModel: 'Live Cloning Bot',
+    systemVersion: '1.0.0',
+    appVersion: '1.0.0',
+    langCode: 'en',
+    systemLangCode: 'en',
+    // Don't force WSS, let it fallback to TCP if needed
+    useWSS: false,
+    baseLogger: 'gramjs'
   });
 }
 
@@ -47,9 +54,17 @@ export async function testTelegramSession(config: TelegramClientConfig): Promise
   try {
     client = createTelegramClient(config);
     
-    logger.info('Testing Telegram session connection...');
-    await client.connect();
+    logger.info('Testing Telegram session connection with improved error handling...');
     
+    // Add connection timeout
+    const connectPromise = client.connect();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Connection timeout after 30 seconds')), 30000)
+    );
+    
+    await Promise.race([connectPromise, timeoutPromise]);
+    
+    // Test if we can get user info
     const me = await client.getMe();
     
     const userInfo = {
@@ -58,7 +73,7 @@ export async function testTelegramSession(config: TelegramClientConfig): Promise
       firstName: me.firstName || ''
     };
     
-    logger.info(`Session valid for user: ${me.firstName} (@${me.username})`);
+    logger.info(`✅ Session valid for user: ${me.firstName} (@${me.username}) - ID: ${userInfo.id}`);
     
     return {
       success: true,
@@ -67,11 +82,21 @@ export async function testTelegramSession(config: TelegramClientConfig): Promise
     
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logger.error(`Session test failed: ${errorMessage}`);
+    logger.error(`❌ Session test failed: ${errorMessage}`);
+    
+    // Provide more specific error messages
+    let userFriendlyError = errorMessage;
+    if (errorMessage.includes('WebSocket connection failed') || errorMessage.includes('Connection timeout')) {
+      userFriendlyError = 'Network connection failed. Please check your internet connection and try again.';
+    } else if (errorMessage.includes('UNAUTHORIZED') || errorMessage.includes('AUTH_KEY')) {
+      userFriendlyError = 'Invalid session string. Please generate a new session string.';
+    } else if (errorMessage.includes('FLOOD_WAIT')) {
+      userFriendlyError = 'Too many requests. Please wait a few minutes before trying again.';
+    }
     
     return {
       success: false,
-      error: errorMessage
+      error: userFriendlyError
     };
   } finally {
     if (client) {

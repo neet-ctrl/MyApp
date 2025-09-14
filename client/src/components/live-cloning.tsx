@@ -78,7 +78,7 @@ interface LiveCloningStatus {
 }
 
 export function LiveCloning() {
-  const [sessionString, setSessionString] = useState('1BVtsOLABux3cdf9iA7_7csD0HjZ-vqy3pQUfbynyLah5ZQQNGCTgc6ao1FOFHur4mvJkRsrzS3KKi65RNXczTxtlxpNIkqoIQvN0ILt2kPp9dUcCuIn8ZlFftx63derTrb_LS6TdeZ4Ly3cI26C_E14TUvhlWNHwB_zDZ1mvpvluQb9EhodVRsWSAQimUWNIrKp9stJum7amnoLzCSdqAydjsfTXej1KZQ1TfxX79yAb-DPIw2kzFWf6Mk9ScDlTeGJg6qRQkiDOHiRrUnrzle1REurAN_4h9qWahhR1ffbreGvOYVDip35Uya4Kn4YGmJM0vtGLq3HoEico3umwBrO6GOc0oxU=');
+  const [sessionString, setSessionString] = useState('');
   const [entityLinks, setEntityLinks] = useState<EntityLink[]>([]);
   const [wordFilters, setWordFilters] = useState<WordFilter[]>([]);
   const [showLogs, setShowLogs] = useState(false);
@@ -241,6 +241,11 @@ export function LiveCloning() {
   // Test session string login
   const testSessionMutation = useMutation({
     mutationFn: async () => {
+      if (!sessionString.trim()) {
+        throw new Error('Please enter a valid session string');
+      }
+
+      console.log('Testing session with backend...');
       const response = await fetch('/api/live-cloning/test-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -256,6 +261,7 @@ export function LiveCloning() {
     },
     onSuccess: (data) => {
       setLoginStatus('success');
+      console.log('Session validation successful:', data);
       toast({ 
         title: 'Session Valid! ✅', 
         description: `Logged in as ${data.userInfo.firstName} (@${data.userInfo.username}) - ID: ${data.userInfo.id}` 
@@ -264,14 +270,16 @@ export function LiveCloning() {
     },
     onError: (error: Error) => {
       setLoginStatus('error');
+      console.error('Session validation failed:', error.message);
       toast({ 
-        title: 'Session Invalid ❌', 
-        description: error.message, 
+        title: 'Connection Error ❌', 
+        description: `${error.message}. This might be due to network connectivity issues or an invalid session string.`, 
         variant: 'destructive' 
       });
     },
     onMutate: () => {
       setLoginStatus('testing');
+      console.log('Starting session validation...');
     }
   });
 
@@ -328,6 +336,37 @@ export function LiveCloning() {
       if (typeof backendSignature === 'string') setSignature(backendSignature);
     }
   }, [settingsData]);
+
+  // Load default session string on component mount
+  useEffect(() => {
+    const loadDefaultSession = async () => {
+      try {
+        console.log('Loading default session...');
+        const defaultSession = '1BVtsOMQBu1MCySasHg5HgnkWT88tu1InjQlIpLdYBk6sQ8AbeLDQnDA3ozJtwCM-tFczcZGyCrvXYBOZZ8p0xEfPVelOUGRx2I3fF7Bp3WxrliIG1EO9S0p5578d3j810CHKkdkgUtqf79d7N-NDAAZ8SPP71bFjqTdZbj4GjzcPIBGM5o5oxNjKP86u8q1MlDwXHbcjv3VHEkIBN3704qI9-xDIr0pqEauUjUnpEDC72eX4y4iWqVWS2mWNKnwBSt3zU9qiFQ_l7xVFsfgG0quxQs3x-BE9m7_5eZ7XRZz2_UPole8otKxkOB3J7LYZSvhNsUv-WuMVXA4SZuZ_XTn9OubHJLE=';
+        setSessionString(defaultSession);
+        
+        // Auto-test the session if it's loaded successfully
+        if (defaultSession && defaultSession.length > 50) {
+          console.log('Auto-testing loaded session...');
+          setTimeout(() => {
+            testSessionMutation.mutate();
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Error loading default session:', error);
+        toast({
+          title: 'Session Loading Error',
+          description: 'Could not load default session. Please enter your session string manually.',
+          variant: 'destructive'
+        });
+      }
+    };
+    
+    // Only load if session string is empty
+    if (!sessionString) {
+      loadDefaultSession();
+    }
+  }, []);
 
   // Add entity link
   const addEntityLinkMutation = useMutation({
@@ -872,23 +911,48 @@ export function LiveCloning() {
                 id="session-string"
                 placeholder="Enter your Telegram session string..."
                 value={sessionString}
-                onChange={(e) => setSessionString(e.target.value)}
+                onChange={(e) => {
+                  setSessionString(e.target.value);
+                  setLoginStatus('idle');
+                }}
                 className="min-h-[100px] font-mono text-sm"
                 data-testid="session-string-input"
               />
+              <div className="text-xs text-muted-foreground mt-1">
+                {sessionString.length > 0 ? (
+                  <span>Session string length: {sessionString.length} characters</span>
+                ) : (
+                  <span>Loading default session string...</span>
+                )}
+              </div>
             </div>
             
             <div className="flex gap-2">
               <Button 
                 onClick={() => testSessionMutation.mutate()}
                 disabled={testSessionMutation.isPending || !sessionString.trim()}
-                variant="outline"
+                variant={loginStatus === 'success' ? 'default' : 'outline'}
                 className="flex-1"
                 data-testid="test-session-button"
               >
-                {testSessionMutation.isPending ? 'Testing...' : 'Test Session'}
-                {loginStatus === 'success' && <CheckCircle className="w-4 h-4 ml-2 text-green-600" />}
-                {loginStatus === 'error' && <AlertTriangle className="w-4 h-4 ml-2 text-red-600" />}
+                {testSessionMutation.isPending ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    Testing Connection...
+                  </div>
+                ) : loginStatus === 'success' ? (
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    Session Valid
+                  </div>
+                ) : loginStatus === 'error' ? (
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    Test Again
+                  </div>
+                ) : (
+                  'Test & Login'
+                )}
               </Button>
               
               <Button
@@ -897,6 +961,7 @@ export function LiveCloning() {
                 size="icon"
                 disabled={!sessionString}
                 data-testid="copy-session-button"
+                title="Copy session string"
               >
                 <Copy className="w-4 h-4" />
               </Button>
