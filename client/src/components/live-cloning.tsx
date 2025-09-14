@@ -1248,20 +1248,28 @@ export function LiveCloning() {
             </CardHeader>
             <CardContent>
               {(entityLinks?.length || 0) > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {entityLinks.map((link, index) => {
                     const fromEntityId = getFormattedEntityId(link.fromEntity);
                     const toEntityId = getFormattedEntityId(link.toEntity);
                     const fromEntityName = getChatName(link.fromEntity);
                     const toEntityName = getChatName(link.toEntity);
                     
+                    // Get number emoji for index
+                    const numberEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
+                    const numberEmoji = numberEmojis[index] || `${index + 1}️⃣`;
+                    
+                    // Extract just the title/name without extra formatting
+                    const fromTitle = fromEntityName.split(' [')[0].replace(/.*\(|\).*/g, '').trim() || fromEntityName;
+                    const toTitle = toEntityName.split(' [')[0].replace(/.*\(|\).*/g, '').trim() || toEntityName;
+                    
                     return (
                       <div key={index} className="p-3 border rounded-lg bg-card">
-                        <div className="font-mono text-sm mb-1">
-                          {fromEntityId} ➡️ {toEntityId}
+                        <div className="text-sm mb-2">
+                          {numberEmoji}〰️{fromTitle} ⏩ {toTitle}
                         </div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          ({fromEntityName} ➡️ {toEntityName})
+                        <div className="text-xs text-muted-foreground font-mono">
+                          [{fromEntityId} ⏩ {toEntityId}]
                         </div>
                       </div>
                     );
@@ -1796,53 +1804,56 @@ export function LiveCloning() {
                     </div>
                   ) : (
                     // View mode
-                    <div className="flex items-center justify-between p-3">
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="flex items-center gap-2 flex-1">
-                          <Badge variant="outline" className="text-xs">
-                            FROM
+                    <div className="p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex-1">
+                          {/* Get number emoji for index */}
+                          {(() => {
+                            const numberEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
+                            const numberEmoji = numberEmojis[index] || `${index + 1}️⃣`;
+                            
+                            // Extract just the title/name without extra formatting
+                            const fromEntityName = getChatName(link.fromEntity);
+                            const toEntityName = getChatName(link.toEntity);
+                            const fromTitle = fromEntityName.split(' [')[0].replace(/.*\(|\).*/g, '').trim() || fromEntityName;
+                            const toTitle = toEntityName.split(' [')[0].replace(/.*\(|\).*/g, '').trim() || toEntityName;
+                            
+                            return (
+                              <div className="text-sm">
+                                {numberEmoji}〰️{fromTitle} ⏩ {toTitle}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={link.isActive ? "default" : "secondary"} className="text-xs">
+                            {link.isActive ? "Active" : "Inactive"}
                           </Badge>
-                          <span className="font-mono text-sm truncate">
-                            {getChatName(link.fromEntity)}
-                          </span>
-                        </div>
-                        <div className="px-2">
-                          <span className="text-muted-foreground">→</span>
-                        </div>
-                        <div className="flex items-center gap-2 flex-1">
-                          <Badge variant="outline" className="text-xs">
-                            TO
-                          </Badge>
-                          <span className="font-mono text-sm truncate">
-                            {getChatName(link.toEntity)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={link.isActive ? "default" : "secondary"} className="text-xs">
-                          {link.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                        {link.id && (
+                          {link.id && (
+                            <Button
+                              onClick={() => startEditEntityLink(link)}
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              data-testid={`edit-entity-link-${index}`}
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </Button>
+                          )}
                           <Button
-                            onClick={() => startEditEntityLink(link)}
+                            onClick={() => removeEntityLink(link)}
                             size="icon"
                             variant="ghost"
-                            className="h-8 w-8"
-                            data-testid={`edit-entity-link-${index}`}
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            data-testid={`remove-entity-link-${index}`}
+                            disabled={removeEntityLinkMutation.isPending}
                           >
-                            <Edit3 className="w-4 h-4" />
+                            <X className="w-4 h-4" />
                           </Button>
-                        )}
-                        <Button
-                          onClick={() => removeEntityLink(link)}
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          data-testid={`remove-entity-link-${index}`}
-                          disabled={removeEntityLinkMutation.isPending}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground font-mono">
+                        [{getFormattedEntityId(link.fromEntity)} ⏩ {getFormattedEntityId(link.toEntity)}]
                       </div>
                     </div>
                   )}
