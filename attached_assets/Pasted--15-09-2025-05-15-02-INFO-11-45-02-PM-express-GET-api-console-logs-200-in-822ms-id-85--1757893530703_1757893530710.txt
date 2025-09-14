@@ -1,0 +1,602 @@
+[15/09/2025, 05:15:02] INFO: 11:45:02 PM [express] GET /api/console-logs 200 in 822ms :: [{"id":85,"level":"INFO","message":"11:44…
+[15/09/2025, 05:14:47] INFO: 11:44:47 PM [express] GET /api/console-logs 200 in 829ms :: [{"id":84,"level":"INFO","message":"11:44…
+[15/09/2025, 05:14:32] INFO: 11:44:32 PM [express] GET /api/console-logs 200 in 415ms :: [{"id":83,"level":"INFO","message":"🔄 Li…
+[15/09/2025, 05:14:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:44:26,696] DEBUG: Receiving items from the network...
+
+[15/09/2025, 05:14:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:44:26,696] DEBUG: Handling pong for message 7550094948846020392
+
+[15/09/2025, 05:14:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:44:26,632] DEBUG: Waiting for messages to send...
+
+[15/09/2025, 05:14:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:44:26,631] DEBUG: Encrypted messages put in a queue to be sent
+
+[15/09/2025, 05:14:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:44:26,631] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+[2025-09-14 23:44:26,631] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:44:26,631] DEBUG: Waiting for messages to send...
+[2025-09-14 23:44:26,631] DEBUG: Assigned msg_id = 7550094948848103216 to MsgsAck (7f27c1b5c9d0)
+
+[15/09/2025, 05:14:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:44:26,631] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+[15/09/2025, 05:14:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:44:26,631] DEBUG: Assigned msg_id = 7550094948846020392 to PingRequest (7f27c1cd7050)
+
+[15/09/2025, 05:14:17] INFO: 11:44:17 PM [express] GET /api/console-logs 200 in 834ms :: [{"id":75,"level":"INFO","message":"11:44…
+[15/09/2025, 05:14:02] INFO: 11:44:02 PM [express] GET /api/console-logs 200 in 426ms :: [{"id":72,"level":"INFO","message":"11:43…
+[15/09/2025, 05:14:02] INFO: Console WebSocket client connected
+[15/09/2025, 05:13:58] INFO: 11:43:58 PM [express] GET /api/github/user 401 in 274ms :: {"error":"Failed to fetch user info"}
+[15/09/2025, 05:13:58] INFO: 11:43:58 PM [express] GET /api/github/user 401 in 292ms :: {"error":"Failed to fetch user info"}
+[15/09/2025, 05:13:58] INFO: 11:43:58 PM [express] GET /api/github/repos 401 in 249ms :: {"error":"Failed to fetch repositories","…
+[15/09/2025, 05:13:57] INFO: 11:43:57 PM [express] GET /api/github/settings 304 in 0ms :: {"settings":null,"hasDefaultPAT":true,"i…
+[15/09/2025, 05:13:54] INFO: 11:43:54 PM [express] GET /api/github/user 401 in 281ms :: {"error":"Failed to fetch user info"}
+[15/09/2025, 05:13:54] INFO: 11:43:54 PM [express] GET /api/github/settings 200 in 0ms :: {"settings":null,"hasDefaultPAT":true,"i…
+[15/09/2025, 05:13:51] INFO: 11:43:51 PM [express] GET /api/text-memos 200 in 556ms :: []
+[15/09/2025, 05:13:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:43:26,636] DEBUG: Receiving items from the network...
+
+[15/09/2025, 05:13:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:43:26,635] DEBUG: Handling pong for message 7550094690905859980
+
+[15/09/2025, 05:13:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:43:26,571] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:43:26,571] DEBUG: Waiting for messages to send...
+
+[15/09/2025, 05:13:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:43:26,570] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+[2025-09-14 23:43:26,570] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:43:26,570] DEBUG: Waiting for messages to send...
+[2025-09-14 23:43:26,570] DEBUG: Assigned msg_id = 7550094690907667192 to MsgsAck (7f27c1b5c550)
+[2025-09-14 23:43:26,570] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+[15/09/2025, 05:13:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:43:26,570] DEBUG: Assigned msg_id = 7550094690905859980 to PingRequest (7f27c1cd7050)
+
+[15/09/2025, 05:13:11] INFO: Console WebSocket client disconnected
+[15/09/2025, 05:13:10] INFO: 11:43:10 PM [express] GET /api/console-logs 200 in 871ms :: [{"id":59,"level":"INFO","message":"11:42…
+[15/09/2025, 05:12:55] INFO: 11:42:55 PM [express] GET /api/console-logs 200 in 841ms :: [{"id":58,"level":"INFO","message":"11:42…
+[15/09/2025, 05:12:40] INFO: 11:42:40 PM [express] GET /api/console-logs 200 in 869ms :: [{"id":57,"level":"INFO","message":"🔄 Li…
+[15/09/2025, 05:12:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:42:26,575] DEBUG: Receiving items from the network...
+
+[15/09/2025, 05:12:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:42:26,575] DEBUG: Handling pong for message 7550094432964059252
+
+[15/09/2025, 05:12:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:42:26,510] DEBUG: Waiting for messages to send...
+
+[15/09/2025, 05:12:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:42:26,509] DEBUG: Assigned msg_id = 7550094432964059252 to PingRequest (7f27c1cd7050)
+
+[15/09/2025, 05:12:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:42:26,509] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+[2025-09-14 23:42:26,509] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:42:26,509] DEBUG: Waiting for messages to send...
+[2025-09-14 23:42:26,509] DEBUG: Assigned msg_id = 7550094432965865512 to MsgsAck (7f27c1b5c5d0)
+[2025-09-14 23:42:26,510] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:42:26,510] DEBUG: Encrypted messages put in a queue to be sent
+
+[15/09/2025, 05:12:25] INFO: 11:42:25 PM [express] GET /api/console-logs 200 in 887ms :: [{"id":51,"level":"INFO","message":"11:42…
+[15/09/2025, 05:12:11] INFO: 11:42:11 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:12:10] INFO: 11:42:10 PM [express] GET /api/console-logs 200 in 415ms :: [{"id":49,"level":"INFO","message":"11:42…
+[15/09/2025, 05:12:09] INFO: 11:42:09 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:12:07] INFO: 11:42:07 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:12:06] INFO: 11:42:06 PM [express] GET /api/live-cloning/word-filters/live_cloning_auto_1757893224459 200 in 562ms…
+[15/09/2025, 05:12:05] INFO: 📖 Read 6 entity links directly from config.json: [
+  [
+    8154976061,
+    7634388518
+  ],
+  [
+    7521656991,
+    7634388518
+  ],
+  [
+    7521656991,
+    4949360302
+  ],
+  [
+    2644276726,
+    4679407328
+  ],
+  [
+    1322268110,
+    1662771631
+  ],
+  [
+    2207734172,
+    2235504754
+  ]
+]
+[15/09/2025, 05:12:05] INFO: 11:42:05 PM [express] GET /api/live-cloning/entity-links/live_cloning_auto_1757893224459 200 in 3ms :…
+[15/09/2025, 05:12:05] INFO: 11:42:05 PM [express] GET /api/live-cloning/settings 304 in 0ms :: {"settings":{"botEnabled":true,"fi…
+[15/09/2025, 05:12:05] INFO: 11:42:05 PM [express] GET /api/live-cloning/status 200 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:11:55] INFO: 11:41:55 PM [express] GET /api/console-logs 200 in 864ms :: [{"id":41,"level":"INFO","message":"11:41…
+[15/09/2025, 05:11:40] INFO: 11:41:40 PM [express] GET /api/console-logs 200 in 837ms :: [{"id":40,"level":"INFO","message":"🔄 Li…
+[15/09/2025, 05:11:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:41:26,517] DEBUG: Handling pong for message 7550094175039760352
+[2025-09-14 23:41:26,517] DEBUG: Receiving items from the network...
+
+[15/09/2025, 05:11:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:41:26,453] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:41:26,453] DEBUG: Waiting for messages to send...
+
+[15/09/2025, 05:11:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:41:26,453] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+[2025-09-14 23:41:26,453] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:41:26,453] DEBUG: Waiting for messages to send...
+[2025-09-14 23:41:26,453] DEBUG: Assigned msg_id = 7550094175041895628 to MsgsAck (7f27c1b5c6d0)
+[2025-09-14 23:41:26,453] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+[15/09/2025, 05:11:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:41:26,452] DEBUG: Assigned msg_id = 7550094175039760352 to PingRequest (7f27c1cd7550)
+
+[15/09/2025, 05:11:25] INFO: 11:41:25 PM [express] GET /api/console-logs 200 in 839ms :: [{"id":35,"level":"INFO","message":"11:41…
+[15/09/2025, 05:11:10] INFO: 11:41:10 PM [express] GET /api/console-logs 200 in 704ms :: [{"id":34,"level":"INFO","message":"11:40…
+[15/09/2025, 05:10:55] INFO: 11:40:55 PM [express] GET /api/console-logs 200 in 727ms :: [{"id":33,"level":"INFO","message":"11:40…
+[15/09/2025, 05:10:40] INFO: 11:40:40 PM [express] GET /api/console-logs 200 in 291ms :: [{"id":31,"level":"INFO","message":"🔄 Li…
+[15/09/2025, 05:10:39] INFO: Console WebSocket client connected
+[15/09/2025, 05:10:30] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:40:28,618] DEBUG: Handling RPC result for message 7550093926206024516
+[2025-09-14 23:40:28,618] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:28,619] INFO: ✅ Resolved entity: 2644276726 -> Pw Arjuna 2026 Batch
+[2025-09-14 23:40:28,619] INFO: Resolving Entity 2644276726:
+[2025-09-14 23:40:28,619] INFO:   Success: True
+[2025-09-14 23:40:28,619] INFO:   Name: Pw Arjuna 2026 Batch
+[2025-09-14 23:40:28,619] INFO:   Type: Channel
+[2025-09-14 23:40:28,621] INFO:   ID: 2644276726
+[2025-09-14 23:40:28,621] DEBUG: Assigned msg_id = 7550093926605044712 to GetChannelsRequest (7f27c1b7d110)
+[2025-09-14 23:40:28,621] DEBUG: Encrypting 1 message(s) in 48 bytes for sending
+[2025-09-14 23:40:28,621] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:28,621] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:28,621] DEBUG: Assigned msg_id = 7550093926606863368 to MsgsAck (7f27c1b8d190)
+[2025-09-14 23:40:28,621] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:28,622] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:28,623] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:28,718] DEBUG: Handling RPC result for message 7550093926605044712
+[2025-09-14 23:40:28,718] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:28,718] INFO: ✅ Resolved entity: 2207734172 -> ALLEN MATERIALS FOR NEET 2025
+[2025-09-14 23:40:28,718] INFO: Resolving Entity 2207734172:
+[2025-09-14 23:40:28,719] INFO:   Success: True
+[2025-09-14 23:40:28,719] INFO:   Name: ALLEN MATERIALS FOR NEET 2025
+[2025-09-14 23:40:28,719] INFO:   Type: Channel
+[2025-09-14 23:40:28,719] INFO:   ID: 2207734172
+[2025-09-14 23:40:28,719] DEBUG: Assigned msg_id = 7550093926998631824 to GetUsersRequest (7f27c1d757d0)
+[2025-09-14 23:40:28,719] DEBUG: Encrypting 1 message(s) in 48 bytes for sending
+[2025-09-14 23:40:28,720] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:28,720] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:28,720] DEBUG: Assigned msg_id = 7550093927001009332 to MsgsAck (7f27c1b37ed0)
+[2025-09-14 23:40:28,720] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:28,720] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:28,720] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:28,821] DEBUG: Handling RPC result for message 7550093926998631824
+[2025-09-14 23:40:28,822] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:28,823] INFO: ✅ Resolved entity: 8154976061 -> Testing
+[2025-09-14 23:40:28,823] INFO: Resolving Entity 8154976061:
+[2025-09-14 23:40:28,824] INFO:   Success: True
+[2025-09-14 23:40:28,824] INFO:   Name: Testing
+[2025-09-14 23:40:28,824] INFO:   Type: User
+[2025-09-14 23:40:28,824] INFO:   ID: 8154976061
+[2025-09-14 23:40:28,825] DEBUG: Assigned msg_id = 7550093927420417180 to GetUsersRequest (7f27c1b7d110)
+[2025-09-14 23:40:28,826] DEBUG: Encrypting 1 message(s) in 48 bytes for sending
+[2025-09-14 23:40:28,826] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:28,826] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:28,826] DEBUG: Assigned msg_id = 7550093927426743852 to MsgsAck (7f27c1b376d0)
+[2025-09-14 23:40:28,826] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:28,827] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:28,827] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:28,898] DEBUG: Handling RPC result for message 7550093927420417180
+[2025-09-14 23:40:28,898] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:28,898] INFO: ✅ Resolved entity: 7521656991 -> 11th Zoology 🏋️‍♀️🏋️
+[2025-09-14 23:40:28,898] INFO: Resolving Entity 7521656991:
+[2025-09-14 23:40:28,899] INFO:   Success: True
+[2025-09-14 23:40:28,899] INFO:   Name: 11th Zoology 🏋️‍♀️🏋️
+[2025-09-14 23:40:28,899] INFO:   Type: User
+[2025-09-14 23:40:28,899] INFO:   ID: 7521656991
+[2025-09-14 23:40:28,899] INFO: ✅ Pre-resolution complete: 10/10 entities resolved
+[2025-09-14 23:40:28,918] INFO: LIVE CLONING BOT STARTED! 🚀
+[2025-09-14 23:40:28,919] DEBUG: Assigned msg_id = 7550093927796964992 to GetStateRequest (7f27c4583950)
+[2025-09-14 23:40:28,919] DEBUG: Encrypting 1 message(s) in 20 bytes for sending
+[2025-09-14 23:40:28,919] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:28,919] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:28,919] DEBUG: Assigned msg_id = 7550093927798860896 to MsgsAck (7f27c4367150)
+[2025-09-14 23:40:28,919] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:28,920] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:28,920] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:28,990] DEBUG: Handling RPC result for message 7550093927796964992
+[2025-09-14 23:40:28,990] DEBUG: Receiving items from the network...
+
+[15/09/2025, 05:10:28] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:40:27,189] INFO:   Success: True
+[2025-09-14 23:40:28,441] INFO:   Name: PW LAKSHYA NEET 2026 BATCH
+[2025-09-14 23:40:28,442] INFO:   Type: Channel
+[2025-09-14 23:40:28,442] INFO:   ID: 1662771631
+[2025-09-14 23:40:28,442] DEBUG: Assigned msg_id = 7550093925890348780 to GetChannelsRequest (7f27c1d757d0)
+[2025-09-14 23:40:28,442] DEBUG: Encrypting 1 message(s) in 48 bytes for sending
+[2025-09-14 23:40:28,442] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:28,443] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:28,443] DEBUG: Assigned msg_id = 7550093925892917980 to MsgsAck (7f27c1b37410)
+[2025-09-14 23:40:28,443] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:28,443] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:28,443] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:28,520] DEBUG: Handling RPC result for message 7550093925890348780
+[2025-09-14 23:40:28,520] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:28,520] INFO: ✅ Resolved entity: 2235504754 -> JEE NEET CUET TOPPERS NOTES & TEST PAPER
+[2025-09-14 23:40:28,520] INFO: Resolving Entity 2235504754:
+[2025-09-14 23:40:28,520] INFO:   Success: True
+[2025-09-14 23:40:28,521] INFO:   Name: JEE NEET CUET TOPPERS NOTES & TEST PAPER
+[2025-09-14 23:40:28,521] INFO:   Type: Channel
+[2025-09-14 23:40:28,521] INFO:   ID: 2235504754
+[2025-09-14 23:40:28,521] DEBUG: Assigned msg_id = 7550093926206024516 to GetChannelsRequest (7f27c1d757d0)
+[2025-09-14 23:40:28,521] DEBUG: Encrypting 1 message(s) in 48 bytes for sending
+[2025-09-14 23:40:28,521] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:28,521] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:28,521] DEBUG: Assigned msg_id = 7550093926207531320 to MsgsAck (7f27c1b35590)
+[2025-09-14 23:40:28,521] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:28,522] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:28,522] DEBUG: Waiting for messages to send...
+
+[15/09/2025, 05:10:28] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:40:26,718] DEBUG: Handling RPC result for message 7550093917676025496
+[2025-09-14 23:40:26,723] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:26,726] INFO: ✅ Successfully synced 57 chats - entities are now available
+[2025-09-14 23:40:26,726] INFO: 
+================================================================================
+[2025-09-14 23:40:26,726] INFO:                            DIALOGS SYNCHRONIZATION                            
+[2025-09-14 23:40:26,726] INFO: ================================================================================
+[2025-09-14 23:40:26,726] INFO: Total Dialogs Synced: 57
+[2025-09-14 23:40:26,726] INFO: Dialog Details:
+[2025-09-14 23:40:26,726] INFO:   1. Testing (ID: 8154976061, Type: User)
+[2025-09-14 23:40:26,726] INFO:   2. Puppet 2 (ID: 4949360302, Type: Chat)
+[2025-09-14 23:40:26,726] INFO:   3. 12th Zoology 🏋️‍♀️ (ID: 7634388518, Type: User)
+[2025-09-14 23:40:26,726] INFO:   4. 11th Zoology 🏋️‍♀️🏋️ (ID: 7521656991, Type: User)
+[2025-09-14 23:40:26,727] INFO:   5. Shakti_Kumar''''00012905611'''' (ID: 6956029558, Type: User)
+[2025-09-14 23:40:26,727] INFO:   6. ALLEN TEST SERIES 2026 (ID: 2301088276, Type: Channel)
+[2025-09-14 23:40:26,727] INFO:   7. Self Use (ID: 2731833766, Type: Channel)
+[2025-09-14 23:40:26,727] INFO:   8. PW AITS NEET TEST SERIES 2026 (ID: 2186541033, Type: Channel)
+[2025-09-14 23:40:26,727] INFO:   9. Pw Real Test Series 2026 (ID: 1992859101, Type: Channel)
+[2025-09-14 23:40:26,727] INFO:   10. Telegram (ID: 777000, Type: User)
+[2025-09-14 23:40:26,727] INFO:   ... and 47 more dialogs
+[2025-09-14 23:40:26,727] INFO: 
+================================================================================
+[2025-09-14 23:40:26,727] INFO:                           ENTITY RESOLUTION PROCESS                           
+[2025-09-14 23:40:26,727] INFO: ================================================================================
+[2025-09-14 23:40:26,727] INFO: Total Entity Pairs to Process: 6
+[2025-09-14 23:40:26,727] INFO: Unique Entity IDs: [4679407328, 7634388518, 4949360302, 1322268110, 1662771631, 2235504754, 2644276726, 2207734172, 8154976061, 7521656991]
+[2025-09-14 23:40:26,727] INFO: Entity ID: 4679407328
+[2025-09-14 23:40:26,727] INFO:   Type: <class 'int'>
+[2025-09-14 23:40:26,727] INFO:   Value Range Check: False
+[2025-09-14 23:40:26,728] INFO:   Is 32-bit safe: False
+[2025-09-14 23:40:26,728] INFO:   Is 64-bit: True
+[2025-09-14 23:40:26,728] INFO:   Binary: 0b100010110111010100001011011100000
+[2025-09-14 23:40:26,728] INFO:   Hex: 0x116ea16e0
+[2025-09-14 23:40:26,728] INFO: Entity ID: 7634388518
+[2025-09-14 23:40:26,728] INFO:   Type: <class 'int'>
+[2025-09-14 23:40:26,728] INFO:   Value Range Check: False
+[2025-09-14 23:40:26,728] INFO:   Is 32-bit safe: False
+[2025-09-14 23:40:26,728] INFO:   Is 64-bit: True
+[2025-09-14 23:40:26,728] INFO:   Binary: 0b111000111000010111000011000100110
+[2025-09-14 23:40:26,728] INFO:   Hex: 0x1c70b8626
+[2025-09-14 23:40:26,728] INFO: Entity ID: 4949360302
+[2025-09-14 23:40:26,728] INFO:   Type: <class 'int'>
+[2025-09-14 23:40:26,728] INFO:   Value Range Check: False
+[2025-09-14 23:40:26,728] INFO:   Is 32-bit safe: False
+[2025-09-14 23:40:26,728] INFO:   Is 64-bit: True
+[2025-09-14 23:40:26,729] INFO:   Binary: 0b100100111000000010011111010101110
+[2025-09-14 23:40:26,729] INFO:   Hex: 0x127013eae
+[2025-09-14 23:40:26,729] INFO: Entity ID: 1322268110
+[2025-09-14 23:40:26,729] INFO:   Type: <class 'int'>
+[2025-09-14 23:40:26,729] INFO:   Value Range Check: True
+[2025-09-14 23:40:26,729] INFO:   Is 32-bit safe: True
+[2025-09-14 23:40:26,729] INFO:   Is 64-bit: False
+[2025-09-14 23:40:26,729] INFO:   Binary: 0b1001110110100000011010111001110
+[2025-09-14 23:40:26,729] INFO:   Hex: 0x4ed035ce
+[2025-09-14 23:40:26,729] INFO: Entity ID: 1662771631
+[2025-09-14 23:40:26,729] INFO:   Type: <class 'int'>
+[2025-09-14 23:40:26,729] INFO:   Value Range Check: True
+[2025-09-14 23:40:26,729] INFO:   Is 32-bit safe: True
+[2025-09-14 23:40:26,729] INFO:   Is 64-bit: False
+[2025-09-14 23:40:26,729] INFO:   Binary: 0b1100011000110111110000110101111
+[2025-09-14 23:40:26,729] INFO:   Hex: 0x631be1af
+[2025-09-14 23:40:26,729] INFO: Entity ID: 2235504754
+[2025-09-14 23:40:26,729] INFO:   Type: <class 'int'>
+[2025-09-14 23:40:26,730] INFO:   Value Range Check: False
+[2025-09-14 23:40:26,730] INFO:   Is 32-bit safe: False
+[2025-09-14 23:40:26,730] INFO:   Is 64-bit: True
+[2025-09-14 23:40:26,730] INFO:   Binary: 0b10000101001111110001100001110010
+[2025-09-14 23:40:26,730] INFO:   Hex: 0x853f1872
+[2025-09-14 23:40:26,730] INFO: Entity ID: 2644276726
+[2025-09-14 23:40:26,730] INFO:   Type: <class 'int'>
+[2025-09-14 23:40:26,730] INFO:   Value Range Check: False
+[2025-09-14 23:40:26,730] INFO:   Is 32-bit safe: False
+[2025-09-14 23:40:26,730] INFO:   Is 64-bit: True
+[2025-09-14 23:40:26,730] INFO:   Binary: 0b10011101100111000111010111110110
+[2025-09-14 23:40:26,730] INFO:   Hex: 0x9d9c75f6
+[2025-09-14 23:40:26,730] INFO: Entity ID: 2207734172
+[2025-09-14 23:40:26,730] INFO:   Type: <class 'int'>
+[2025-09-14 23:40:26,730] INFO:   Value Range Check: False
+[2025-09-14 23:40:26,730] INFO:   Is 32-bit safe: False
+[2025-09-14 23:40:26,730] INFO:   Is 64-bit: True
+[2025-09-14 23:40:26,731] INFO:   Binary: 0b10000011100101110101100110011100
+[2025-09-14 23:40:26,731] INFO:   Hex: 0x8397599c
+[2025-09-14 23:40:26,731] INFO: Entity ID: 8154976061
+[2025-09-14 23:40:26,731] INFO:   Type: <class 'int'>
+[2025-09-14 23:40:26,731] INFO:   Value Range Check: False
+[2025-09-14 23:40:26,731] INFO:   Is 32-bit safe: False
+[2025-09-14 23:40:26,731] INFO:   Is 64-bit: True
+[2025-09-14 23:40:26,731] INFO:   Binary: 0b111100110000100110000111100111101
+[2025-09-14 23:40:26,731] INFO:   Hex: 0x1e6130f3d
+[2025-09-14 23:40:26,731] INFO: Entity ID: 7521656991
+[2025-09-14 23:40:26,731] INFO:   Type: <class 'int'>
+[2025-09-14 23:40:26,731] INFO:   Value Range Check: False
+[2025-09-14 23:40:26,731] INFO:   Is 32-bit safe: False
+[2025-09-14 23:40:26,731] INFO:   Is 64-bit: True
+[2025-09-14 23:40:26,731] INFO:   Binary: 0b111000000010100110110000010011111
+[2025-09-14 23:40:26,732] INFO:   Hex: 0x1c053609f
+[2025-09-14 23:40:26,732] INFO: 🔍 Pre-resolving 6 entity link pairs...
+[2025-09-14 23:40:26,732] DEBUG: Assigned msg_id = 7550093918459187612 to GetChatsRequest (7f27c1b9d4d0)
+[2025-09-14 23:40:26,732] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:26,732] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,732] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,732] DEBUG: Assigned msg_id = 7550093918460591420 to MsgsAck (7f27c1b8d2d0)
+[2025-09-14 23:40:26,732] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:26,733] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,733] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,818] DEBUG: Handling RPC result for message 7550093918459187612
+[2025-09-14 23:40:26,818] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:26,818] INFO: ✅ Resolved entity: 4679407328 -> Puppet 3
+[2025-09-14 23:40:26,818] INFO: Resolving Entity 4679407328:
+[2025-09-14 23:40:26,818] INFO:   Success: True
+[2025-09-14 23:40:26,819] INFO:   Name: Puppet 3
+[2025-09-14 23:40:26,819] INFO:   Type: Chat
+[2025-09-14 23:40:26,819] INFO:   ID: 4679407328
+[2025-09-14 23:40:26,819] DEBUG: Assigned msg_id = 7550093918807772740 to GetUsersRequest (7f27c1d757d0)
+[2025-09-14 23:40:26,819] DEBUG: Encrypting 1 message(s) in 48 bytes for sending
+[2025-09-14 23:40:26,819] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,819] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,819] DEBUG: Assigned msg_id = 7550093918809705836 to MsgsAck (7f27c1b8cc10)
+[2025-09-14 23:40:26,820] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:26,820] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,820] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,918] DEBUG: Handling RPC result for message 7550093918807772740
+[2025-09-14 23:40:26,918] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:26,919] INFO: ✅ Resolved entity: 7634388518 -> 12th Zoology 🏋️‍♀️
+[2025-09-14 23:40:26,919] INFO: Resolving Entity 7634388518:
+[2025-09-14 23:40:26,919] INFO:   Success: True
+[2025-09-14 23:40:26,919] INFO:   Name: 12th Zoology 🏋️‍♀️
+[2025-09-14 23:40:26,919] INFO:   Type: User
+[2025-09-14 23:40:26,919] INFO:   ID: 7634388518
+[2025-09-14 23:40:26,920] DEBUG: Assigned msg_id = 7550093919211118800 to GetChatsRequest (7f27c1b7d110)
+[2025-09-14 23:40:26,920] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:26,920] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,920] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,920] DEBUG: Assigned msg_id = 7550093919213730916 to MsgsAck (7f27c1b8cf10)
+[2025-09-14 23:40:26,921] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:26,921] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,921] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:27,018] DEBUG: Handling RPC result for message 7550093919211118800
+[2025-09-14 23:40:27,018] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:27,019] INFO: ✅ Resolved entity: 4949360302 -> Puppet 2
+[2025-09-14 23:40:27,019] INFO: Resolving Entity 4949360302:
+[2025-09-14 23:40:27,019] INFO:   Success: True
+[2025-09-14 23:40:27,019] INFO:   Name: Puppet 2
+[2025-09-14 23:40:27,019] INFO:   Type: Chat
+[2025-09-14 23:40:27,019] INFO:   ID: 4949360302
+[2025-09-14 23:40:27,020] DEBUG: Assigned msg_id = 7550093919905744300 to GetUsersRequest (7f27c1d757d0)
+[2025-09-14 23:40:27,020] DEBUG: Encrypting 1 message(s) in 48 bytes for sending
+[2025-09-14 23:40:27,020] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:27,020] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:27,020] DEBUG: Assigned msg_id = 7550093919908525216 to MsgsAck (7f27c1b8d1d0)
+[2025-09-14 23:40:27,021] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:27,021] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:27,021] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:27,118] DEBUG: Handling RPC result for message 7550093919905744300
+[2025-09-14 23:40:27,118] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:27,118] INFO: ✅ Resolved entity: 1322268110 -> TrueCaller Bot
+[2025-09-14 23:40:27,118] INFO: Resolving Entity 1322268110:
+[2025-09-14 23:40:27,118] INFO:   Success: True
+[2025-09-14 23:40:27,118] INFO:   Name: TrueCaller Bot
+[2025-09-14 23:40:27,119] INFO:   Type: User
+[2025-09-14 23:40:27,119] INFO:   ID: 1322268110
+[2025-09-14 23:40:27,119] DEBUG: Assigned msg_id = 7550093920302542436 to GetChannelsRequest (7f27c1b7d110)
+[2025-09-14 23:40:27,119] DEBUG: Encrypting 1 message(s) in 48 bytes for sending
+[2025-09-14 23:40:27,119] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:27,119] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:27,119] DEBUG: Assigned msg_id = 7550093920304271448 to MsgsAck (7f27c1b8d0d0)
+[2025-09-14 23:40:27,119] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:27,120] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:27,120] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:27,189] DEBUG: Handling RPC result for message 7550093920302542436
+[2025-09-14 23:40:27,189] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:27,189] INFO: ✅ Resolved entity: 1662771631 -> PW LAKSHYA NEET 2026 BATCH
+[2025-09-14 23:40:27,189] INFO: Resolving Entity 1662771631:
+
+[15/09/2025, 05:10:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:40:26,535] DEBUG: Handling RPC result for message 7550093917389540776
+[2025-09-14 23:40:26,535] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:26,535] INFO: 
+================================================================================
+[2025-09-14 23:40:26,535] INFO:                           CLIENT CONNECTION DETAILS                           
+[2025-09-14 23:40:26,535] INFO: ================================================================================
+[2025-09-14 23:40:26,535] INFO: Connected User ID: 6956029558
+[2025-09-14 23:40:26,535] INFO: Connected Username: Ashaktihvc
+[2025-09-14 23:40:26,535] INFO: Connected First Name: Shakti_Kumar''''00012905611''''
+[2025-09-14 23:40:26,535] INFO: Connected Last Name: 
+[2025-09-14 23:40:26,536] INFO: Client Connection State: True
+[2025-09-14 23:40:26,536] INFO: Client DC ID: Unknown
+[2025-09-14 23:40:26,536] INFO: Client Session: StringSession
+[2025-09-14 23:40:26,536] INFO: Connected as: Shakti_Kumar''''00012905611'''' (@Ashaktihvc) - ID: 6956029558
+[2025-09-14 23:40:26,536] INFO: 🔄 Syncing dialogs to load entities...
+[2025-09-14 23:40:26,536] DEBUG: Assigned msg_id = 7550093917676025496 to GetDialogsRequest (7f27c1d757d0)
+[2025-09-14 23:40:26,536] DEBUG: Encrypting 1 message(s) in 48 bytes for sending
+[2025-09-14 23:40:26,536] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,536] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,536] DEBUG: Assigned msg_id = 7550093917677322492 to MsgsAck (7f27c1b34c90)
+[2025-09-14 23:40:26,536] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:26,537] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,537] DEBUG: Waiting for messages to send...
+
+[15/09/2025, 05:10:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:40:26,464] DEBUG: Handling RPC result for message 7550093917106750592
+[2025-09-14 23:40:26,464] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:26,464] DEBUG: Assigned msg_id = 7550093917389540776 to GetUsersRequest (7f27c1b37450)
+[2025-09-14 23:40:26,465] DEBUG: Encrypting 1 message(s) in 32 bytes for sending
+[2025-09-14 23:40:26,465] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,465] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,465] DEBUG: Assigned msg_id = 7550093917390975104 to MsgsAck (7f27c1b37e50)
+[2025-09-14 23:40:26,465] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:26,465] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,465] DEBUG: Waiting for messages to send...
+
+[15/09/2025, 05:10:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:40:26,393] DEBUG: Handling RPC result for message 7550093916806252584
+[2025-09-14 23:40:26,393] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:26,394] DEBUG: Assigned msg_id = 7550093917106750592 to GetUsersRequest (7f27c1b376d0)
+[2025-09-14 23:40:26,394] DEBUG: Encrypting 1 message(s) in 32 bytes for sending
+[2025-09-14 23:40:26,394] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,394] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,394] DEBUG: Assigned msg_id = 7550093917108032332 to MsgsAck (7f27c1b37f50)
+[2025-09-14 23:40:26,394] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:26,394] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,394] DEBUG: Waiting for messages to send...
+
+[15/09/2025, 05:10:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:40:26,318] DEBUG: Handling RPC result for message 7550093916516353712
+[2025-09-14 23:40:26,318] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:26,319] DEBUG: Assigned msg_id = 7550093916806252584 to GetDifferenceRequest (7f27c1d757d0)
+[2025-09-14 23:40:26,319] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:26,319] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,319] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,320] DEBUG: Assigned msg_id = 7550093916812093840 to MsgsAck (7f27c1b37750)
+[2025-09-14 23:40:26,320] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:26,322] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,322] DEBUG: Waiting for messages to send...
+
+[15/09/2025, 05:10:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:40:26,246] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:26,246] DEBUG: Assigned msg_id = 7550093916516353712 to GetStateRequest (7f27c1d757d0)
+[2025-09-14 23:40:26,246] DEBUG: Encrypting 1 message(s) in 20 bytes for sending
+[2025-09-14 23:40:26,246] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,247] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,247] DEBUG: Assigned msg_id = 7550093916519076452 to MsgsAck (7f27c1b35590)
+[2025-09-14 23:40:26,247] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:26,247] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,247] DEBUG: Waiting for messages to send...
+
+[15/09/2025, 05:10:26] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:40:25,860] DEBUG: Using selector: EpollSelector
+[2025-09-14 23:40:25,863] INFO: 
+================================================================================
+[2025-09-14 23:40:25,863] INFO:                               SYSTEM INFORMATION                              
+[2025-09-14 23:40:25,863] INFO: ================================================================================
+[2025-09-14 23:40:25,863] INFO: Python Version: 3.11.13
+[2025-09-14 23:40:25,922] INFO: Platform: Linux-6.2.16-x86_64-with-glibc2.40
+[2025-09-14 23:40:25,926] INFO: Architecture: ('64bit', '')
+[2025-09-14 23:40:25,926] INFO: Machine: x86_64
+[2025-09-14 23:40:25,926] INFO: Node: ca6152caef27
+[2025-09-14 23:40:25,927] INFO: System: Linux
+[2025-09-14 23:40:25,927] INFO: Processor: 
+[2025-09-14 23:40:25,927] INFO: Current Working Directory: /home/runner/workspace/bot_source/live-cloning
+[2025-09-14 23:40:25,927] INFO: Script Location: /home/runner/workspace/bot_source/live-cloning/enhanced_logger.py
+[2025-09-14 23:40:25,927] INFO: Python Executable: /home/runner/workspace/.pythonlibs/bin/python3
+[2025-09-14 23:40:25,927] INFO: 
+================================================================================
+[2025-09-14 23:40:25,927] INFO:                             ENVIRONMENT VARIABLES                             
+[2025-09-14 23:40:25,927] INFO: ================================================================================
+[2025-09-14 23:40:25,927] INFO: TG_API_ID: 28403662
+[2025-09-14 23:40:25,927] INFO: TG_API_HASH: 079509d4...
+[2025-09-14 23:40:25,927] INFO: LIVE_CLONING_INSTANCE_ID: live_cloning_auto_1757893224459
+[2025-09-14 23:40:25,927] INFO: NODE_ENV: development
+[2025-09-14 23:40:25,927] INFO: PATH: /home/runner/workspace/node_modules/.bin:/home/runner/node_modules/.bin:/home/node_modules/.bin:/node_modules/.bin:/nix/store/lz7iav1hd92jbv44zf2rdd7b2mj23536-nodejs-20.19.3/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/nix/store/mxcq77rlan82dzpv3cgj0fh6qvv8ncil-bzip2-1.0.8-bin/bin:/nix/store/lmci3q5pnjkas9d2x81kd05jgmiffkn3-tk-8.6.13/bin:/nix/store/0xj7i7pnp1xyk09qg8dgsvl60gz1psyl-brotli-1.1.0/bin:/nix/store/0g1s8yd0biawp32fl3i7kdbi219jx6aq-openssh-9.7p1/bin:/nix/store/6i4xxaa812vsbli9jkq4mksdddrk27lw-xz-5.4.6-bin/bin:/nix/store/aa0kd17cjag4j4jfjdyiq1f1rf9nk2gm-gh-2.49.2/bin:/nix/store/ic7bslpvcsh3888azrf8sxz1xzc42jwq-libjpeg-turbo-3.0.3-bin/bin:/nix/store/lg6c3mlv18qhvsiwf0yl27ryq016w0cz-libwebp-1.4.0/bin:/nix/store/n0g1wrj6h8g5knynm8i3832ps41snada-fontconfig-2.15.0-bin/bin:/nix/store/a6yfhfzpmvz8v73796djqk811p4b6wan-freetype-2.13.2-dev/bin:/nix/store/1rdmf4lap3f82pqdlmrgj1vjs08dk5xw-libpng-apng-1.6.43-dev/bin:/nix/store/8nfjxqhnqb1h4wsd07pz8ph81kskw65q-nano-8.0/bin:/nix/store/bhkrx8pzqy12v6jmil17lkl8zgcyck0l-lcms2-2.16-bin/bin:/nix/store/qannz09m66qpcy3ny1f4nkl4ql0g71ks-openssl-3.0.13-bin/bin:/nix/store/z8dx4c6z528qi2w1p38yzg17g8q5jnln-cargo-1.77.2/bin:/nix/store/p16s3zg96afj68mfp17m03svhwmdgcz8-tcl-8.6.13/bin:/nix/store/lja3blbngvaiik9bxifdlypilh4glzhw-openjpeg-2.5.2/bin:/nix/store/p2rq6p1k69hsb53mq0q8dxk32f7vs4p3-railway-3.7.0/bin:/nix/store/j2zdy07sb5nbiskhp5g79c93rj9076n0-rustc-wrapper-1.77.2/bin:/nix/store/0kv8fh7h31jzp0ran1p772zfjm8znf7j-libtiff-4.6.0-bin/bin:/nix/store/cm58jpx9hqzpg0g1azm1pnif0fifk310-libdeflate-1.20/bin:/home/runner/workspace/.pythonlibs/bin:/nix/store/2lcqw1d28vklbk8ikiwad28iq2smwndv-python-wrapped-0.1.0/bin:/nix/store/2qx6jrl9h5hwpsry3ilbiihgmrnrvp50-pip-wrapper/bin:/nix/store/mx06wb8qp5z14na666bwnm1f2mxxwzj0-poetry-wrapper/bin:/nix/store/w4ml96z06nzljipl8hjlfvwg4pkxknyx-uv-0.5.11/bin:/nix/store/djy8g4cghlw19fmy6zblim1waxkr7mf2-npx/bin:/home/runner/workspace/.config/npm/node_global/bin:/home/runner/workspace/node_modules/.bin:/nix/store/8y4ls7z2sfxbq6ch3yp45l28p29qswvx-nodejs-20.19.3-wrapped/bin:/nix/store/nj22dzxzzx4m80lfa91fzqh8k9lvwigw-bun-1.2.16/bin:/nix/store/pciji08qkvcg3191yykpfipdcbbic9k5-pnpm-10.12.4/bin:/nix/store/6mzbvyzh4dfgfab6lciclji7awp9w3c4-yarn-1.22.22/bin:/nix/store/gvg9vrp821nmnyf9pxig6pss1sjywd5w-prettier-3.5.3/bin:/nix/store/w7ldv9b1vc48a235g7ib2kjyqlrzfv0s-postgresql-16.9/bin:/nix/store/ckxxssz70fkcr1fv5l4qn0mv1a66vc1i-pid1/bin:/nix/store/s7bk3jqgq54wriw50r9n4sip8j627nih-replit-runtime-path/bin:/home/runner/.nix-profile/bin:/home/runner/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+[2025-09-14 23:40:25,928] INFO: 
+================================================================================
+[2025-09-14 23:40:25,928] INFO:                             CONFIGURATION SOURCES                             
+[2025-09-14 23:40:25,928] INFO: ================================================================================
+[2025-09-14 23:40:25,928] INFO: Config File: config.json
+[2025-09-14 23:40:25,928] INFO:   Full Path: /home/runner/workspace/bot_source/live-cloning/config.json
+[2025-09-14 23:40:25,928] INFO:   Exists: True
+[2025-09-14 23:40:25,928] INFO:   Content Keys: ['api_id', 'api_hash', 'bot_enabled', 'sudo', 'filter_words', 'add_signature', 'signature', 'entities', 'filters']
+[2025-09-14 23:40:25,928] INFO:   API ID Source: 28403662
+[2025-09-14 23:40:25,928] INFO:   API Hash Source: 079509d4...
+[2025-09-14 23:40:25,928] INFO:   Entity Links Count: 6
+[2025-09-14 23:40:25,928] INFO:   Entity Links: [[8154976061, 7634388518], [7521656991, 7634388518], [7521656991, 4949360302], [2644276726, 4679407328], [1322268110, 1662771631], [2207734172, 2235504754]]
+[2025-09-14 23:40:25,929] INFO: 
+[2025-09-14 23:40:25,929] INFO: Config File: ../config/live_cloning_persistent_settings.json
+[2025-09-14 23:40:25,929] INFO:   Full Path: /home/runner/workspace/bot_source/config/live_cloning_persistent_settings.json
+[2025-09-14 23:40:25,929] INFO:   Exists: False
+[2025-09-14 23:40:25,929] INFO: 
+[2025-09-14 23:40:25,929] INFO: Config File: ../config/bot-config.json
+[2025-09-14 23:40:25,929] INFO:   Full Path: /home/runner/workspace/bot_source/config/bot-config.json
+[2025-09-14 23:40:25,929] INFO:   Exists: False
+[2025-09-14 23:40:25,929] INFO: 
+[2025-09-14 23:40:25,929] INFO: Config File: plugins/jsons/config.json
+[2025-09-14 23:40:25,929] INFO:   Full Path: /home/runner/workspace/bot_source/live-cloning/plugins/jsons/config.json
+[2025-09-14 23:40:25,929] INFO:   Exists: True
+[2025-09-14 23:40:25,930] INFO:   Content Keys: ['api_id', 'api_hash', 'bot_enabled', 'sudo', 'filter_words', 'add_signature', 'signature']
+[2025-09-14 23:40:25,930] INFO:   API ID Source: 
+[2025-09-14 23:40:25,930] INFO:   API Hash Source: ...
+[2025-09-14 23:40:25,930] INFO: 
+[2025-09-14 23:40:25,930] INFO: Config File: plugins/jsons/entities.json
+[2025-09-14 23:40:25,930] INFO:   Full Path: /home/runner/workspace/bot_source/live-cloning/plugins/jsons/entities.json
+[2025-09-14 23:40:25,930] INFO:   Exists: True
+[2025-09-14 23:40:25,930] INFO:   Content Keys: ['entities']
+[2025-09-14 23:40:25,930] INFO:   Entity Links Count: 0
+[2025-09-14 23:40:25,930] INFO:   Entity Links: []
+[2025-09-14 23:40:25,930] INFO: 
+[2025-09-14 23:40:25,931] INFO: 🚀 DIRECT AUTO-START - NO VALIDATION REQUIRED!
+[2025-09-14 23:40:25,931] INFO: Connected Account: 28403662
+[2025-09-14 23:40:25,931] INFO: Entity Links: 6
+[2025-09-14 23:40:25,931] INFO: 🚀 STARTING LIVE CLONING - AUTO-START GUARANTEED!
+[2025-09-14 23:40:25,931] INFO: 
+================================================================================
+[2025-09-14 23:40:25,931] INFO:                                CLIENT CREATION                                
+[2025-09-14 23:40:25,931] INFO: ================================================================================
+[2025-09-14 23:40:25,931] INFO: Creating TelegramClient with API ID: 28403662
+[2025-09-14 23:40:25,932] INFO: API Hash: 079509d4...
+[2025-09-14 23:40:25,932] INFO: Session String Length: 353
+[2025-09-14 23:40:25,932] INFO: Connecting to 91.108.56.196:443/TcpFull...
+[2025-09-14 23:40:25,933] DEBUG: Connection attempt 1...
+[2025-09-14 23:40:25,996] DEBUG: Connection success!
+[2025-09-14 23:40:25,996] DEBUG: Starting send loop
+[2025-09-14 23:40:25,997] DEBUG: Starting receive loop
+[2025-09-14 23:40:26,018] INFO: Connection to 91.108.56.196:443/TcpFull complete!
+[2025-09-14 23:40:26,018] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,019] DEBUG: Assigned msg_id = 7550093915606279476 to InvokeWithLayerRequest (7f27c1b35590)
+[2025-09-14 23:40:26,019] DEBUG: Encrypting 1 message(s) in 80 bytes for sending
+[2025-09-14 23:40:26,019] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,019] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,019] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:26,086] DEBUG: Handling bad salt for message 7550093915606279476
+[2025-09-14 23:40:26,087] DEBUG: 1 message(s) will be resent
+[2025-09-14 23:40:26,087] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:26,088] DEBUG: Assigned msg_id = 7550093915881917104 to InvokeWithLayerRequest (7f27c1b35590)
+[2025-09-14 23:40:26,088] DEBUG: Encrypting 1 message(s) in 80 bytes for sending
+[2025-09-14 23:40:26,088] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,088] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,088] DEBUG: Assigned msg_id = 7550093915884797200 to MsgsAck (7f27c1b37410)
+[2025-09-14 23:40:26,088] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:40:26,089] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,089] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,154] DEBUG: Handling container
+[2025-09-14 23:40:26,154] DEBUG: Handling new session created
+[2025-09-14 23:40:26,154] DEBUG: Handling acknowledge for [7550093915881917104]
+[2025-09-14 23:40:26,154] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:26,164] DEBUG: Handling RPC result for message 7550093915881917104
+[2025-09-14 23:40:26,165] DEBUG: Receiving items from the network...
+[2025-09-14 23:40:26,165] DEBUG: Assigned msg_id = 7550093916191893680 to GetUsersRequest (7f27c1b35590)
+[2025-09-14 23:40:26,165] DEBUG: Encrypting 1 message(s) in 32 bytes for sending
+[2025-09-14 23:40:26,165] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,165] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,165] DEBUG: Assigned msg_id = 7550093916193358524 to MsgsAck (7f27c1b375d0)
+[2025-09-14 23:40:26,165] DEBUG: Encrypting 1 message(s) in 60 bytes for sending
+[2025-09-14 23:40:26,166] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:40:26,166] DEBUG: Waiting for messages to send...
+[2025-09-14 23:40:26,245] DEBUG: Handling RPC result for message 7550093916191893680
+
+[15/09/2025, 05:10:24] INFO: 11:40:24 PM [express] serving on port 5000
+[15/09/2025, 05:10:24] INFO: 🌟 Service will run continuously until server shutdown
+[15/09/2025, 05:10:24] INFO: 🔄 Starting Live Cloning Python process for 24/7 operation...
+[15/09/2025, 05:10:24] INFO: ✅ Live Cloning 24/7 service started successfully!
+[15/09/2025, 05:10:24] INFO: 📊 Running with 6 entity links and bot enabled: true
+[15/09/2025, 05:10:24] INFO: ✅ text_memos schema is ready
+[15/09/2025, 05:10:24] INFO: ✅ Environment verification completed
+[15/09/2025, 05:10:24] DEBUG: ✅ File system write access: OK
+[15/09/2025, 05:10:24] DEBUG: ✅ Node.js version: OK
+[15/09/2025, 05:10:24] INFO: ✅ All directories created/verified
+[15/09/2025, 05:10:24] INFO: ✅ Automatic setup completed successfully
+[15/09/2025, 05:10:24] INFO: 📎 Total loaded for auto-start: 6 entity links and 0 word filters
+[15/09/2025, 05:10:24] DEBUG: ✅ Downloads directory: OK
+[15/09/2025, 05:10:24] INFO: 📋 Loaded persistent settings for auto-start: {
+  "botEnabled": true,
+  "filterWords": true,
+  "addSignature": true,
+  "signature": "Final testbbb",
+  "sessionString": "1BVtsOMQBu1MCySasHg5HgnkWT88tu1InjQlIpLdYBk6sQ8AbeLDQnDA3ozJtwCM-tFczcZGyCrvXYBOZZ8p0xEfPVelOUGRx2I3fF7Bp3WxrliIG1EO9S0p5578d3j810CHKkdkgUtqf79d7N-NDAAZ8SPP71bFjqTdZbj4GjzcPIBGM5o5oxNjKP86u8q1MlDwXHbcjv3VHEkIBN3704qI9-xDIr0pqEauUjUnpEDC72eX4y4iWqVWS2mWNKnwBSt3zU9qiFQ_l7xVFsfgG0quxQs3x-BE9m7_5eZ7XRZz2_UPole8otKxkOB3J7LYZSvhNsUv-WuMVXA4SZuZ_XTn9OubHJLE="
+}
+[15/09/2025, 05:10:24] INFO: 📎 Loaded 6 entity links from Python config.json
+[15/09/2025, 05:10:24] INFO: 📝 Using persistent config session string
+[15/09/2025, 05:10:24] INFO: 🚀 Starting Live Cloning service for 24/7 always-running architecture...
+[15/09/2025, 05:10:24] INFO: ✅ All required packages are available
+[15/09/2025, 05:10:23] INFO: 🔧 Ensuring text_memos schema is up to date...
+[15/09/2025, 05:10:23] INFO: ✅ Database connection verified
+[15/09/2025, 05:10:23] INFO: ✅ Loaded persistent live cloning settings: {
+  "botEnabled": true,
+  "filterWords": true,
+  "addSignature": true,
+  "signature": "Final testbbb",
+  "sessionString": "1BVtsOMQBu...[REDACTED]"
+}
+[15/09/2025, 05:10:23] INFO: 🔧 Starting automatic setup...
