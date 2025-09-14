@@ -94,6 +94,10 @@ RUN mkdir -p /app/downloads/completed \
 RUN if [ -f /app/bot_source/live-cloning/requirements.txt ]; then pip3 install -r /app/bot_source/live-cloning/requirements.txt; fi
 RUN if [ -f /app/bot_source/python-copier/requirements.txt ]; then pip3 install -r /app/bot_source/python-copier/requirements.txt; fi
 
+# CRITICAL FIX: Force upgrade Telethon to latest version to support 64-bit user IDs
+# This ensures the correct version is installed last, overriding any older versions
+RUN pip3 install "telethon>=1.41.0" --upgrade --no-cache-dir
+
 # Expose the app port
 EXPOSE 5000
 

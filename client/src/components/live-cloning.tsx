@@ -82,7 +82,6 @@ export function LiveCloning() {
   const [entityLinks, setEntityLinks] = useState<EntityLink[]>([]);
   const [wordFilters, setWordFilters] = useState<WordFilter[]>([]);
   const [showLogs, setShowLogs] = useState(false);
-  const [loginStatus, setLoginStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   
   // Entity Link Form
   const [newFromEntity, setNewFromEntity] = useState('');
@@ -238,50 +237,6 @@ export function LiveCloning() {
     }
   }, [wordFiltersData]);
 
-  // Test session string login
-  const testSessionMutation = useMutation({
-    mutationFn: async () => {
-      if (!sessionString.trim()) {
-        throw new Error('Please enter a valid session string');
-      }
-
-      console.log('Testing session with backend...');
-      const response = await fetch('/api/live-cloning/test-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionString: sessionString.trim() }),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to test session');
-      }
-      
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setLoginStatus('success');
-      console.log('Session validation successful:', data);
-      toast({ 
-        title: 'Session Valid! ✅', 
-        description: `Logged in as ${data.userInfo.firstName} (@${data.userInfo.username}) - ID: ${data.userInfo.id}` 
-      });
-      queryClient.invalidateQueries({ queryKey: ['live-cloning-status'] });
-    },
-    onError: (error: Error) => {
-      setLoginStatus('error');
-      console.error('Session validation failed:', error.message);
-      toast({ 
-        title: 'Connection Error ❌', 
-        description: `${error.message}. This might be due to network connectivity issues or an invalid session string.`, 
-        variant: 'destructive' 
-      });
-    },
-    onMutate: () => {
-      setLoginStatus('testing');
-      console.log('Starting session validation...');
-    }
-  });
 
   // Settings mutations
   const updateSettingsMutation = useMutation({
@@ -345,13 +300,6 @@ export function LiveCloning() {
         const defaultSession = '1BVtsOMQBu1MCySasHg5HgnkWT88tu1InjQlIpLdYBk6sQ8AbeLDQnDA3ozJtwCM-tFczcZGyCrvXYBOZZ8p0xEfPVelOUGRx2I3fF7Bp3WxrliIG1EO9S0p5578d3j810CHKkdkgUtqf79d7N-NDAAZ8SPP71bFjqTdZbj4GjzcPIBGM5o5oxNjKP86u8q1MlDwXHbcjv3VHEkIBN3704qI9-xDIr0pqEauUjUnpEDC72eX4y4iWqVWS2mWNKnwBSt3zU9qiFQ_l7xVFsfgG0quxQs3x-BE9m7_5eZ7XRZz2_UPole8otKxkOB3J7LYZSvhNsUv-WuMVXA4SZuZ_XTn9OubHJLE=';
         setSessionString(defaultSession);
         
-        // Auto-test the session if it's loaded successfully
-        if (defaultSession && defaultSession.length > 50) {
-          console.log('Auto-testing loaded session...');
-          setTimeout(() => {
-            testSessionMutation.mutate();
-          }, 1000);
-        }
       } catch (error) {
         console.error('Error loading default session:', error);
         toast({
@@ -913,7 +861,6 @@ export function LiveCloning() {
                 value={sessionString}
                 onChange={(e) => {
                   setSessionString(e.target.value);
-                  setLoginStatus('idle');
                 }}
                 className="min-h-[100px] font-mono text-sm"
                 data-testid="session-string-input"
@@ -928,33 +875,6 @@ export function LiveCloning() {
             </div>
             
             <div className="flex gap-2">
-              <Button 
-                onClick={() => testSessionMutation.mutate()}
-                disabled={testSessionMutation.isPending || !sessionString.trim()}
-                variant={loginStatus === 'success' ? 'default' : 'outline'}
-                className="flex-1"
-                data-testid="test-session-button"
-              >
-                {testSessionMutation.isPending ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                    Testing Connection...
-                  </div>
-                ) : loginStatus === 'success' ? (
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" />
-                    Session Valid
-                  </div>
-                ) : loginStatus === 'error' ? (
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4" />
-                    Test Again
-                  </div>
-                ) : (
-                  'Test & Login'
-                )}
-              </Button>
-              
               <Button
                 onClick={() => navigator.clipboard.writeText(sessionString)}
                 variant="ghost"

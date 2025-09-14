@@ -1,6 +1,6 @@
+telethon>=1.41.0
 tgcrypto
-telethon
 requests
 python-dotenv
-pillow
+pillow>=8.0.0
 cryptg

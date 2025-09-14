@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["cargo", "freetype", "gh", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssh", "openssl", "railway", "rustc", "tcl", "tk", "zlib"]
+packages = ["cargo", "freetype", "gh", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssh", "openssl", "railway", "rustc", "tcl", "tk", "zlib", "nano"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -76,10 +76,6 @@ externalPort = 3002
 [[ports]]
 localPort = 37111
 externalPort = 6000
-
-[[ports]]
-localPort = 38357
-externalPort = 9000
 
 [[ports]]
 localPort = 38823
