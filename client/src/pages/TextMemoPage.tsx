@@ -331,7 +331,14 @@ export default function TextMemoPage() {
   // Fetch all memos
   const { data: memos = [], isLoading } = useQuery({
     queryKey: ['/api/text-memos'],
-    queryFn: () => fetch('/api/text-memos').then((res) => res.json()) as Promise<TextMemo[]>,
+    queryFn: async () => {
+      const response = await fetch('/api/text-memos');
+      if (!response.ok) {
+        throw new Error('Failed to fetch memos');
+      }
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   // Create memo mutation
