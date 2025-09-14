@@ -1,0 +1,53 @@
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+✅ Loaded persistent live cloning settings: {
+  botEnabled: true,
+  filterWords: true,
+  addSignature: false,
+  signature: 'Final testbbb',
+  sessionString: '1BVtsOMQBu...[REDACTED]'
+}
+[2025-09-13 21:56:21] INFO    🔧 Starting automatic setup...
+[2025-09-13 21:56:22] INFO    ✅ Database connection verified
+[2025-09-13 21:56:22] INFO    ✅ All directories created/verified
+[2025-09-13 21:56:22] INFO    ✅ All required packages are available
+[2025-09-13 21:56:22] DEBUG   ✅ Node.js version: OK
+[2025-09-13 21:56:22] DEBUG   ✅ File system write access: OK
+[2025-09-13 21:56:22] DEBUG   ✅ Downloads directory: OK
+[2025-09-13 21:56:22] INFO    ✅ Environment verification completed
+[2025-09-13 21:56:22] INFO    ✅ Automatic setup completed successfully
+🚀 Starting Live Cloning service for 24/7 always-running architecture...
+📋 Loaded persistent settings for auto-start: {
+  botEnabled: true,
+  filterWords: true,
+  addSignature: false,
+  signature: 'Final testbbb',
+  sessionString: '1BVtsOMQBuyywtItcGyuFulZkrbUMRTcW4zveTMbISJ3pnzHZ1Y1e8zu5XU3tuKLNIo7k5AmtZ3TIqy5NSnypqibZoW1jfGYNzbQNyV-rx1sEqYS1x675ynrqX5yba5PwlphB4EMfIB3CmftFLdQ0YtfgeHVeFEvSNK1q37otbptsHhGLjzlP1HwrcrVksG7q3RqOzxmU1cE0YdC_JWQCWenx_-RLPJUpAObhy39oiYbvLAeNn09WdfsUdF5KWujyFYRRy9nwxbhh-TzenWzMQUOQN3vHfS9bvk21JfrxcHe_fUSKfqcINzo9ehGamN-PHY1y4BX4bfF51Yzhnv0m4Vrwm8j3yO8='
+}
+🚂 Using Railway-specific session string (avoiding IP conflict)
+📎 Loaded 3 entity links from Python config.json
+📎 Total loaded for auto-start: 3 entity links and 0 word filters
+🔄 Starting Live Cloning Python process for 24/7 operation...
+✅ Live Cloning 24/7 service started successfully!
+📊 Running with 3 entity links and bot enabled: true
+🌟 Service will run continuously until server shutdown
+9:56:23 PM [express] serving on port 8080
+🔄 Live Cloning Error (24/7): [ INFO/2025-09-13 21:56:23,548] telethon.network.mtprotosender: Connecting to 91.108.56.196:443/TcpFull...
+[ INFO/2025-09-13 21:56:23,550] telethon.network.mtprotosender: Connection to 91.108.56.196:443/TcpFull complete!
+[ INFO/2025-09-13 21:56:23,593] root: Connected as: Unsupported User (@UnsupportedUser64Bot) - ID: 1926801217
+[ INFO/2025-09-13 21:56:23,593] root: 🔄 Syncing dialogs to load entities...
+[ INFO/2025-09-13 21:56:23,671] root: ✅ Successfully synced 18 chats - entities are now available
+[ INFO/2025-09-13 21:56:23,671] root: 🔍 Pre-resolving 3 entity link pairs...
+[ERROR/2025-09-13 21:56:23,671] telethon.network.mtprotosender: Request caused struct.error: 'i' format requires -2147483648 <= number <= 2147483647: GetUsersRequest(id=[InputUser(user_id=4949360302, access_hash=0)])
+[ERROR/2025-09-13 21:56:23,671] root: ❌ Failed to resolve entity 4949360302: 'i' format requires -2147483648 <= number <= 2147483647
+[ERROR/2025-09-13 21:56:23,671] telethon.network.mtprotosender: Request caused struct.error: 'i' format requires -2147483648 <= number <= 2147483647: GetUsersRequest(id=[InputUser(user_id=8154976061, access_hash=0)])
+[ERROR/2025-09-13 21:56:23,671] root: ❌ Failed to resolve entity 8154976061: 'i' format requires -2147483648 <= number <= 2147483647
+[ERROR/2025-09-13 21:56:23,671] telethon.network.mtprotosender: Request caused struct.error: 'i' format requires -2147483648 <= number <= 2147483647: GetUsersRequest(id=[InputUser(user_id=7634388518, access_hash=0)])
+[ERROR/2025-09-13 21:56:23,671] root: ❌ Failed to resolve entity 7634388518: 'i' format requires -2147483648 <= number <= 2147483647
+[ERROR/2025-09-13 21:56:23,671] telethon.network.mtprotosender: Request caused struct.error: 'i' format requires -2147483648 <= number <= 2147483647: GetUsersRequest(id=[InputUser(user_id=7521656991, access_hash=0)])
+[ERROR/2025-09-13 21:56:23,671] root: ❌ Failed to resolve entity 7521656991: 'i' format requires -2147483648 <= number <= 2147483647
+[WARNING/2025-09-13 21:56:23,671] root: ⚠️ 4 entities could not be resolved: [4949360302, 8154976061, 7634388518, 7521656991]
+[WARNING/2025-09-13 21:56:23,671] root: 💡 Make sure the bot is joined to all channels/groups and try the Sync command
+[ INFO/2025-09-13 21:56:23,671] root: ✅ Pre-resolution complete: 0/4 entities resolved
+[ INFO/2025-09-13 21:56:23,672] root: LIVE CLONING BOT STARTED! 🚀

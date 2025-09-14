@@ -2104,7 +2104,7 @@ if __name__ == "__main__":
         
         // Fallback to hardcoded session (same as used by Python live cloning service)
         if (!sessionString) {
-          sessionString = "1BVtsOLABux3cdf9iA7_7csD0HjZ-vqy3pQUfbynyLah5ZQQNGCTgc6ao1FOFHur4mvJkRsrzS3KKi65RNXczTxtlxpNIkqoIQvN0ILt2kPp9dUcCuIn8ZlFftx63derTrb_LS6TdeZ4Ly3cI26C_E14TUvhlWNHwB_zDZ1mvpvluQb9EhodVRsWSAQimUWNIrKp9stJum7amnoLzCSdqAydjsfTXej1KZQ1TfxX79yAb-DPIw2kzFWf6Mk9ScDlTeGJg6qRQkiDOHiRrUnrzle1REurAN_4h9qWahhR1ffbreGvOYVDip35Uya4Kn4YGmJM0vtGLq3HoEico3umwBrO6GOc0oxU=";
+          sessionString = "1BVtsOMQBu1MCySasHg5HgnkWT88tu1InjQlIpLdYBk6sQ8AbeLDQnDA3ozJtwCM-tFczcZGyCrvXYBOZZ8p0xEfPVelOUGRx2I3fF7Bp3WxrliIG1EO9S0p5578d3j810CHKkdkgUtqf79d7N-NDAAZ8SPP71bFjqTdZbj4GjzcPIBGM5o5oxNjKP86u8q1MlDwXHbcjv3VHEkIBN3704qI9-xDIr0pqEauUjUnpEDC72eX4y4iWqVWS2mWNKnwBSt3zU9qiFQ_l7xVFsfgG0quxQs3x-BE9m7_5eZ7XRZz2_UPole8otKxkOB3J7LYZSvhNsUv-WuMVXA4SZuZ_XTn9OubHJLE=";
           console.log('Using hardcoded session string for entity resolution');
         }
 

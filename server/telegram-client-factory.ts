@@ -36,8 +36,7 @@ export function createTelegramClient(config: TelegramClientConfig): TelegramClie
     langCode: 'en',
     systemLangCode: 'en',
     // Don't force WSS, let it fallback to TCP if needed
-    useWSS: false,
-    baseLogger: 'gramjs'
+    useWSS: false
   });
 }
 

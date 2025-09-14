@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Live Cloning Bot - Web Interface Integration
+Live Cloning Bot - Web Interface Integration with Comprehensive Logging
 Based on telegram-live-sender by mehdiirh
 Adapted for web-based control and management
+Enhanced with detailed logging for debugging Railway deployment issues
 """
 
 import sys
@@ -25,6 +26,9 @@ from telethon.tl.custom import Message
 from telethon.errors import SessionPasswordNeededError, PhoneCodeInvalidError
 from telethon.sessions import StringSession
 
+# Import comprehensive logger
+from enhanced_logger import comprehensive_logger
+
 # Configure logging
 logging.basicConfig(
     format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s',
@@ -33,6 +37,14 @@ logging.basicConfig(
 
 class LiveCloner:
     def __init__(self, session_string: str = None, config_path: str = None):
+        # COMPREHENSIVE LOGGING: Start logging everything from initialization
+        comprehensive_logger.log_system_info()
+        comprehensive_logger.log_package_versions()
+        comprehensive_logger.log_environment_variables()
+        comprehensive_logger.log_command_line_args()
+        comprehensive_logger.log_config_sources()
+        comprehensive_logger.log_telethon_analysis()
+        
         self.session_string = session_string
         self.config_path = config_path or 'config.json'
         self.client: Optional[TelegramClient] = None
@@ -41,6 +53,13 @@ class LiveCloner:
         self.processed_messages = 0
         self.status_file = 'status.json'
         self.log_file = 'live_cloner.log'
+        
+        # Log session string details if provided
+        if self.session_string:
+            comprehensive_logger.log_session_details(self.session_string)
+        
+        # Log API credentials from config
+        comprehensive_logger.log_api_credentials(self.config["api_id"], self.config["api_hash"])
         
         # Initialize with default config if not exists
         if not os.path.exists(self.config_path):
@@ -151,6 +170,12 @@ class LiveCloner:
             if not self.session_string:
                 raise ValueError("Session string is required")
             
+            # COMPREHENSIVE LOGGING: Log client creation process
+            comprehensive_logger.log_separator("CLIENT CREATION")
+            logging.info(f"Creating TelegramClient with API ID: {self.config['api_id']}")
+            logging.info(f"API Hash: {self.config['api_hash'][:8]}...")
+            logging.info(f"Session String Length: {len(self.session_string)}")
+            
             self.client = TelegramClient(StringSession(self.session_string), self.config["api_id"], self.config["api_hash"])
             
             # Start client with session string
@@ -160,6 +185,15 @@ class LiveCloner:
                 raise ValueError("Session is not authorized")
             
             me = await self.client.get_me()
+            user_info = {
+                "id": me.id,
+                "username": me.username or "No username", 
+                "firstName": me.first_name or "Unknown",
+                "lastName": me.last_name or ""
+            }
+            
+            # COMPREHENSIVE LOGGING: Log client connection details
+            comprehensive_logger.log_client_connection(self.client, user_info)
             logging.info(f"Connected as: {me.first_name} (@{me.username}) - ID: {me.id}")
             
             # CRITICAL: Sync dialogs first (like original Python script does)
@@ -168,6 +202,10 @@ class LiveCloner:
                 logging.info("🔄 Syncing dialogs to load entities...")
                 dialogs = await self.client.get_dialogs()
                 logging.info(f"✅ Successfully synced {len(dialogs)} chats - entities are now available")
+                
+                # COMPREHENSIVE LOGGING: Log dialog sync details
+                comprehensive_logger.log_dialogs_sync(len(dialogs), dialogs)
+                
             except Exception as e:
                 logging.warning(f"⚠️ Dialog sync failed: {e} - some entities may not be available")
             
@@ -182,6 +220,8 @@ class LiveCloner:
             
         except Exception as e:
             logging.error(f"Failed to start client: {e}")
+            comprehensive_logger.logger.error(f"CLIENT START FAILED: {e}")
+            comprehensive_logger.logger.error(f"Error Type: {type(e).__name__}")
             self.update_status({"error": str(e)})
             return False
 
@@ -192,6 +232,9 @@ class LiveCloner:
             if not entities:
                 logging.info("📝 No entity links configured, skipping pre-resolution")
                 return
+            
+            # COMPREHENSIVE LOGGING: Log entity resolution process
+            comprehensive_logger.log_entity_resolution_process(entities)
             
             logging.info(f"🔍 Pre-resolving {len(entities)} entity link pairs...")
             resolved_count = 0
@@ -210,10 +253,17 @@ class LiveCloner:
                     resolved_entity = await self.client.get_entity(entity_id)
                     entity_name = getattr(resolved_entity, 'title', getattr(resolved_entity, 'first_name', f'ID:{entity_id}'))
                     logging.info(f"✅ Resolved entity: {entity_id} -> {entity_name}")
+                    
+                    # COMPREHENSIVE LOGGING: Log successful resolution
+                    comprehensive_logger.log_entity_resolution_attempt(entity_id, True, resolved_entity)
                     resolved_count += 1
+                    
                 except Exception as e:
                     logging.error(f"❌ Failed to resolve entity {entity_id}: {e}")
                     failed_entities.append(entity_id)
+                    
+                    # COMPREHENSIVE LOGGING: Log failed resolution with detailed error
+                    comprehensive_logger.log_entity_resolution_attempt(entity_id, False, None, e)
             
             if failed_entities:
                 logging.warning(f"⚠️ {len(failed_entities)} entities could not be resolved: {failed_entities}")
@@ -223,6 +273,7 @@ class LiveCloner:
             
         except Exception as e:
             logging.error(f"❌ Error during entity pre-resolution: {e}")
+            comprehensive_logger.logger.error(f"ENTITY PRE-RESOLUTION FAILED: {e}")
 
     def register_event_handlers(self):
         """Register Telegram event handlers"""
@@ -704,16 +755,34 @@ async def main():
     
     args = parser.parse_args()
     
+    # COMPREHENSIVE LOGGING: Log main function start for Railway debugging
+    comprehensive_logger.log_separator("MAIN FUNCTION START - Railway Debugging")
+    comprehensive_logger.logger.info(f"Script Arguments: {sys.argv}")
+    comprehensive_logger.logger.info(f"Session provided: {bool(args.session)}")
+    comprehensive_logger.logger.info(f"Config path: {args.config}")
+    comprehensive_logger.logger.info(f"Test session mode: {args.test_session}")
+    
     cloner = LiveCloner(session_string=args.session, config_path=args.config)
     
     if args.test_session:
         # Test session and exit
+        comprehensive_logger.log_separator("TEST SESSION MODE")
         result = await cloner.test_session()
+        comprehensive_logger.logger.info(f"Test session result: {result}")
         print(json.dumps(result))
         return
     
-    # Run the cloner
-    await cloner.run()
+    try:
+        # Run the cloner
+        comprehensive_logger.log_separator("STARTING LIVE CLONING")
+        await cloner.run()
+    except Exception as e:
+        comprehensive_logger.logger.error(f"MAIN FUNCTION ERROR: {e}")
+        comprehensive_logger.logger.error(f"Error Type: {type(e).__name__}")
+        raise
+    finally:
+        # Create comprehensive summary report for Railway debugging
+        comprehensive_logger.create_summary_report()
 
 if __name__ == "__main__":
     asyncio.run(main())
