@@ -343,7 +343,7 @@ export default function TextMemoPage() {
 
   // Create memo mutation
   const createMemoMutation = useMutation({
-    mutationFn: (memo: InsertTextMemo) => apiRequest('/api/text-memos', 'POST', memo),
+    mutationFn: (memo: InsertTextMemo) => apiRequest('POST', '/api/text-memos', memo),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/text-memos'] });
       toast({ title: "Memo created successfully" });
@@ -356,7 +356,7 @@ export default function TextMemoPage() {
   // Update memo mutation
   const updateMemoMutation = useMutation({
     mutationFn: ({ id, content }: { id: number; content: string }) =>
-      apiRequest(`/api/text-memos/${id}`, 'PUT', { content }),
+      apiRequest('PUT', `/api/text-memos/${id}`, { content }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/text-memos'] });
       toast({ title: "Memo updated successfully" });
@@ -368,7 +368,7 @@ export default function TextMemoPage() {
 
   // Delete memo mutation
   const deleteMemoMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/text-memos/${id}`, 'DELETE'),
+    mutationFn: (id: number) => apiRequest('DELETE', `/api/text-memos/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/text-memos'] });
       toast({ title: "Memo deleted successfully" });
