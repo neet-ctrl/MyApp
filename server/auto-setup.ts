@@ -2,6 +2,7 @@ import { logger } from './telegram-bot/logger';
 import { db } from './db';
 import * as fs from 'fs';
 import * as path from 'path';
+import { sql } from 'drizzle-orm';
 
 // Automatic setup system that runs on startup
 export async function autoSetup(): Promise<void> {
@@ -11,13 +12,16 @@ export async function autoSetup(): Promise<void> {
     // 1. Ensure database connection is working
     await ensureDatabaseConnection();
 
-    // 2. Create all necessary directories
+    // 2. Ensure TextMemo schema is up to date
+    await ensureTextMemosSchema();
+
+    // 3. Create all necessary directories
     await createDirectories();
 
-    // 3. Install missing packages (if any)
+    // 4. Install missing packages (if any)
     await checkAndInstallPackages();
 
-    // 4. Verify environment is ready
+    // 5. Verify environment is ready
     await verifyEnvironment();
 
     logger.info('✅ Automatic setup completed successfully');
@@ -36,6 +40,26 @@ async function ensureDatabaseConnection(): Promise<void> {
     logger.info('✅ Database connection verified');
   } catch (error) {
     logger.warn('⚠️ Database connection issue, but continuing...');
+  }
+}
+
+async function ensureTextMemosSchema(): Promise<void> {
+  try {
+    logger.info('🔧 Ensuring text_memos schema is up to date...');
+    
+    // Add missing columns if they don't exist (idempotent)
+    await db.execute(sql`ALTER TABLE text_memos ADD COLUMN IF NOT EXISTS hint text`);
+    await db.execute(sql`ALTER TABLE text_memos ADD COLUMN IF NOT EXISTS description text`);
+    await db.execute(sql`ALTER TABLE text_memos ADD COLUMN IF NOT EXISTS content text`);
+    await db.execute(sql`ALTER TABLE text_memos ADD COLUMN IF NOT EXISTS created_at timestamp DEFAULT now()`);
+    
+    // Set default on content if missing
+    await db.execute(sql`ALTER TABLE text_memos ALTER COLUMN content SET DEFAULT ''`);
+    
+    logger.info('✅ text_memos schema is ready');
+  } catch (error) {
+    logger.warn('⚠️ text_memos schema update issue, but continuing...');
+    logger.debug(`Schema error: ${error}`);
   }
 }
 

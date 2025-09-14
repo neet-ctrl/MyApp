@@ -19,6 +19,7 @@ import { createBotManager, getBotManager, destroyBotManager } from './telegram-b
 import type { BotManager } from './telegram-bot/BotManager';
 import { configReader } from '../shared/config-reader';
 import { z } from 'zod';
+import { insertTextMemoSchema, TextMemo } from '@shared/schema';
 import { createTelegramClient, testTelegramSession } from './telegram-client-factory';
 
 
@@ -102,6 +103,119 @@ export async function registerRoutes(app: Express): Promise<Express> {
   // use storage to perform CRUD operations on the storage interface
   // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
 
+  // =====================================================
+  // TextMemo Management API
+  // =====================================================
+  
+  // Get all text memos
+  app.get('/api/text-memos', async (req, res) => {
+    try {
+      const memos = await storage.getAllTextMemos();
+      res.json(memos);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to get text memos: ${errorMessage}`);
+      res.status(500).json({ error: 'Failed to get text memos' });
+    }
+  });
+
+  // Get a specific text memo
+  app.get('/api/text-memos/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid memo ID' });
+      }
+
+      const memo = await storage.getTextMemo(id);
+      if (!memo) {
+        return res.status(404).json({ error: 'Text memo not found' });
+      }
+
+      res.json(memo);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to get text memo: ${errorMessage}`);
+      res.status(500).json({ error: 'Failed to get text memo' });
+    }
+  });
+
+  // Create a new text memo
+  app.post('/api/text-memos', async (req, res) => {
+    try {
+      // Validate request body using Zod schema
+      const validatedData = insertTextMemoSchema.parse(req.body);
+      
+      const memo = await storage.saveTextMemo(validatedData);
+      res.status(201).json(memo);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          error: 'Validation error', 
+          details: error.errors 
+        });
+      }
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to create text memo: ${errorMessage}`);
+      res.status(500).json({ error: 'Failed to create text memo' });
+    }
+  });
+
+  // Update a text memo
+  app.put('/api/text-memos/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid memo ID' });
+      }
+
+      // Validate request body with partial schema for updates
+      const partialSchema = insertTextMemoSchema.partial();
+      const validatedData = partialSchema.parse(req.body);
+
+      const updatedMemo = await storage.updateTextMemo(id, validatedData);
+      if (!updatedMemo) {
+        return res.status(404).json({ error: 'Text memo not found' });
+      }
+
+      res.json(updatedMemo);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          error: 'Validation error', 
+          details: error.errors 
+        });
+      }
+
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to update text memo: ${errorMessage}`);
+      res.status(500).json({ error: 'Failed to update text memo' });
+    }
+  });
+
+  // Delete a text memo
+  app.delete('/api/text-memos/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid memo ID' });
+      }
+
+      const deleted = await storage.deleteTextMemo(id);
+      if (!deleted) {
+        return res.status(404).json({ error: 'Text memo not found' });
+      }
+
+      res.json({ message: 'Text memo deleted successfully' });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to delete text memo: ${errorMessage}`);
+      res.status(500).json({ error: 'Failed to delete text memo' });
+    }
+  });
+
+  // =====================================================
   // Telegram Bot Management API
   // Add API endpoints for download management
   app.get('/api/downloads', async (req, res) => {

@@ -4,6 +4,7 @@ import {
   wordFilters, 
   liveCloningInstances,
   liveCloningMessages,
+  textMemos,
   type EntityLink,
   type InsertEntityLink,
   type WordFilter,
@@ -12,6 +13,8 @@ import {
   type InsertLiveCloningInstance,
   type LiveCloningMessage,
   type InsertLiveCloningMessage,
+  type TextMemo,
+  type InsertTextMemo,
   type GitHubSettings,
   type InsertGitHubSettings,
   type GitTokenConfig,
@@ -112,6 +115,53 @@ export class DatabaseLiveCloningStorage implements IStorage {
     this.cachedRepositories.clear();
   }
 
+  // TextMemo Database Storage (Persistent)
+  async getAllTextMemos(): Promise<TextMemo[]> {
+    return db
+      .select()
+      .from(textMemos)
+      .orderBy(desc(textMemos.createdAt));
+  }
+
+  async getTextMemo(id: number): Promise<TextMemo | null> {
+    const [memo] = await db
+      .select()
+      .from(textMemos)
+      .where(eq(textMemos.id, id));
+    
+    return memo || null;
+  }
+
+  async saveTextMemo(memo: InsertTextMemo): Promise<TextMemo> {
+    const [saved] = await db
+      .insert(textMemos)
+      .values({
+        ...memo,
+        createdAt: new Date(),
+      })
+      .returning();
+    
+    return saved;
+  }
+
+  async updateTextMemo(id: number, updates: Partial<TextMemo>): Promise<TextMemo | null> {
+    const [updated] = await db
+      .update(textMemos)
+      .set(updates)
+      .where(eq(textMemos.id, id))
+      .returning();
+    
+    return updated || null;
+  }
+
+  async deleteTextMemo(id: number): Promise<boolean> {
+    const result = await db
+      .delete(textMemos)
+      .where(eq(textMemos.id, id));
+    
+    return (result.rowCount ?? 0) > 0;
+  }
+
   // CRITICAL: Live Cloning Database Storage (Persistent)
   // These methods use PostgreSQL database for full persistence
 
@@ -176,7 +226,7 @@ export class DatabaseLiveCloningStorage implements IStorage {
       .delete(liveCloningInstances)
       .where(eq(liveCloningInstances.instanceId, instanceId));
     
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getAllLiveCloningInstances(): Promise<LiveCloningInstance[]> {
@@ -222,7 +272,7 @@ export class DatabaseLiveCloningStorage implements IStorage {
       .delete(entityLinks)
       .where(eq(entityLinks.id, id));
     
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async deleteEntityLinksByInstance(instanceId: string): Promise<number> {
@@ -230,7 +280,7 @@ export class DatabaseLiveCloningStorage implements IStorage {
       .delete(entityLinks)
       .where(eq(entityLinks.instanceId, instanceId));
     
-    return result.rowCount;
+    return result.rowCount ?? 0;
   }
 
   // CRITICAL: Word Filters Database Storage (Persistent)
@@ -269,7 +319,7 @@ export class DatabaseLiveCloningStorage implements IStorage {
       .delete(wordFilters)
       .where(eq(wordFilters.id, id));
     
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async deleteWordFiltersByInstance(instanceId: string): Promise<number> {
@@ -277,7 +327,7 @@ export class DatabaseLiveCloningStorage implements IStorage {
       .delete(wordFilters)
       .where(eq(wordFilters.instanceId, instanceId));
     
-    return result.rowCount;
+    return result.rowCount ?? 0;
   }
 
   // CRITICAL: Live Cloning Messages Database Storage (Persistent)
@@ -306,6 +356,6 @@ export class DatabaseLiveCloningStorage implements IStorage {
       .delete(liveCloningMessages)
       .where(eq(liveCloningMessages.instanceId, instanceId));
     
-    return result.rowCount;
+    return result.rowCount ?? 0;
   }
 }

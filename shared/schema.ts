@@ -70,6 +70,16 @@ export const gitRepositories = pgTable("git_repositories", {
   cachedAt: timestamp("cached_at").defaultNow(),
 });
 
+// TextMemo tables
+export const textMemos = pgTable("text_memos", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  hint: text("hint"),
+  content: text("content").default(""),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Live Cloning tables
 export const liveCloningInstances = pgTable("live_cloning_instances", {
   id: serial("id").primaryKey(),
@@ -352,6 +362,9 @@ export const insertGithubSettingsSchema = createInsertSchema(githubSettings).omi
 export const insertGitTokenConfigSchema = createInsertSchema(gitTokenConfigs).omit({ id: true, createdAt: true, lastUsed: true });
 export const insertGitRepositorySchema = createInsertSchema(gitRepositories).omit({ id: true, cachedAt: true });
 
+// TextMemo insert schema
+export const insertTextMemoSchema = createInsertSchema(textMemos).omit({ id: true, createdAt: true });
+
 // Live Cloning insert schemas
 export const insertLiveCloningInstanceSchema = createInsertSchema(liveCloningInstances).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertEntityLinkSchema = createInsertSchema(entityLinks).omit({ id: true, createdAt: true });
@@ -371,6 +384,7 @@ export type BotSession = typeof botSessions.$inferSelect;
 export type GitHubSettings = typeof githubSettings.$inferSelect;
 export type GitTokenConfig = typeof gitTokenConfigs.$inferSelect;
 export type GitRepository = typeof gitRepositories.$inferSelect;
+export type TextMemo = typeof textMemos.$inferSelect;
 
 // Live Cloning types
 export type LiveCloningInstance = typeof liveCloningInstances.$inferSelect;
@@ -384,6 +398,7 @@ export type InsertBotSession = z.infer<typeof insertBotSessionSchema>;
 export type InsertGitHubSettings = z.infer<typeof insertGithubSettingsSchema>;
 export type InsertGitTokenConfig = z.infer<typeof insertGitTokenConfigSchema>;
 export type InsertGitRepository = z.infer<typeof insertGitRepositorySchema>;
+export type InsertTextMemo = z.infer<typeof insertTextMemoSchema>;
 
 // Live Cloning insert types
 export type InsertLiveCloningInstance = z.infer<typeof insertLiveCloningInstanceSchema>;

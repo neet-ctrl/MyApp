@@ -19,6 +19,7 @@ import {
   Forward,
   Github,
   Zap,
+  FileText,
 } from 'lucide-react';
 import type { TelegramSession } from '@shared/schema';
 
@@ -45,6 +46,7 @@ const navigationItems = [
   { id: 'file-manager', label: '📁 File Manager', icon: Files },
   { id: 'github-sync', label: '🐙 GitHub Sync', icon: Github },
   { id: 'git-control', label: '⚡ Git Control', icon: Github },
+  { id: 'text-memo', label: '📝 Text Memo', icon: FileText },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 

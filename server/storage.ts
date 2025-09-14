@@ -8,6 +8,8 @@ import {
   InsertGitTokenConfig,
   GitRepository,
   InsertGitRepository,
+  TextMemo,
+  InsertTextMemo,
   LiveCloningInstance,
   InsertLiveCloningInstance,
   EntityLink,
@@ -38,6 +40,13 @@ export interface IStorage {
   saveCachedRepository(repo: InsertGitRepository): Promise<GitRepository>;
   deleteCachedRepository(fullName: string): Promise<boolean>;
   clearRepositoryCache(): Promise<void>;
+  
+  // TextMemo Management
+  getAllTextMemos(): Promise<TextMemo[]>;
+  getTextMemo(id: number): Promise<TextMemo | null>;
+  saveTextMemo(memo: InsertTextMemo): Promise<TextMemo>;
+  updateTextMemo(id: number, updates: Partial<TextMemo>): Promise<TextMemo | null>;
+  deleteTextMemo(id: number): Promise<boolean>;
   
   // Live Cloning Management
   getLiveCloningInstance(instanceId: string): Promise<LiveCloningInstance | null>;
@@ -72,6 +81,10 @@ export class MemStorage implements IStorage {
   private cachedRepositories: Map<string, GitRepository> = new Map();
   private tokenIdCounter: number = 1;
   private defaultPAT: string = process.env.GITHUB_PERSONAL_ACCESS_TOKEN || process.env.GITHUB_PAT || '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';
+  
+  // TextMemo storage maps
+  private textMemos: Map<number, TextMemo> = new Map();
+  private textMemoIdCounter: number = 1;
   
   // Live Cloning storage maps
   private liveCloningInstances: Map<string, LiveCloningInstance> = new Map();
@@ -165,6 +178,51 @@ export class MemStorage implements IStorage {
 
   async clearRepositoryCache(): Promise<void> {
     this.cachedRepositories.clear();
+  }
+
+  // TextMemo Management
+  async getAllTextMemos(): Promise<TextMemo[]> {
+    return Array.from(this.textMemos.values()).sort((a, b) => {
+      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bDate - aDate;
+    });
+  }
+
+  async getTextMemo(id: number): Promise<TextMemo | null> {
+    return this.textMemos.get(id) || null;
+  }
+
+  async saveTextMemo(memo: InsertTextMemo): Promise<TextMemo> {
+    const savedMemo: TextMemo = {
+      id: this.textMemoIdCounter++,
+      title: memo.title,
+      description: memo.description || null,
+      hint: memo.hint || null,
+      content: memo.content || "",
+      createdAt: new Date(),
+    };
+    this.textMemos.set(savedMemo.id, savedMemo);
+    return savedMemo;
+  }
+
+  async updateTextMemo(id: number, updates: Partial<TextMemo>): Promise<TextMemo | null> {
+    const existingMemo = this.textMemos.get(id);
+    if (!existingMemo) return null;
+
+    const updatedMemo: TextMemo = {
+      ...existingMemo,
+      ...updates,
+      id: existingMemo.id, // Preserve original ID
+      createdAt: existingMemo.createdAt, // Preserve creation date
+    };
+
+    this.textMemos.set(id, updatedMemo);
+    return updatedMemo;
+  }
+
+  async deleteTextMemo(id: number): Promise<boolean> {
+    return this.textMemos.delete(id);
   }
 
   // Live Cloning Management
