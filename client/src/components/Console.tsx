@@ -1,7 +1,13 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Maximize2, Minimize2, Copy, RotateCcw, GripVertical } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Maximize2, Minimize2, Copy, RotateCcw, GripVertical, Archive, Clock, Download, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ConsoleLog {
@@ -18,21 +24,58 @@ interface ConsoleProps {
   onClose: () => void;
 }
 
+interface SavedLogCollection {
+  id: string;
+  name: string;
+  logs: ConsoleLog[];
+  savedAt: string;
+  totalEntries: number;
+}
+
 export default function Console({ isOpen, onClose }: ConsoleProps) {
   const [isMaximized, setIsMaximized] = useState(false);
   const [logs, setLogs] = useState<ConsoleLog[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [position, setPosition] = useState({ x: 50, y: 50 });
-  const [size, setSize] = useState({ width: 600, height: 400 });
+  const [size, setSize] = useState({ width: 700, height: 500 });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  
+  // Enhanced clipboard and persistent storage states
+  const [selectedLogIds, setSelectedLogIds] = useState<Set<number>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [savedLogCollections, setSavedLogCollections] = useState<SavedLogCollection[]>([]);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showSavedLogsDialog, setShowSavedLogsDialog] = useState(false);
+  const [saveLogName, setSaveLogName] = useState('');
+  const [rangeStart, setRangeStart] = useState<number | null>(null);
+  const [rangeEnd, setRangeEnd] = useState<number | null>(null);
+  const [showRangeDialog, setShowRangeDialog] = useState(false);
+  
   const { toast } = useToast();
   
   const consoleRef = useRef<HTMLDivElement>(null);
   const logsContainerRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Load saved log collections from localStorage on mount
+  useEffect(() => {
+    const savedCollections = localStorage.getItem('console-saved-logs');
+    if (savedCollections) {
+      try {
+        setSavedLogCollections(JSON.parse(savedCollections));
+      } catch (error) {
+        console.error('Failed to load saved log collections:', error);
+      }
+    }
+  }, []);
+
+  // Save log collections to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('console-saved-logs', JSON.stringify(savedLogCollections));
+  }, [savedLogCollections]);
 
   // Fetch initial logs from API
   const fetchLogs = async () => {
@@ -106,22 +149,172 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     }, 100);
   };
 
-  // Copy all logs to clipboard
-  const copyLogs = async () => {
+  // Copy functions
+  const copyAllLogs = async () => {
     try {
       const logText = logs.map(log => 
-        `[${new Date(log.timestamp).toLocaleString()}] ${log.level.toUpperCase()}: ${log.message}`
+        `[${formatTimestamp(log.timestamp)}] ${log.level.toUpperCase()}: ${log.message}`
       ).join('\n');
       
       await navigator.clipboard.writeText(logText);
       toast({
-        title: 'Logs Copied',
+        title: 'All Logs Copied',
         description: `${logs.length} log entries copied to clipboard`,
       });
     } catch (error) {
       toast({
         title: 'Copy Failed',
         description: 'Failed to copy logs to clipboard',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const copySelectedLogs = async () => {
+    try {
+      const selectedLogs = logs.filter(log => selectedLogIds.has(log.id));
+      const logText = selectedLogs.map(log => 
+        `[${formatTimestamp(log.timestamp)}] ${log.level.toUpperCase()}: ${log.message}`
+      ).join('\n');
+      
+      await navigator.clipboard.writeText(logText);
+      toast({
+        title: 'Selected Logs Copied',
+        description: `${selectedLogs.length} selected log entries copied to clipboard`,
+      });
+      setSelectedLogIds(new Set());
+      setIsSelectionMode(false);
+    } catch (error) {
+      toast({
+        title: 'Copy Failed',
+        description: 'Failed to copy selected logs to clipboard',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const copyRangeLogs = async () => {
+    if (rangeStart === null || rangeEnd === null) {
+      toast({
+        title: 'Invalid Range',
+        description: 'Please specify both start and end entry numbers',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const sortedLogs = [...logs].reverse(); // Show oldest first for range selection
+      const start = Math.max(0, rangeStart - 1);
+      const end = Math.min(sortedLogs.length, rangeEnd);
+      const rangeLogs = sortedLogs.slice(start, end);
+      
+      const logText = rangeLogs.map(log => 
+        `[${formatTimestamp(log.timestamp)}] ${log.level.toUpperCase()}: ${log.message}`
+      ).join('\n');
+      
+      await navigator.clipboard.writeText(logText);
+      toast({
+        title: 'Range Copied',
+        description: `Log entries ${rangeStart}-${rangeEnd} (${rangeLogs.length} entries) copied to clipboard`,
+      });
+      setShowRangeDialog(false);
+      setRangeStart(null);
+      setRangeEnd(null);
+    } catch (error) {
+      toast({
+        title: 'Copy Failed',
+        description: 'Failed to copy log range to clipboard',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const copySpecificLog = async (log: ConsoleLog) => {
+    try {
+      const logText = `[${formatTimestamp(log.timestamp)}] ${log.level.toUpperCase()}: ${log.message}`;
+      await navigator.clipboard.writeText(logText);
+      toast({
+        title: 'Log Entry Copied',
+        description: 'Single log entry copied to clipboard',
+      });
+    } catch (error) {
+      toast({
+        title: 'Copy Failed',
+        description: 'Failed to copy log entry to clipboard',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Save current logs persistently
+  const saveCurrentLogs = () => {
+    if (!saveLogName.trim()) {
+      toast({
+        title: 'Name Required',
+        description: 'Please enter a name for the log collection',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const newCollection: SavedLogCollection = {
+      id: Date.now().toString(),
+      name: saveLogName.trim(),
+      logs: [...logs],
+      savedAt: new Date().toISOString(),
+      totalEntries: logs.length
+    };
+
+    setSavedLogCollections(prev => [newCollection, ...prev].slice(0, 50)); // Keep max 50 collections
+    setSaveLogName('');
+    setShowSaveDialog(false);
+    
+    toast({
+      title: 'Logs Saved',
+      description: `Log collection "${newCollection.name}" saved with ${logs.length} entries`,
+    });
+  };
+
+  // Load saved log collection
+  const loadSavedLogs = (collection: SavedLogCollection) => {
+    setLogs(collection.logs);
+    toast({
+      title: 'Logs Loaded',
+      description: `Loaded "${collection.name}" with ${collection.totalEntries} entries`,
+    });
+    setShowSavedLogsDialog(false);
+  };
+
+  // Delete saved log collection
+  const deleteSavedLogs = (collectionId: string) => {
+    setSavedLogCollections(prev => prev.filter(c => c.id !== collectionId));
+    toast({
+      title: 'Collection Deleted',
+      description: 'Log collection has been deleted',
+    });
+  };
+
+  // Export saved logs as JSON
+  const exportSavedLogs = (collection: SavedLogCollection) => {
+    try {
+      const dataStr = JSON.stringify(collection, null, 2);
+      const dataBlob = new Blob([dataStr], {type: 'application/json'});
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `console-logs-${collection.name}-${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: 'Export Complete',
+        description: `Log collection exported as JSON file`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Export Failed',
+        description: 'Failed to export log collection',
         variant: 'destructive',
       });
     }
@@ -139,6 +332,26 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   // Handle maximize/minimize
   const toggleMaximize = () => {
     setIsMaximized(!isMaximized);
+  };
+
+  // Log selection handling
+  const toggleLogSelection = (logId: number) => {
+    const newSelection = new Set(selectedLogIds);
+    if (newSelection.has(logId)) {
+      newSelection.delete(logId);
+    } else {
+      newSelection.add(logId);
+    }
+    setSelectedLogIds(newSelection);
+  };
+
+  const selectAllLogs = () => {
+    setSelectedLogIds(new Set(logs.map(log => log.id)));
+  };
+
+  const clearSelection = () => {
+    setSelectedLogIds(new Set());
+    setIsSelectionMode(false);
   };
 
   // Mouse event handlers for dragging
@@ -184,8 +397,8 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       const deltaY = e.clientY - dragStart.y;
       
       setSize(prev => ({
-        width: Math.max(300, prev.width + deltaX),
-        height: Math.max(200, prev.height + deltaY),
+        width: Math.max(400, prev.width + deltaX),
+        height: Math.max(300, prev.height + deltaY),
       }));
       
       setDragStart({
@@ -226,14 +439,29 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     }
   }, [isDragging, isResizing, dragStart]);
 
+  // Format timestamp for better readability
+  const formatTimestamp = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString();
+  };
+
   // Format log level with colors
   const getLogLevelColor = (level: string) => {
     switch (level.toUpperCase()) {
-      case 'ERROR': return 'text-red-500';
-      case 'WARN': return 'text-yellow-500';
-      case 'INFO': return 'text-blue-500';
-      case 'DEBUG': return 'text-gray-500';
-      default: return 'text-gray-700 dark:text-gray-300';
+      case 'ERROR': return 'text-red-500 bg-red-50 dark:bg-red-950';
+      case 'WARN': return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-950';
+      case 'INFO': return 'text-blue-600 bg-blue-50 dark:bg-blue-950';
+      case 'DEBUG': return 'text-gray-600 bg-gray-50 dark:bg-gray-950';
+      default: return 'text-gray-700 bg-gray-50 dark:bg-gray-950 dark:text-gray-300';
+    }
+  };
+
+  const getLogLevelBadgeColor = (level: string) => {
+    switch (level.toUpperCase()) {
+      case 'ERROR': return 'bg-red-500 text-white';
+      case 'WARN': return 'bg-yellow-500 text-white';
+      case 'INFO': return 'bg-blue-500 text-white';
+      case 'DEBUG': return 'bg-gray-500 text-white';
+      default: return 'bg-gray-500 text-white';
     }
   };
 
@@ -258,115 +486,407 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       };
 
   return (
-    <div
-      ref={consoleRef}
-      style={consoleStyle}
-      className="bg-background border shadow-lg rounded-lg overflow-hidden"
-      data-testid="console-window"
-    >
-      {/* Header Bar */}
-      <CardHeader 
-        className="py-2 px-4 bg-muted cursor-move select-none flex flex-row items-center justify-between space-y-0"
-        onMouseDown={handleMouseDown}
-        data-testid="console-header"
+    <>
+      <div
+        ref={consoleRef}
+        style={consoleStyle}
+        className="bg-background border shadow-lg rounded-lg overflow-hidden flex flex-col"
+        data-testid="console-window"
       >
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-1">
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-            <span className="text-sm font-medium">Console</span>
-          </div>
-          <span className="text-xs text-muted-foreground">
-            {logs.length} logs • {isConnected ? 'Live' : 'Disconnected'}
-          </span>
-        </div>
-        
-        <div className="flex items-center space-x-1">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleLastLog}
-            className="h-6 w-6 p-0"
-            data-testid="button-refresh"
-          >
-            <RotateCcw className="h-3 w-3" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={copyLogs}
-            className="h-6 w-6 p-0"
-            data-testid="button-copy"
-          >
-            <Copy className="h-3 w-3" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={toggleMaximize}
-            className="h-6 w-6 p-0"
-            data-testid="button-maximize"
-          >
-            {isMaximized ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onClose}
-            className="h-6 w-6 p-0"
-            data-testid="button-close"
-          >
-            ×
-          </Button>
-        </div>
-      </CardHeader>
-
-      {/* Logs Content */}
-      <CardContent className="p-0 h-full">
-        <div 
-          ref={logsContainerRef}
-          className="h-full overflow-y-auto bg-black dark:bg-gray-900 text-green-400 dark:text-green-300 font-mono text-sm p-4"
-          data-testid="logs-container"
+        {/* Enhanced Header Bar */}
+        <CardHeader 
+          className="py-2 px-4 bg-muted cursor-move select-none flex flex-row items-center justify-between space-y-0 flex-shrink-0"
+          onMouseDown={handleMouseDown}
+          data-testid="console-header"
         >
-          {logs.length === 0 ? (
-            <div className="text-center text-gray-500 mt-8">
-              No logs available. Waiting for real-time logs...
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
+              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-sm font-medium">Enhanced Console</span>
             </div>
-          ) : (
-            logs.slice().reverse().map((log, index) => (
-              <div key={log.id || index} className="mb-1 break-words" data-testid={`log-entry-${index}`}>
-                <span className="text-gray-400 dark:text-gray-500">
-                  [{new Date(log.timestamp).toLocaleTimeString()}]
-                </span>{' '}
-                <span className={getLogLevelColor(log.level)}>
-                  {log.level.toUpperCase()}
-                </span>{' '}
-                <span className="text-gray-300 dark:text-gray-400">
-                  [{log.source}]
-                </span>{' '}
-                <span className="text-white dark:text-gray-100">
-                  {log.message}
-                </span>
-                {log.metadata && (
-                  <div className="ml-4 text-xs text-gray-500 dark:text-gray-400">
-                    {typeof log.metadata === 'string' ? log.metadata : JSON.stringify(log.metadata)}
-                  </div>
-                )}
+            <span className="text-xs text-muted-foreground">
+              {logs.length} logs • {isConnected ? 'Live' : 'Disconnected'}
+            </span>
+            {isSelectionMode && (
+              <Badge variant="secondary" className="text-xs">
+                {selectedLogIds.size} selected
+              </Badge>
+            )}
+          </div>
+          
+          <div className="flex items-center space-x-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleLastLog}
+              className="h-6 w-6 p-0"
+              data-testid="button-refresh"
+              title="Refresh logs"
+            >
+              <RotateCcw className="h-3 w-3" />
+            </Button>
+            
+            {/* Enhanced Clipboard Button with Dropdown */}
+            <div className="relative group">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={copyAllLogs}
+                className="h-6 w-6 p-0"
+                data-testid="button-copy"
+                title="Copy options"
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+              
+              {/* Clipboard Options Dropdown */}
+              <div className="absolute right-0 top-8 w-48 bg-popover border rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="p-2 space-y-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="w-full justify-start text-xs"
+                    onClick={copyAllLogs}
+                  >
+                    <Copy className="h-3 w-3 mr-2" />
+                    Copy All Logs
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="w-full justify-start text-xs"
+                    onClick={() => setIsSelectionMode(!isSelectionMode)}
+                  >
+                    <Copy className="h-3 w-3 mr-2" />
+                    Select & Copy
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="w-full justify-start text-xs"
+                    onClick={() => setShowRangeDialog(true)}
+                  >
+                    <Copy className="h-3 w-3 mr-2" />
+                    Copy Range
+                  </Button>
+                  
+                  {selectedLogIds.size > 0 && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="w-full justify-start text-xs"
+                      onClick={copySelectedLogs}
+                    >
+                      <Copy className="h-3 w-3 mr-2" />
+                      Copy Selected ({selectedLogIds.size})
+                    </Button>
+                  )}
+                </div>
               </div>
-            ))
-          )}
-        </div>
-      </CardContent>
+            </div>
+            
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowSaveDialog(true)}
+              className="h-6 w-6 p-0"
+              data-testid="button-save"
+              title="Save logs persistently"
+            >
+              <Archive className="h-3 w-3" />
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowSavedLogsDialog(true)}
+              className="h-6 w-6 p-0"
+              data-testid="button-saved-logs"
+              title="View saved log collections"
+            >
+              <Clock className="h-3 w-3" />
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={toggleMaximize}
+              className="h-6 w-6 p-0"
+              data-testid="button-maximize"
+            >
+              {isMaximized ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onClose}
+              className="h-6 w-6 p-0"
+              data-testid="button-close"
+            >
+              ×
+            </Button>
+          </div>
+        </CardHeader>
 
-      {/* Resize Handle */}
-      {!isMaximized && (
-        <div
-          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-muted hover:bg-muted-foreground/20 transition-colors"
-          onMouseDown={handleResizeMouseDown}
-          data-testid="resize-handle"
-        >
-          <GripVertical className="h-3 w-3 rotate-90" />
-        </div>
-      )}
-    </div>
+        {/* Selection Mode Controls */}
+        {isSelectionMode && (
+          <div className="flex items-center justify-between px-4 py-2 bg-blue-50 dark:bg-blue-950 border-b">
+            <div className="flex items-center space-x-2">
+              <Button size="sm" variant="outline" onClick={selectAllLogs}>
+                Select All
+              </Button>
+              <Button size="sm" variant="outline" onClick={clearSelection}>
+                Clear Selection
+              </Button>
+            </div>
+            <div className="flex items-center space-x-2">
+              {selectedLogIds.size > 0 && (
+                <Button size="sm" onClick={copySelectedLogs}>
+                  Copy Selected ({selectedLogIds.size})
+                </Button>
+              )}
+              <Button size="sm" variant="ghost" onClick={() => setIsSelectionMode(false)}>
+                Exit Selection
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced Logs Content */}
+        <CardContent className="p-0 flex-1 overflow-hidden">
+          <div 
+            ref={logsContainerRef}
+            className="h-full overflow-y-auto"
+            data-testid="logs-container"
+          >
+            {logs.length === 0 ? (
+              <div className="text-center text-gray-500 mt-8 p-4">
+                <div className="text-lg mb-2">No logs available</div>
+                <div className="text-sm">Waiting for real-time logs...</div>
+              </div>
+            ) : (
+              <div className="space-y-1 p-2">
+                {logs.slice().reverse().map((log, index) => (
+                  <div 
+                    key={log.id || index} 
+                    className={`
+                      border rounded-lg p-3 transition-all duration-200 hover:shadow-sm cursor-pointer
+                      ${selectedLogIds.has(log.id) ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950' : 'bg-white dark:bg-gray-900'}
+                      ${getLogLevelColor(log.level)}
+                    `}
+                    onClick={() => isSelectionMode ? toggleLogSelection(log.id) : copySpecificLog(log)}
+                    data-testid={`log-entry-${index}`}
+                    title={isSelectionMode ? "Click to select/deselect" : "Click to copy this log entry"}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        {/* Log Header */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge className={`text-xs ${getLogLevelBadgeColor(log.level)}`}>
+                            {log.level.toUpperCase()}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {log.source}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {formatTimestamp(log.timestamp)}
+                          </span>
+                          {isSelectionMode && (
+                            <div className={`w-4 h-4 rounded border-2 ${selectedLogIds.has(log.id) ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
+                              {selectedLogIds.has(log.id) && (
+                                <div className="text-white text-xs">✓</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Log Message */}
+                        <div className="text-sm break-words font-mono leading-relaxed">
+                          {log.message}
+                        </div>
+                        
+                        {/* Metadata */}
+                        {log.metadata && (
+                          <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800 rounded text-xs font-mono text-muted-foreground">
+                            {typeof log.metadata === 'string' ? log.metadata : JSON.stringify(log.metadata, null, 2)}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Quick Copy Button */}
+                      {!isSelectionMode && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copySpecificLog(log);
+                          }}
+                          title="Copy this log entry"
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+
+        {/* Resize Handle */}
+        {!isMaximized && (
+          <div
+            className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-muted hover:bg-muted-foreground/20 transition-colors"
+            onMouseDown={handleResizeMouseDown}
+            data-testid="resize-handle"
+          >
+            <GripVertical className="h-3 w-3 rotate-90" />
+          </div>
+        )}
+      </div>
+
+      {/* Save Logs Dialog */}
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save Current Logs</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="logName">Collection Name</Label>
+              <Input
+                id="logName"
+                value={saveLogName}
+                onChange={(e) => setSaveLogName(e.target.value)}
+                placeholder="Enter a name for this log collection"
+              />
+            </div>
+            <div className="text-sm text-muted-foreground">
+              This will save {logs.length} log entries persistently, surviving server restarts and page refreshes.
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowSaveDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={saveCurrentLogs}>
+                Save Logs
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Range Copy Dialog */}
+      <Dialog open={showRangeDialog} onOpenChange={setShowRangeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Copy Log Range</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="rangeStart">Start Entry #</Label>
+                <Input
+                  id="rangeStart"
+                  type="number"
+                  min="1"
+                  max={logs.length}
+                  value={rangeStart || ''}
+                  onChange={(e) => setRangeStart(parseInt(e.target.value) || null)}
+                  placeholder="1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="rangeEnd">End Entry #</Label>
+                <Input
+                  id="rangeEnd"
+                  type="number"
+                  min="1"
+                  max={logs.length}
+                  value={rangeEnd || ''}
+                  onChange={(e) => setRangeEnd(parseInt(e.target.value) || null)}
+                  placeholder={logs.length.toString()}
+                />
+              </div>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Total entries available: {logs.length}. Entries are numbered from oldest (1) to newest ({logs.length}).
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowRangeDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={copyRangeLogs}>
+                Copy Range
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Saved Logs Dialog */}
+      <Dialog open={showSavedLogsDialog} onOpenChange={setShowSavedLogsDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Saved Log Collections</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {savedLogCollections.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                No saved log collections yet. Save current logs to create persistent backups.
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {savedLogCollections.map((collection) => (
+                  <div key={collection.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-medium">{collection.name}</h3>
+                        <div className="text-sm text-muted-foreground">
+                          {collection.totalEntries} entries • Saved {formatTimestamp(collection.savedAt)}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => loadSavedLogs(collection)}
+                        >
+                          Load
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => exportSavedLogs(collection)}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteSavedLogs(collection.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={() => setShowSavedLogsDialog(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
