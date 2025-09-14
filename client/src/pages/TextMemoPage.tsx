@@ -28,6 +28,15 @@ function CreateMemoDialog({ open, onOpenChange, onSubmit }: CreateMemoDialogProp
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
       console.error('Title is required');
+      // Show visual feedback
+      const titleInput = document.getElementById('title') as HTMLInputElement;
+      if (titleInput) {
+        titleInput.focus();
+        titleInput.style.borderColor = '#ef4444';
+        setTimeout(() => {
+          titleInput.style.borderColor = '';
+        }, 2000);
+      }
       return;
     }
 
@@ -41,7 +50,7 @@ function CreateMemoDialog({ open, onOpenChange, onSubmit }: CreateMemoDialogProp
     console.log('Submitting memo data:', memoData);
     onSubmit(memoData);
 
-    // Reset form
+    // Reset form only after successful submission
     setTitle("");
     setHint("");
     setDescription("");
@@ -111,10 +120,10 @@ function CreateMemoDialog({ open, onOpenChange, onSubmit }: CreateMemoDialogProp
             </Button>
             <Button
               type="submit"
-              disabled={!title.trim()}
+              disabled={!title.trim() || createMemoMutation.isPending}
               data-testid="button-create"
             >
-              Create
+              {createMemoMutation.isPending ? 'Creating...' : 'Create'}
             </Button>
           </div>
         </form>
@@ -439,6 +448,15 @@ export default function TextMemoPage() {
   });
 
   const handleCreateMemo = (memo: InsertTextMemo) => {
+    console.log('Creating memo with data:', memo);
+    if (!memo.title || memo.title.trim() === '') {
+      toast({
+        title: "Error",
+        description: "Title is required to create a memo",
+        variant: "destructive"
+      });
+      return;
+    }
     createMemoMutation.mutate(memo);
   };
 
