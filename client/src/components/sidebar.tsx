@@ -20,6 +20,7 @@ import {
   Github,
   Zap,
   FileText,
+  Terminal,
 } from 'lucide-react';
 import type { TelegramSession } from '@shared/schema';
 
@@ -30,6 +31,7 @@ interface SidebarProps {
   onSelectFolder: () => void;
   onLogout: () => void;
   isDownloadDirectorySelected: boolean;
+  onOpenConsole: () => void;
 }
 
 const navigationItems = [
@@ -57,6 +59,7 @@ export function Sidebar({
   onSelectFolder,
   onLogout,
   isDownloadDirectorySelected,
+  onOpenConsole,
 }: SidebarProps) {
   const userInitials = session?.firstName && session?.lastName
     ? `${session.firstName[0]}${session.lastName[0]}`
@@ -148,6 +151,17 @@ export function Sidebar({
             Default
           </Button>
         </div>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-start"
+          onClick={onOpenConsole}
+          data-testid="button-open-console"
+        >
+          <Terminal className="w-4 h-4 mr-2" />
+          <span>Console</span>
+        </Button>
         
         {session && (
           <Button

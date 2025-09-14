@@ -24,12 +24,14 @@ import { telegramManager } from '@/lib/telegram';
 import { downloadManager } from '@/lib/downloads';
 import type { TelegramSession } from '@shared/schema';
 import TextMemoPage from "@/pages/TextMemoPage";
+import Console from "@/components/Console";
 
 export default function Home() {
   const [currentView, setCurrentView] = useState('python-script');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentSession, setCurrentSession] = useState<TelegramSession | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isConsoleOpen, setIsConsoleOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -237,7 +239,7 @@ export default function Home() {
       case 'text-memo':
         return <TextMemoPage />;
       case 'settings':
-        return <Settings onShowMessage={handleShowMessage} />;
+        return <Settings />;
       default:
         return <PythonScriptMain />; // Default to Python script mode
     }
@@ -252,6 +254,7 @@ export default function Home() {
         onSelectFolder={handleSelectFolder}
         onLogout={handleLogout}
         isDownloadDirectorySelected={downloadManager.isDownloadDirectorySelected()}
+        onOpenConsole={() => setIsConsoleOpen(true)}
       />
 
       <main className="flex-1 overflow-y-auto relative">
@@ -282,6 +285,12 @@ export default function Home() {
           }
         }}
         onSuccess={handleAuthSuccess}
+      />
+
+      {/* Console Component */}
+      <Console 
+        isOpen={isConsoleOpen} 
+        onClose={() => setIsConsoleOpen(false)} 
       />
     </div>
   );

@@ -1,0 +1,195 @@
+[15/09/2025, 05:03:11] INFO: 11:33:10 PM [express] GET /api/console-logs 500 in 557ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:03:11] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:03:09] INFO: 11:33:09 PM [express] GET /api/live-cloning/logs 304 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:03:09] INFO: 11:33:08 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:03:07] INFO: 11:33:06 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:03:06] INFO: 11:33:06 PM [express] GET /api/live-cloning/logs 304 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:03:05] INFO: 11:33:04 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:03:03] INFO: 11:33:03 PM [express] GET /api/live-cloning/logs 304 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:03:03] INFO: 11:33:02 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:03:01] INFO: 11:33:00 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:03:00] INFO: 11:32:59 PM [express] GET /api/live-cloning/logs 304 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:58] INFO: 11:32:58 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:57] INFO: 11:32:56 PM [express] GET /api/live-cloning/logs 304 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:56] INFO: 11:32:56 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:54] INFO: 11:32:54 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:54] INFO: 11:32:53 PM [express] GET /api/live-cloning/logs 304 in 4ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:52] INFO: 11:32:51 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:51] INFO: 11:32:50 PM [express] GET /api/live-cloning/logs 304 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:50] INFO: 11:32:49 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:48] INFO: 11:32:47 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:48] INFO: 11:32:47 PM [express] GET /api/live-cloning/logs 304 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:46] INFO: 11:32:45 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:44] INFO: 11:32:44 PM [express] GET /api/live-cloning/logs 304 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:44] INFO: 11:32:43 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:41] INFO: 11:32:41 PM [express] GET /api/live-cloning/status 304 in 0ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:41] INFO: 11:32:41 PM [express] GET /api/live-cloning/logs 304 in 2ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:39] INFO: 11:32:39 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:38] INFO: 11:32:38 PM [express] GET /api/live-cloning/logs 304 in 0ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:38] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:02:38] INFO: 11:32:37 PM [express] GET /api/console-logs 500 in 564ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:02:37] INFO: 11:32:37 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:33] INFO: 11:32:32 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:32] INFO: 11:32:31 PM [express] GET /api/live-cloning/logs 304 in 0ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:31] INFO: 11:32:30 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:29] INFO: 11:32:28 PM [express] GET /api/live-cloning/logs 304 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:29] INFO: 11:32:28 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:27] INFO: 11:32:26 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:26] INFO: 11:32:25 PM [express] GET /api/live-cloning/logs 200 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:24] INFO: 11:32:24 PM [express] GET /api/live-cloning/status 200 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:23] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:32:22,513] DEBUG: Handling pong for message 7550091838560024700
+
+[15/09/2025, 05:02:23] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:32:22,513] DEBUG: Receiving items from the network...
+
+[15/09/2025, 05:02:23] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:32:22,448] DEBUG: Assigned msg_id = 7550091838560024700 to PingRequest (7fccd54ff3d0)
+[2025-09-14 23:32:22,448] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+[2025-09-14 23:32:22,449] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:32:22,449] DEBUG: Waiting for messages to send...
+[2025-09-14 23:32:22,449] DEBUG: Assigned msg_id = 7550091838563508472 to MsgsAck (7fccd535c410)
+[2025-09-14 23:32:22,449] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:32:22,449] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:32:22,450] DEBUG: Waiting for messages to send...
+
+[15/09/2025, 05:02:22] INFO: 11:32:22 PM [express] GET /api/live-cloning/logs 304 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:22] INFO: 11:32:22 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:21] INFO: 11:32:20 PM [express] GET /api/console-logs 500 in 559ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:02:21] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:02:20] INFO: 11:32:20 PM [express] GET /api/live-cloning/status 304 in 0ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:19] INFO: 11:32:19 PM [express] GET /api/live-cloning/logs 304 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:18] INFO: 11:32:17 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:16] INFO: 11:32:16 PM [express] GET /api/live-cloning/logs 304 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:16] INFO: 11:32:15 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:14] INFO: 11:32:13 PM [express] GET /api/live-cloning/status 304 in 0ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:13] INFO: 11:32:13 PM [express] GET /api/live-cloning/logs 304 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:12] INFO: 11:32:11 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:10] INFO: 11:32:09 PM [express] GET /api/live-cloning/logs 304 in 0ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:09] INFO: 11:32:09 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:07] INFO: 11:32:07 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:07] INFO: 11:32:06 PM [express] GET /api/live-cloning/logs 200 in 1ms :: {"logs":["✅ Auto-started at 2025-09-14…
+[15/09/2025, 05:02:06] INFO: 11:32:05 PM [express] GET /api/console-logs 500 in 563ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:02:06] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:02:05] INFO: 11:32:05 PM [express] GET /api/live-cloning/status 304 in 0ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:03] INFO: 11:32:02 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:02:01] INFO: 11:32:00 PM [express] GET /api/live-cloning/status 304 in 2ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:01:59] INFO: 11:31:59 PM [express] GET /api/live-cloning/word-filters/live_cloning_auto_1757892440121 304 in 561ms…
+[15/09/2025, 05:01:59] INFO: 📖 Read 6 entity links directly from config.json: [
+  [
+    8154976061,
+    7634388518
+  ],
+  [
+    7521656991,
+    7634388518
+  ],
+  [
+    7521656991,
+    4949360302
+  ],
+  [
+    2644276726,
+    4679407328
+  ],
+  [
+    1322268110,
+    1662771631
+  ],
+  [
+    2207734172,
+    2235504754
+  ]
+]
+[15/09/2025, 05:01:59] INFO: 11:31:58 PM [express] GET /api/live-cloning/entity-links/live_cloning_auto_1757892440121 304 in 2ms :…
+[15/09/2025, 05:01:58] INFO: 11:31:58 PM [express] GET /api/live-cloning/status 304 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:01:58] INFO: 11:31:58 PM [express] GET /api/live-cloning/settings 304 in 0ms :: {"settings":{"botEnabled":true,"fi…
+[15/09/2025, 05:01:52] INFO: Console WebSocket client disconnected
+[15/09/2025, 05:01:51] INFO: 11:31:50 PM [express] GET /api/console-logs 500 in 577ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:01:51] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:01:51] INFO: Console WebSocket client connected
+[15/09/2025, 05:01:47] INFO: Console WebSocket client disconnected
+[15/09/2025, 05:01:47] INFO: 11:31:47 PM [express] GET /api/live-cloning/word-filters/live_cloning_auto_1757892440121 200 in 581ms…
+[15/09/2025, 05:01:47] INFO: 11:31:47 PM [express] GET /api/live-cloning/entity-links/live_cloning_auto_1757892440121 200 in 3ms :…
+[15/09/2025, 05:01:47] INFO: 📖 Read 6 entity links directly from config.json: [
+  [
+    8154976061,
+    7634388518
+  ],
+  [
+    7521656991,
+    7634388518
+  ],
+  [
+    7521656991,
+    4949360302
+  ],
+  [
+    2644276726,
+    4679407328
+  ],
+  [
+    1322268110,
+    1662771631
+  ],
+  [
+    2207734172,
+    2235504754
+  ]
+]
+[15/09/2025, 05:01:47] INFO: 11:31:46 PM [express] GET /api/live-cloning/status 200 in 1ms :: {"status":{"running":true,"instanceI…
+[15/09/2025, 05:01:47] INFO: 11:31:46 PM [express] GET /api/live-cloning/settings 200 in 1ms :: {"settings":{"botEnabled":true,"fi…
+[15/09/2025, 05:01:36] INFO: 11:31:35 PM [express] GET /api/console-logs 500 in 575ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:01:36] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:01:23] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:31:22,452] DEBUG: Handling pong for message 7550091580621531312
+
+[15/09/2025, 05:01:23] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:31:22,452] DEBUG: Receiving items from the network...
+
+[15/09/2025, 05:01:22] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:31:22,388] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+[2025-09-14 23:31:22,388] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:31:22,388] DEBUG: Waiting for messages to send...
+[2025-09-14 23:31:22,389] DEBUG: Assigned msg_id = 7550091580623879260 to MsgsAck (7fccd535c990)
+
+[15/09/2025, 05:01:22] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:31:22,388] DEBUG: Assigned msg_id = 7550091580621531312 to PingRequest (7fccd54ff3d0)
+
+[15/09/2025, 05:01:22] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:31:22,389] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-14 23:31:22,389] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:31:22,389] DEBUG: Waiting for messages to send...
+
+[15/09/2025, 05:01:20] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:01:20] INFO: 11:31:19 PM [express] GET /api/console-logs 500 in 578ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:01:17] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:01:17] INFO: 11:31:16 PM [express] GET /api/console-logs 500 in 560ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:01:16] INFO: 11:31:15 PM [express] GET /api/console-logs 500 in 569ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:01:16] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:01:15] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:01:15] INFO: 11:31:14 PM [express] GET /api/console-logs 500 in 580ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:01:14] INFO: 11:31:13 PM [express] GET /api/console-logs 500 in 582ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:01:14] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:01:05] INFO: 11:31:04 PM [express] GET /api/console-logs 500 in 563ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:01:05] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:00:50] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:00:50] INFO: 11:30:49 PM [express] GET /api/console-logs 500 in 576ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:00:35] INFO: 11:30:34 PM [express] GET /api/console-logs 500 in 568ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:00:35] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:00:22] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:30:22,392] DEBUG: Handling pong for message 7550091322683549096
+
+[15/09/2025, 05:00:22] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:30:22,393] DEBUG: Receiving items from the network...
+
+[15/09/2025, 05:00:22] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:30:22,329] DEBUG: Waiting for messages to send...
+
+[15/09/2025, 05:00:22] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:30:22,328] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+[2025-09-14 23:30:22,328] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-14 23:30:22,328] DEBUG: Waiting for messages to send...
+[2025-09-14 23:30:22,329] DEBUG: Assigned msg_id = 7550091322685531784 to MsgsAck (7fccd535c510)
+
+[15/09/2025, 05:00:22] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:30:22,328] DEBUG: Assigned msg_id = 7550091322683549096 to PingRequest (7fccd54ff3d0)
+
+[15/09/2025, 05:00:22] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:30:22,329] DEBUG: Encrypted messages put in a queue to be sent
+
+[15/09/2025, 05:00:22] INFO: 🔄 Live Cloning (24/7): [2025-09-14 23:30:22,329] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+[15/09/2025, 05:00:20] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:00:20] INFO: 11:30:19 PM [express] GET /api/console-logs 500 in 560ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 05:00:05] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 05:00:05] INFO: 11:30:04 PM [express] GET /api/console-logs 500 in 578ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 04:59:50] INFO: 11:29:49 PM [express] GET /api/console-logs 500 in 555ms :: {"error":"Failed to get console logs"}
+[15/09/2025, 04:59:50] ERROR: Failed to get console logs: relation "console_logs" does not exist
+[15/09/2025, 04:59:50] INFO: Console WebSocket client connected
