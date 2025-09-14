@@ -82,28 +82,28 @@ export function LiveCloning() {
   const [entityLinks, setEntityLinks] = useState<EntityLink[]>([]);
   const [wordFilters, setWordFilters] = useState<WordFilter[]>([]);
   const [showLogs, setShowLogs] = useState(false);
-  
+
   // Entity Link Form
   const [newFromEntity, setNewFromEntity] = useState('');
   const [newToEntity, setNewToEntity] = useState('');
   const [manualFromEntity, setManualFromEntity] = useState('');
   const [manualToEntity, setManualToEntity] = useState('');
   const [useManualInput, setUseManualInput] = useState(false);
-  
+
   // Word Filter Form
   const [newFromWord, setNewFromWord] = useState('');
   const [newToWord, setNewToWord] = useState('');
-  
+
   // Edit states
   const [editingEntityLink, setEditingEntityLink] = useState<EntityLink | null>(null);
   const [editingWordFilter, setEditingWordFilter] = useState<WordFilter | null>(null);
-  
+
   // Bot Settings
   const [botEnabled, setBotEnabled] = useState(true);
   const [filterWords, setFilterWords] = useState(true);
   const [addSignature, setAddSignature] = useState(false);
   const [signature, setSignature] = useState('');
-  
+
   // Advanced Settings
   const [showAdvancedMonitoring, setShowAdvancedMonitoring] = useState(true);
   const [showPerformanceStats, setShowPerformanceStats] = useState(false);
@@ -114,7 +114,7 @@ export function LiveCloning() {
   const [autoScroll, setAutoScroll] = useState(true);
   const [alertsEnabled, setAlertsEnabled] = useState(true);
   const [performanceThreshold, setPerformanceThreshold] = useState(90);
-  
+
   // Advanced Bot Features
   const [skipDuplicates, setSkipDuplicates] = useState(true);
   const [preserveFormatting, setPreserveFormatting] = useState(true);
@@ -246,12 +246,12 @@ export function LiveCloning() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to update settings');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -299,7 +299,7 @@ export function LiveCloning() {
         console.log('Loading default session...');
         const defaultSession = '1BVtsOMQBu1MCySasHg5HgnkWT88tu1InjQlIpLdYBk6sQ8AbeLDQnDA3ozJtwCM-tFczcZGyCrvXYBOZZ8p0xEfPVelOUGRx2I3fF7Bp3WxrliIG1EO9S0p5578d3j810CHKkdkgUtqf79d7N-NDAAZ8SPP71bFjqTdZbj4GjzcPIBGM5o5oxNjKP86u8q1MlDwXHbcjv3VHEkIBN3704qI9-xDIr0pqEauUjUnpEDC72eX4y4iWqVWS2mWNKnwBSt3zU9qiFQ_l7xVFsfgG0quxQs3x-BE9m7_5eZ7XRZz2_UPole8otKxkOB3J7LYZSvhNsUv-WuMVXA4SZuZ_XTn9OubHJLE=';
         setSessionString(defaultSession);
-        
+
       } catch (error) {
         console.error('Error loading default session:', error);
         toast({
@@ -309,7 +309,7 @@ export function LiveCloning() {
         });
       }
     };
-    
+
     // Only load if session string is empty
     if (!sessionString) {
       loadDefaultSession();
@@ -325,7 +325,7 @@ export function LiveCloning() {
 
       // Format entity IDs to proper Telegram format
       let formattedFromEntity, formattedToEntity;
-      
+
       if (useManualInput) {
         // Handle manual input - parse and validate the entered entities
         formattedFromEntity = parseEntityInput(manualFromEntity);
@@ -334,26 +334,26 @@ export function LiveCloning() {
         // Handle dropdown selection - find and format chats
         const fromChat = chats.find(c => c.id === newFromEntity);
         const toChat = chats.find(c => c.id === newToEntity);
-        
+
         if (!fromChat || !toChat) {
           throw new Error('Selected chats not found');
         }
-        
+
         formattedFromEntity = formatChatToTelegramEntity(fromChat);
         formattedToEntity = formatChatToTelegramEntity(toChat);
       }
-      
+
       // Validate the formatted entity IDs
       if (!validateTelegramEntity(formattedFromEntity.id)) {
         throw new Error(`Invalid source entity format: ${formattedFromEntity.id}. ${getSuggestedEntityFormat(formattedFromEntity.id)}`);
       }
-      
+
       if (!validateTelegramEntity(formattedToEntity.id)) {
         throw new Error(`Invalid target entity format: ${formattedToEntity.id}. ${getSuggestedEntityFormat(formattedToEntity.id)}`);
       }
 
       const instanceId = status.instanceId || `live_cloning_${Date.now()}`;
-      
+
       const response = await fetch('/api/live-cloning/entity-links', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -363,12 +363,12 @@ export function LiveCloning() {
           toEntity: formattedToEntity.id
         }),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to add entity link');
       }
-      
+
       return response.json();
     },
     onSuccess: (data) => {
@@ -397,7 +397,7 @@ export function LiveCloning() {
       }
 
       const instanceId = status.instanceId || `live_cloning_${Date.now()}`;
-      
+
       const response = await fetch('/api/live-cloning/word-filters', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -407,12 +407,12 @@ export function LiveCloning() {
           toWord: newToWord
         }),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to add word filter');
       }
-      
+
       return response.json();
     },
     onSuccess: (data) => {
@@ -455,12 +455,12 @@ export function LiveCloning() {
           }
         }),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to start live cloning');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -485,12 +485,12 @@ export function LiveCloning() {
       const response = await fetch('/api/live-cloning/stop', {
         method: 'POST',
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to stop live cloning');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -512,12 +512,12 @@ export function LiveCloning() {
       const response = await fetch('/api/live-cloning/clear-logs', {
         method: 'POST',
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to clear logs');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -540,12 +540,12 @@ export function LiveCloning() {
       const response = await fetch(`/api/live-cloning/entity-links/${linkId}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to delete entity link');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -568,12 +568,12 @@ export function LiveCloning() {
       const response = await fetch(`/api/live-cloning/word-filters/${filterId}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to delete word filter');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -618,7 +618,7 @@ export function LiveCloning() {
   const editEntityLinkMutation = useMutation({
     mutationFn: async (link: EntityLink) => {
       if (!link.id) throw new Error('Cannot edit entity link without ID');
-      
+
       const response = await fetch(`/api/live-cloning/entity-links/${link.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -628,12 +628,12 @@ export function LiveCloning() {
           isActive: link.isActive
         }),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to update entity link');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -654,7 +654,7 @@ export function LiveCloning() {
   const editWordFilterMutation = useMutation({
     mutationFn: async (filter: WordFilter) => {
       if (!filter.id) throw new Error('Cannot edit word filter without ID');
-      
+
       const response = await fetch(`/api/live-cloning/word-filters/${filter.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -664,12 +664,12 @@ export function LiveCloning() {
           isActive: filter.isActive
         }),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to update word filter');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -728,11 +728,11 @@ export function LiveCloning() {
       const entityInfo = parseEntityInput(chatId);
       return entityInfo.isValid ? createEntityDisplayName(entityInfo) : `Unknown (${chatId})`;
     }
-    
+
     const entityInfo = formatChatToTelegramEntity(chat);
     return createEntityDisplayName(entityInfo, chat);
   };
-  
+
   // Get properly formatted entity ID for a chat
   const getFormattedEntityId = (chatId: string) => {
     const chat = chats.find(c => c.id === chatId);
@@ -823,7 +823,7 @@ export function LiveCloning() {
               <div className="text-sm text-muted-foreground">Word Filters</div>
             </div>
           </div>
-          
+
           {status.currentUserInfo && (
             <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
               <div className="flex items-center gap-2">
@@ -834,7 +834,7 @@ export function LiveCloning() {
               </div>
             </div>
           )}
-          
+
           {status.lastActivity && (
             <div className="mt-2 text-sm text-muted-foreground">
               Last activity: {new Date(status.lastActivity).toLocaleString()}
@@ -873,7 +873,7 @@ export function LiveCloning() {
                 )}
               </div>
             </div>
-            
+
             <div className="flex gap-2">
               <Button
                 onClick={() => navigator.clipboard.writeText(sessionString)}
@@ -893,7 +893,7 @@ export function LiveCloning() {
                 <Settings className="w-4 h-4" />
                 Bot Settings
               </h4>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="bot-enabled">Bot Enabled</Label>
@@ -907,7 +907,7 @@ export function LiveCloning() {
                     data-testid="bot-enabled-switch"
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <Label htmlFor="filter-words">Filter Words</Label>
                   <Switch
@@ -920,7 +920,7 @@ export function LiveCloning() {
                     data-testid="filter-words-switch"
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <Label htmlFor="add-signature">Add Signature</Label>
                   <Switch
@@ -933,7 +933,7 @@ export function LiveCloning() {
                     data-testid="add-signature-switch"
                   />
                 </div>
-                
+
                 {addSignature && (
                   <div>
                     <Label htmlFor="signature-text">Signature Text</Label>
@@ -1019,7 +1019,7 @@ export function LiveCloning() {
                 <Terminal className="w-4 h-4 mr-2" />
                 {showLogs ? 'Hide' : 'Show'} Logs
               </Button>
-              
+
               <Button
                 onClick={() => clearLogsMutation.mutate()}
                 disabled={clearLogsMutation.isPending}
@@ -1046,7 +1046,7 @@ export function LiveCloning() {
                 <div className="text-xs text-muted-foreground">Word Filters</div>
               </div>
             </div>
-            
+
             {/* Advanced Monitoring Toggle */}
             <div className="pt-4 border-t">
               <Button
@@ -1108,7 +1108,7 @@ export function LiveCloning() {
                   <div className="text-xs text-muted-foreground">Uptime</div>
                 </div>
               </div>
-              
+
               {showPerformanceStats && (
                 <div className="mt-4 p-4 bg-muted/50 rounded-lg">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1254,15 +1254,19 @@ export function LiveCloning() {
                     const toEntityId = getFormattedEntityId(link.toEntity);
                     const fromEntityName = getChatName(link.fromEntity);
                     const toEntityName = getChatName(link.toEntity);
-                    
+
                     // Get number emoji for index
                     const numberEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
                     const numberEmoji = numberEmojis[index] || `${index + 1}️⃣`;
-                    
-                    // Extract just the title/name without extra formatting
-                    const fromTitle = fromEntityName.split(' [')[0].replace(/.*\(|\).*/g, '').trim() || fromEntityName;
-                    const toTitle = toEntityName.split(' [')[0].replace(/.*\(|\).*/g, '').trim() || toEntityName;
-                    
+
+                    // Extract just the actual chat title/name, not username
+                    const fromChat = chats.find(c => c.id === link.fromEntity);
+                    const toChat = chats.find(c => c.id === link.toEntity);
+
+                    const fromTitle = fromChat ? fromChat.title : fromEntityName.split(' [')[0].replace(/.*\(|\).*/g, '').trim() || fromEntityName;
+                    const toTitle = toChat ? toChat.title : toEntityName.split(' [')[0].replace(/.*\(|\).*/g, '').trim() || toEntityName;
+
+
                     return (
                       <div key={index} className="p-3 border rounded-lg bg-card">
                         <div className="text-sm mb-2">
@@ -1509,7 +1513,7 @@ export function LiveCloning() {
                 />
               </div>
             </div>
-            
+
             {!useManualInput ? (
               /* Dropdown Selection Mode */
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -1540,7 +1544,7 @@ export function LiveCloning() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="to-entity">To Entity (Target)</Label>
                   {chatsLoading ? (
@@ -1568,7 +1572,7 @@ export function LiveCloning() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex items-end">
                   <Button
                     onClick={() => addEntityLinkMutation.mutate()}
@@ -1616,7 +1620,7 @@ export function LiveCloning() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="manual-to-entity">To Entity (Target)</Label>
                   <Input
@@ -1649,14 +1653,14 @@ export function LiveCloning() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex items-end">
                   <Button
                     onClick={() => {
                       // Set the parsed entity IDs for manual input
                       const fromEntityId = parseEntityInput(manualFromEntity).id;
                       const toEntityId = parseEntityInput(manualToEntity).id;
-                      
+
                       if (!validateTelegramEntity(fromEntityId) || !validateTelegramEntity(toEntityId)) {
                         toast({
                           title: 'Invalid Entity Format',
@@ -1665,11 +1669,11 @@ export function LiveCloning() {
                         });
                         return;
                       }
-                      
+
                       // Create temporary entity objects for the mutation
                       setNewFromEntity(fromEntityId);
                       setNewToEntity(toEntityId);
-                      
+
                       // Trigger the mutation after a short delay to let state update
                       setTimeout(() => {
                         addEntityLinkMutation.mutate();
@@ -1691,7 +1695,7 @@ export function LiveCloning() {
                 </div>
               </div>
             )}
-            
+
             {/* Format Guide */}
             <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded border border-blue-200 dark:border-blue-800">
               <div className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">✅ Supported Entity Formats (100% Telegram Compatible)</div>
@@ -1811,13 +1815,15 @@ export function LiveCloning() {
                           {(() => {
                             const numberEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
                             const numberEmoji = numberEmojis[index] || `${index + 1}️⃣`;
-                            
+
                             // Extract just the title/name without extra formatting
-                            const fromEntityName = getChatName(link.fromEntity);
-                            const toEntityName = getChatName(link.toEntity);
-                            const fromTitle = fromEntityName.split(' [')[0].replace(/.*\(|\).*/g, '').trim() || fromEntityName;
-                            const toTitle = toEntityName.split(' [')[0].replace(/.*\(|\).*/g, '').trim() || toEntityName;
-                            
+                            const fromChat = chats.find(c => c.id === link.fromEntity);
+                            const toChat = chats.find(c => c.id === link.toEntity);
+
+                            const fromTitle = fromChat ? fromChat.title : fromEntityName.split(' [')[0].replace(/.*\(|\).*/g, '').trim() || fromEntityName;
+                            const toTitle = toChat ? toChat.title : toEntityName.split(' [')[0].replace(/.*\(|\).*/g, '').trim() || toEntityName;
+
+
                             return (
                               <div className="text-sm">
                                 {numberEmoji}〰️{fromTitle} ⏩ {toTitle}
@@ -1885,7 +1891,7 @@ export function LiveCloning() {
                 data-testid="from-word-input"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="to-word">To Word</Label>
               <Input
@@ -1896,7 +1902,7 @@ export function LiveCloning() {
                 data-testid="to-word-input"
               />
             </div>
-            
+
             <div className="flex items-end">
               <Button
                 onClick={() => addWordFilterMutation.mutate()}
