@@ -111,7 +111,8 @@ export async function registerRoutes(app: Express): Promise<Express> {
   app.get('/api/text-memos', async (req, res) => {
     try {
       const memos = await storage.getAllTextMemos();
-      res.json(memos);
+      // Ensure we always return an array
+      res.json(Array.isArray(memos) ? memos : []);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`Failed to get text memos: ${errorMessage}`);

@@ -329,7 +329,7 @@ export default function TextMemoPage() {
   const queryClient = useQueryClient();
 
   // Fetch all memos
-  const { data: memos = [], isLoading } = useQuery({
+  const { data: memos = [], isLoading, error } = useQuery({
     queryKey: ['/api/text-memos'],
     queryFn: async () => {
       const response = await fetch('/api/text-memos');
@@ -337,6 +337,10 @@ export default function TextMemoPage() {
         throw new Error('Failed to fetch memos');
       }
       const data = await response.json();
+      // Ensure we always have an array
+      if (data && typeof data === 'object' && data.error) {
+        throw new Error(data.error);
+      }
       return Array.isArray(data) ? data : [];
     },
   });
@@ -401,6 +405,14 @@ export default function TextMemoPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-muted-foreground">Loading memos...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-destructive">Error loading memos: {error.message}</div>
       </div>
     );
   }
