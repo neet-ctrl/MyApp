@@ -598,10 +598,34 @@ class LiveCloner:
                 await message.reply("❗️ There is no linked entities.")
                 return
 
-            text = "🖇 Linked entities: \n\n"
-            for entity_pair in entities:
+            text = "🖇 Linked entities:\n"
+            
+            # Number emojis for display
+            number_emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
+            
+            for i, entity_pair in enumerate(entities):
                 if len(entity_pair) >= 2:
-                    text += f"**{entity_pair[0]}** ➡️ **{entity_pair[1]}**\n"
+                    from_entity_id = entity_pair[0]
+                    to_entity_id = entity_pair[1]
+                    
+                    # Get entity names
+                    try:
+                        from_entity = await self.client.get_entity(from_entity_id)
+                        from_name = getattr(from_entity, 'title', getattr(from_entity, 'first_name', f'ID:{from_entity_id}'))
+                    except:
+                        from_name = f'ID:{from_entity_id}'
+                    
+                    try:
+                        to_entity = await self.client.get_entity(to_entity_id)
+                        to_name = getattr(to_entity, 'title', getattr(to_entity, 'first_name', f'ID:{to_entity_id}'))
+                    except:
+                        to_name = f'ID:{to_entity_id}'
+                    
+                    # Use appropriate number emoji or fallback
+                    number = number_emojis[i] if i < len(number_emojis) else f"{i+1}️⃣"
+                    
+                    text += f"{number}〰️{from_name} ⏩ {to_name}\n"
+                    text += f"      {{{from_entity_id} ⏩ {to_entity_id}}}\n"
 
             await message.reply(text)
 
