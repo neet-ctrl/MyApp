@@ -110,28 +110,12 @@ export async function registerRoutes(app: Express): Promise<Express> {
   // Get all text memos
   app.get('/api/text-memos', async (req, res) => {
     try {
-      console.log('Fetching all text memos...');
       const memos = await storage.getAllTextMemos();
-      console.log('Retrieved memos from storage:', memos, 'Type:', typeof memos, 'Is Array:', Array.isArray(memos));
-      
-      // Ensure we always return an array
-      const result = Array.isArray(memos) ? memos : [];
-      console.log('Sending response:', result);
-      
-      res.setHeader('Content-Type', 'application/json');
-      res.status(200).json(result);
+      res.json(memos);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`Failed to get text memos: ${errorMessage}`, error);
       logger.error(`Failed to get text memos: ${errorMessage}`);
-      
-      // Return proper error response
-      res.setHeader('Content-Type', 'application/json');
-      res.status(500).json({ 
-        error: 'Failed to fetch text memos', 
-        message: errorMessage,
-        timestamp: new Date().toISOString()
-      });
+      res.status(500).json({ error: 'Failed to get text memos' });
     }
   });
 
@@ -159,23 +143,13 @@ export async function registerRoutes(app: Express): Promise<Express> {
   // Create a new text memo
   app.post('/api/text-memos', async (req, res) => {
     try {
-      console.log('Creating text memo with data:', req.body);
-      
       // Validate request body using Zod schema
       const validatedData = insertTextMemoSchema.parse(req.body);
       
-      console.log('Validated data:', validatedData);
-      
       const memo = await storage.saveTextMemo(validatedData);
-      
-      console.log('Created memo:', memo);
-      
       res.status(201).json(memo);
     } catch (error) {
-      console.error('Text memo creation error:', error);
-      
       if (error instanceof z.ZodError) {
-        console.error('Validation errors:', error.errors);
         return res.status(400).json({ 
           error: 'Validation error', 
           details: error.errors 
@@ -184,7 +158,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`Failed to create text memo: ${errorMessage}`);
-      res.status(500).json({ error: 'Failed to create text memo', details: errorMessage });
+      res.status(500).json({ error: 'Failed to create text memo' });
     }
   });
 

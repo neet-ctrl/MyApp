@@ -24,33 +24,16 @@ function CreateMemoDialog({ open, onOpenChange, onSubmit }: CreateMemoDialogProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const trimmedTitle = title.trim();
-    if (!trimmedTitle) {
-      console.error('Title is required');
-      // Show visual feedback
-      const titleInput = document.getElementById('title') as HTMLInputElement;
-      if (titleInput) {
-        titleInput.focus();
-        titleInput.style.borderColor = '#ef4444';
-        setTimeout(() => {
-          titleInput.style.borderColor = '';
-        }, 2000);
-      }
-      return;
-    }
+    if (!title.trim()) return;
 
-    const memoData = {
-      title: trimmedTitle,
+    onSubmit({
+      title: title.trim(),
       hint: hint.trim() || undefined,
       description: description.trim() || undefined,
       content: ""
-    };
-    
-    console.log('Submitting memo data:', memoData);
-    onSubmit(memoData);
+    });
 
-    // Reset form only after successful submission
+    // Reset form
     setTitle("");
     setHint("");
     setDescription("");
@@ -120,10 +103,10 @@ function CreateMemoDialog({ open, onOpenChange, onSubmit }: CreateMemoDialogProp
             </Button>
             <Button
               type="submit"
-              disabled={!title.trim() || createMemoMutation.isPending}
+              disabled={!title.trim()}
               data-testid="button-create"
             >
-              {createMemoMutation.isPending ? 'Creating...' : 'Create'}
+              Create
             </Button>
           </div>
         </form>
@@ -346,79 +329,27 @@ export default function TextMemoPage() {
   const queryClient = useQueryClient();
 
   // Fetch all memos
-  const { data: memos = [], isLoading, error } = useQuery({
+  const { data: memos = [], isLoading } = useQuery({
     queryKey: ['/api/text-memos'],
     queryFn: async () => {
-      try {
-        const response = await fetch('/api/text-memos', {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (!response.ok) {
-          console.error('Failed to fetch memos, status:', response.status, response.statusText);
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          console.error('Response is not JSON:', contentType);
-          throw new Error('Invalid response format');
-        }
-        
-        const data = await response.json();
-        console.log('Fetched memos data:', data, 'Type:', typeof data, 'Is Array:', Array.isArray(data));
-        
-        // Ensure we always have an array
-        if (Array.isArray(data)) {
-          return data;
-        } else if (data && typeof data === 'object' && data.error) {
-          console.error('API returned error:', data.error);
-          throw new Error(data.error);
-        } else if (data === null || data === undefined) {
-          console.warn('API returned null/undefined, using empty array');
-          return [];
-        } else {
-          console.warn('API returned non-array data:', data, 'Converting to empty array');
-          return [];
-        }
-      } catch (fetchError) {
-        console.error('Fetch error:', fetchError);
-        throw fetchError; // Let React Query handle the error state
+      const response = await fetch('/api/text-memos');
+      if (!response.ok) {
+        throw new Error('Failed to fetch memos');
       }
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     },
-    retry: 2,
-    retryDelay: 1000,
   });
 
   // Create memo mutation
   const createMemoMutation = useMutation({
-    mutationFn: async (memo: InsertTextMemo) => {
-      console.log('Creating memo:', memo);
-      try {
-        const result = await apiRequest('/api/text-memos', 'POST', memo);
-        console.log('Memo creation result:', result);
-        return result;
-      } catch (error) {
-        console.error('Memo creation failed:', error);
-        throw error;
-      }
-    },
-    onSuccess: (data) => {
-      console.log('Memo created successfully:', data);
+    mutationFn: (memo: InsertTextMemo) => apiRequest('/api/text-memos', 'POST', memo),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/text-memos'] });
       toast({ title: "Memo created successfully" });
     },
-    onError: (error: any) => {
-      console.error('Memo creation error:', error);
-      const errorMessage = error?.details || error?.message || 'Failed to create memo';
-      toast({ 
-        title: "Failed to create memo", 
-        description: errorMessage,
-        variant: "destructive" 
-      });
+    onError: () => {
+      toast({ title: "Failed to create memo", variant: "destructive" });
     },
   });
 
@@ -448,15 +379,6 @@ export default function TextMemoPage() {
   });
 
   const handleCreateMemo = (memo: InsertTextMemo) => {
-    console.log('Creating memo with data:', memo);
-    if (!memo.title || memo.title.trim() === '') {
-      toast({
-        title: "Error",
-        description: "Title is required to create a memo",
-        variant: "destructive"
-      });
-      return;
-    }
     createMemoMutation.mutate(memo);
   };
 
@@ -483,14 +405,6 @@ export default function TextMemoPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-destructive">Error loading memos: {error.message}</div>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
@@ -500,7 +414,7 @@ export default function TextMemoPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {/* Plus button for creating new memo */}
-        {(!Array.isArray(memos) || memos.length === 0) ? (
+        {memos.length === 0 ? (
           <Card 
             className="h-48 border-dashed border-2 cursor-pointer hover:bg-muted/50 transition-colors flex items-center justify-center"
             onClick={() => setCreateDialogOpen(true)}
@@ -523,7 +437,7 @@ export default function TextMemoPage() {
                 <p className="text-xs text-muted-foreground">Add new memo</p>
               </div>
             </Card>
-            {Array.isArray(memos) && memos.map((memo) => (
+            {memos.map((memo) => (
               <MemoCard
                 key={memo.id}
                 memo={memo}
