@@ -1,0 +1,43 @@
+{
+  "requirements_met": true,
+  "auto_start_guaranteed": true,
+  "validation_results": {
+    "Python Environment": true,
+    "Required Packages": true,
+    "File Locations": true,
+    "Configuration Files": true,
+    "Environment Variables": true,
+    "Write Permissions": true,
+    "Network Connectivity": true,
+    "Session String Format": true
+  },
+  "critical_errors": [],
+  "warnings": [
+    "Optional package missing: aiohttp",
+    "Optional file missing: /home/runner/workspace/bot_source/live-cloning/../config/live_cloning_persistent_settings.json",
+    "Optional file missing: /home/runner/workspace/bot_source/live-cloning/../config/bot-config.json",
+    "Optional environment variable missing: LIVE_CLONING_INSTANCE_ID"
+  ],
+  "file_locations": {
+    "python_executable": "/home/runner/workspace/.pythonlibs/bin/python3",
+    "telethon_location": "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/telethon/__init__.py",
+    "asyncio_location": "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/asyncio/__init__.py",
+    "json_location": "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/json/__init__.py",
+    "logging_location": "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/logging/__init__.py",
+    "os_location": "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/os.py",
+    "pathlib_location": "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/pathlib.py",
+    "cryptg_location": "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/cryptg/__init__.py",
+    "tgcrypto_location": "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/tgcrypto.cpython-311-x86_64-linux-gnu.so",
+    "required_live_cloner.py": "/home/runner/workspace/bot_source/live-cloning/live_cloner.py",
+    "required_enhanced_logger.py": "/home/runner/workspace/bot_source/live-cloning/enhanced_logger.py",
+    "required_config.json": "/home/runner/workspace/bot_source/live-cloning/config.json",
+    "required_plugins_jsons_config.json": "/home/runner/workspace/bot_source/live-cloning/plugins/jsons/config.json",
+    "optional_plugins_jsons_entities.json": "/home/runner/workspace/bot_source/live-cloning/plugins/jsons/entities.json",
+    "main_config": "/home/runner/workspace/bot_source/live-cloning/config.json"
+  },
+  "summary": {
+    "passed": 8,
+    "total": 8,
+    "success_rate": "100.0%"
+  }
+}
