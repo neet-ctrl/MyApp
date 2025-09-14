@@ -110,15 +110,28 @@ export async function registerRoutes(app: Express): Promise<Express> {
   // Get all text memos
   app.get('/api/text-memos', async (req, res) => {
     try {
+      console.log('Fetching all text memos...');
       const memos = await storage.getAllTextMemos();
+      console.log('Retrieved memos from storage:', memos, 'Type:', typeof memos, 'Is Array:', Array.isArray(memos));
+      
       // Ensure we always return an array
       const result = Array.isArray(memos) ? memos : [];
-      res.json(result);
+      console.log('Sending response:', result);
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).json(result);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`Failed to get text memos: ${errorMessage}`, error);
       logger.error(`Failed to get text memos: ${errorMessage}`);
-      // Always return an array even on error for frontend compatibility
-      res.status(200).json([]);
+      
+      // Return proper error response
+      res.setHeader('Content-Type', 'application/json');
+      res.status(500).json({ 
+        error: 'Failed to fetch text memos', 
+        message: errorMessage,
+        timestamp: new Date().toISOString()
+      });
     }
   });
 

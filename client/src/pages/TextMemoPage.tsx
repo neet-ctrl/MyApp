@@ -341,29 +341,47 @@ export default function TextMemoPage() {
     queryKey: ['/api/text-memos'],
     queryFn: async () => {
       try {
-        const response = await fetch('/api/text-memos');
+        const response = await fetch('/api/text-memos', {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+        
         if (!response.ok) {
-          console.error('Failed to fetch memos, status:', response.status);
-          return []; // Return empty array on error
+          console.error('Failed to fetch memos, status:', response.status, response.statusText);
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          console.error('Response is not JSON:', contentType);
+          throw new Error('Invalid response format');
+        }
+        
         const data = await response.json();
-        console.log('Fetched memos data:', data);
+        console.log('Fetched memos data:', data, 'Type:', typeof data, 'Is Array:', Array.isArray(data));
         
         // Ensure we always have an array
         if (Array.isArray(data)) {
           return data;
         } else if (data && typeof data === 'object' && data.error) {
           console.error('API returned error:', data.error);
+          throw new Error(data.error);
+        } else if (data === null || data === undefined) {
+          console.warn('API returned null/undefined, using empty array');
           return [];
         } else {
-          console.warn('API returned non-array data:', data);
+          console.warn('API returned non-array data:', data, 'Converting to empty array');
           return [];
         }
       } catch (fetchError) {
         console.error('Fetch error:', fetchError);
-        return []; // Return empty array on any error
+        throw fetchError; // Let React Query handle the error state
       }
     },
+    retry: 2,
+    retryDelay: 1000,
   });
 
   // Create memo mutation
@@ -464,7 +482,7 @@ export default function TextMemoPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {/* Plus button for creating new memo */}
-        {memos.length === 0 ? (
+        {(!Array.isArray(memos) || memos.length === 0) ? (
           <Card 
             className="h-48 border-dashed border-2 cursor-pointer hover:bg-muted/50 transition-colors flex items-center justify-center"
             onClick={() => setCreateDialogOpen(true)}
@@ -487,7 +505,7 @@ export default function TextMemoPage() {
                 <p className="text-xs text-muted-foreground">Add new memo</p>
               </div>
             </Card>
-            {memos.map((memo) => (
+            {Array.isArray(memos) && memos.map((memo) => (
               <MemoCard
                 key={memo.id}
                 memo={memo}
