@@ -1238,51 +1238,40 @@ export function LiveCloning() {
             </CardContent>
           </Card>
 
-          {/* Active Users Monitoring */}
-          <Card data-testid="active-users-card">
+          {/* 🖇 Linked Entities */}
+          <Card data-testid="linked-entities-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Active Users ({status.activeUsers?.length || 0})
-                <Button
-                  onClick={() => setShowActiveUsers(!showActiveUsers)}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <UserCheck className="w-4 h-4" />
-                </Button>
+                <Link className="w-5 h-5" />
+                🖇 Linked entities ({entityLinks?.length || 0})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {showActiveUsers && (status.activeUsers?.length || 0) > 0 ? (
+              {(entityLinks?.length || 0) > 0 ? (
                 <div className="space-y-2">
-                  {(status.activeUsers || []).map((user, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-semibold text-blue-600">
-                            {user.username?.charAt(0)?.toUpperCase() || 'U'}
-                          </span>
+                  {entityLinks.map((link, index) => {
+                    const fromEntityId = getFormattedEntityId(link.fromEntity);
+                    const toEntityId = getFormattedEntityId(link.toEntity);
+                    const fromEntityName = getChatName(link.fromEntity);
+                    const toEntityName = getChatName(link.toEntity);
+                    
+                    return (
+                      <div key={index} className="p-3 border rounded-lg bg-card">
+                        <div className="font-mono text-sm mb-1">
+                          {fromEntityId} ➡️ {toEntityId}
                         </div>
-                        <div>
-                          <div className="font-medium">@{user.username}</div>
-                          <div className="text-sm text-muted-foreground">ID: {user.id}</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium">{user.messageCount} messages</div>
-                        <div className="text-xs text-muted-foreground">
-                          Last seen: {new Date(user.lastSeen).toLocaleTimeString()}
+                        <div className="text-xs text-muted-foreground truncate">
+                          ({fromEntityName} ➡️ {toEntityName})
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>No active users detected</p>
-                  <p className="text-sm">Start live cloning to monitor user activity</p>
+                  <Link className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>No linked entities</p>
+                  <p className="text-sm">Add entity links in configuration above</p>
                 </div>
               )}
             </CardContent>
