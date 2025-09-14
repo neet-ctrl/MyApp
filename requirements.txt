@@ -8,3 +8,9 @@ python-dotenv
 telethon
 telethon
 tgcrypto
+cryptg
+pillow
+python-dotenv
+requests
+telethon
+tgcrypto

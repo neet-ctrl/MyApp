@@ -51,7 +51,7 @@ export function JSCopier() {
   const [newToOffset, setNewToOffset] = useState<number>(0);
   const [showLogs, setShowLogs] = useState(false);
   const [configContent, setConfigContent] = useState('');
-  const [sessionString, setSessionString] = useState(import.meta.env.VITE_DEFAULT_SESSION_STRING || '1BVtsOLABux3cdf9iA7_7csD0HjZ-vqy3pQUfbynyLah5ZQQNGCTgc6ao1FOFHur4mvJkRsrzS3KKi65RNXczTxtlxpNIkqoIQvN0ILt2kPp9dUcCuIn8ZlFftx63derTrb_LS6TdeZ4Ly3cI26C_E14TUvhlWNHwB_zDZ1mvpvluQb9EhodVRsWSAQimUWNIrKp9stJum7amnoLzCSdqAydjsfTXej1KZQ1TfxX79yAb-DPIw2kzFWf6Mk9ScDlTeGJg6qRQkiDOHiRrUnrzle1REurAN_4h9qWahhR1ffbreGvOYVDip35Uya4Kn4YGmJM0vtGLq3HoEico3umwBrO6GOc0oxU=');
+  const [sessionString, setSessionString] = useState(import.meta.env.VITE_DEFAULT_SESSION_STRING || '1BQAWZmxvcmEud2ViLnRlbGVncmFtLm9yZwG7tVMJrbKp6mCBCaAP9/omphgWal2m8nAJ5X17Cy++A4Q+D94BwUqNkIMzTPMpRaFtz0atr2ZuF9EAKMi6Pb2+pidjKtBIvCa+tsyUhesqfRVzd5XWtmZW+NnHNmeX/APeHbfBRLuM0ertwRQVHuwcR5V9xtb2YwUVJRl2WyXeDJ4ed11LS+F3vrVDH43pwiDOnINtAMGuJ2BhfzoYzv+Bv9CfJMYCROm1hQHN6WRv1zD5tYrE9E1eR4sxUmJXpH5R+Dr33g+imj9j2S/O8TA3fPxzDM5WvTK3wRwGiMyF9lHFNb5qaaMVT5CupWBHzezUd/XM5QyyV5fNwf0k5b6j2A==');
   const [editingPair, setEditingPair] = useState<ForwardPair | null>(null);
   const [loginStatus, setLoginStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [isEditingConfig, setIsEditingConfig] = useState(false);
