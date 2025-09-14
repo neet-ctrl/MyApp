@@ -12,6 +12,7 @@ import {
   User,
   RefreshCw,
   Loader2,
+  Copy,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -239,45 +240,124 @@ export function ChatSelection({ onChatSelect }: ChatSelectionProps) {
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Chat ID</p>
-                      <p className="text-sm font-mono bg-muted/50 p-2 rounded">
-                        {selectedChat.id}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-mono bg-muted/50 p-2 rounded flex-1">
+                          {selectedChat.id}
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            navigator.clipboard.writeText(selectedChat.id);
+                            toast({ title: 'Copied!', description: 'Chat ID copied to clipboard' });
+                          }}
+                          className="h-8 w-8"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     {selectedChat.username && (
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Username</p>
-                        <p className="text-sm">@{selectedChat.username}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm flex-1">@{selectedChat.username}</p>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`@${selectedChat.username}`);
+                              toast({ title: 'Copied!', description: 'Username copied to clipboard' });
+                            }}
+                            className="h-8 w-8"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     )}
 
                     {selectedChat.username && (selectedChat.type === 'channel' || selectedChat.type === 'group') && (
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Invite Link</p>
-                        <p className="text-sm text-blue-600 break-all">
-                          https://t.me/{selectedChat.username}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-blue-600 break-all flex-1">
+                            https://t.me/{selectedChat.username}
+                          </p>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`https://t.me/${selectedChat.username}`);
+                              toast({ title: 'Copied!', description: 'Invite link copied to clipboard' });
+                            }}
+                            className="h-8 w-8 flex-shrink-0"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     )}
 
                     {selectedChat.participantCount && (
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Members</p>
-                        <p className="text-sm">{selectedChat.participantCount.toLocaleString()}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm flex-1">{selectedChat.participantCount.toLocaleString()}</p>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              navigator.clipboard.writeText(selectedChat.participantCount?.toString() || '0');
+                              toast({ title: 'Copied!', description: 'Member count copied to clipboard' });
+                            }}
+                            className="h-8 w-8"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     )}
 
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Chat Type</p>
-                      <p className="text-sm capitalize">{selectedChat.type}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm capitalize flex-1">{selectedChat.type}</p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            navigator.clipboard.writeText(selectedChat.type);
+                            toast({ title: 'Copied!', description: 'Chat type copied to clipboard' });
+                          }}
+                          className="h-8 w-8"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     {selectedChat.type !== 'private' && (
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Access</p>
-                        <p className="text-sm">
-                          {selectedChat.username ? 'Public' : 'Private'} {selectedChat.type}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm flex-1">
+                            {selectedChat.username ? 'Public' : 'Private'} {selectedChat.type}
+                          </p>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              const accessText = `${selectedChat.username ? 'Public' : 'Private'} ${selectedChat.type}`;
+                              navigator.clipboard.writeText(accessText);
+                              toast({ title: 'Copied!', description: 'Access type copied to clipboard' });
+                            }}
+                            className="h-8 w-8"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
