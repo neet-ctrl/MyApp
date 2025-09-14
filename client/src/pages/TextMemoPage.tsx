@@ -24,14 +24,22 @@ function CreateMemoDialog({ open, onOpenChange, onSubmit }: CreateMemoDialogProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      console.error('Title is required');
+      return;
+    }
 
-    onSubmit({
-      title: title.trim(),
+    const memoData = {
+      title: trimmedTitle,
       hint: hint.trim() || undefined,
       description: description.trim() || undefined,
       content: ""
-    });
+    };
+    
+    console.log('Submitting memo data:', memoData);
+    onSubmit(memoData);
 
     // Reset form
     setTitle("");
@@ -332,28 +340,58 @@ export default function TextMemoPage() {
   const { data: memos = [], isLoading, error } = useQuery({
     queryKey: ['/api/text-memos'],
     queryFn: async () => {
-      const response = await fetch('/api/text-memos');
-      if (!response.ok) {
-        throw new Error('Failed to fetch memos');
+      try {
+        const response = await fetch('/api/text-memos');
+        if (!response.ok) {
+          console.error('Failed to fetch memos, status:', response.status);
+          return []; // Return empty array on error
+        }
+        const data = await response.json();
+        console.log('Fetched memos data:', data);
+        
+        // Ensure we always have an array
+        if (Array.isArray(data)) {
+          return data;
+        } else if (data && typeof data === 'object' && data.error) {
+          console.error('API returned error:', data.error);
+          return [];
+        } else {
+          console.warn('API returned non-array data:', data);
+          return [];
+        }
+      } catch (fetchError) {
+        console.error('Fetch error:', fetchError);
+        return []; // Return empty array on any error
       }
-      const data = await response.json();
-      // Ensure we always have an array
-      if (data && typeof data === 'object' && data.error) {
-        throw new Error(data.error);
-      }
-      return Array.isArray(data) ? data : [];
     },
   });
 
   // Create memo mutation
   const createMemoMutation = useMutation({
-    mutationFn: (memo: InsertTextMemo) => apiRequest('/api/text-memos', 'POST', memo),
-    onSuccess: () => {
+    mutationFn: async (memo: InsertTextMemo) => {
+      console.log('Creating memo:', memo);
+      try {
+        const result = await apiRequest('/api/text-memos', 'POST', memo);
+        console.log('Memo creation result:', result);
+        return result;
+      } catch (error) {
+        console.error('Memo creation failed:', error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      console.log('Memo created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/text-memos'] });
       toast({ title: "Memo created successfully" });
     },
-    onError: () => {
-      toast({ title: "Failed to create memo", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Memo creation error:', error);
+      const errorMessage = error?.details || error?.message || 'Failed to create memo';
+      toast({ 
+        title: "Failed to create memo", 
+        description: errorMessage,
+        variant: "destructive" 
+      });
     },
   });
 

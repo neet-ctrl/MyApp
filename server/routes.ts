@@ -112,11 +112,13 @@ export async function registerRoutes(app: Express): Promise<Express> {
     try {
       const memos = await storage.getAllTextMemos();
       // Ensure we always return an array
-      res.json(Array.isArray(memos) ? memos : []);
+      const result = Array.isArray(memos) ? memos : [];
+      res.json(result);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`Failed to get text memos: ${errorMessage}`);
-      res.status(500).json({ error: 'Failed to get text memos' });
+      // Always return an array even on error for frontend compatibility
+      res.status(200).json([]);
     }
   });
 
@@ -144,13 +146,23 @@ export async function registerRoutes(app: Express): Promise<Express> {
   // Create a new text memo
   app.post('/api/text-memos', async (req, res) => {
     try {
+      console.log('Creating text memo with data:', req.body);
+      
       // Validate request body using Zod schema
       const validatedData = insertTextMemoSchema.parse(req.body);
       
+      console.log('Validated data:', validatedData);
+      
       const memo = await storage.saveTextMemo(validatedData);
+      
+      console.log('Created memo:', memo);
+      
       res.status(201).json(memo);
     } catch (error) {
+      console.error('Text memo creation error:', error);
+      
       if (error instanceof z.ZodError) {
+        console.error('Validation errors:', error.errors);
         return res.status(400).json({ 
           error: 'Validation error', 
           details: error.errors 
@@ -159,7 +171,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`Failed to create text memo: ${errorMessage}`);
-      res.status(500).json({ error: 'Failed to create text memo' });
+      res.status(500).json({ error: 'Failed to create text memo', details: errorMessage });
     }
   });
 

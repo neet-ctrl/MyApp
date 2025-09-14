@@ -194,16 +194,26 @@ export class MemStorage implements IStorage {
   }
 
   async saveTextMemo(memo: InsertTextMemo): Promise<TextMemo> {
-    const savedMemo: TextMemo = {
-      id: this.textMemoIdCounter++,
-      title: memo.title,
-      description: memo.description || null,
-      hint: memo.hint || null,
-      content: memo.content || "",
-      createdAt: new Date(),
-    };
-    this.textMemos.set(savedMemo.id, savedMemo);
-    return savedMemo;
+    try {
+      console.log('Storage: Saving memo:', memo);
+      
+      const savedMemo: TextMemo = {
+        id: this.textMemoIdCounter++,
+        title: memo.title,
+        description: memo.description || null,
+        hint: memo.hint || null,
+        content: memo.content || "",
+        createdAt: new Date(),
+      };
+      
+      this.textMemos.set(savedMemo.id, savedMemo);
+      console.log('Storage: Memo saved successfully:', savedMemo);
+      
+      return savedMemo;
+    } catch (error) {
+      console.error('Storage: Error saving memo:', error);
+      throw error;
+    }
   }
 
   async updateTextMemo(id: number, updates: Partial<TextMemo>): Promise<TextMemo | null> {
