@@ -447,7 +447,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     setIsSelectionMode(false);
   };
 
-  // Mouse event handlers for dragging
+  // Mouse event handlers for dragging - optimized for better performance
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isMaximized) return;
     
@@ -456,13 +456,17 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       x: e.clientX - position.x,
       y: e.clientY - position.y,
     });
+    e.preventDefault();
   };
 
   const handleMouseMove = (e: MouseEvent) => {
     if (isDragging && !isMaximized) {
-      setPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
+      // Use requestAnimationFrame for smoother dragging
+      requestAnimationFrame(() => {
+        setPosition({
+          x: e.clientX - dragStart.x,
+          y: e.clientY - dragStart.y,
+        });
       });
     }
   };
@@ -472,10 +476,11 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     setIsResizing(false);
   };
 
-  // Mouse event handlers for resizing
+  // Mouse event handlers for resizing - optimized for better performance
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     if (isMaximized) return;
     e.stopPropagation();
+    e.preventDefault();
     
     setIsResizing(true);
     setDragStart({
@@ -486,17 +491,20 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
 
   const handleResizeMouseMove = (e: MouseEvent) => {
     if (isResizing && !isMaximized) {
-      const deltaX = e.clientX - dragStart.x;
-      const deltaY = e.clientY - dragStart.y;
-      
-      setSize(prev => ({
-        width: Math.max(400, prev.width + deltaX),
-        height: Math.max(300, prev.height + deltaY),
-      }));
-      
-      setDragStart({
-        x: e.clientX,
-        y: e.clientY,
+      // Use requestAnimationFrame for smoother resizing
+      requestAnimationFrame(() => {
+        const deltaX = e.clientX - dragStart.x;
+        const deltaY = e.clientY - dragStart.y;
+        
+        setSize(prev => ({
+          width: Math.max(400, prev.width + deltaX),
+          height: Math.max(300, prev.height + deltaY),
+        }));
+        
+        setDragStart({
+          x: e.clientX,
+          y: e.clientY,
+        });
       });
     }
   };
@@ -890,9 +898,18 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         )}
       </div>
 
-      {/* Save Logs Dialog */}
+      {/* Save Logs Dialog - positioned relative to console */}
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-        <DialogContent>
+        <DialogContent 
+          className="absolute"
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1001
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Save Current Logs</DialogTitle>
           </DialogHeader>
@@ -921,9 +938,18 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Range Copy Dialog */}
+      {/* Range Copy Dialog - positioned relative to console */}
       <Dialog open={showRangeDialog} onOpenChange={setShowRangeDialog}>
-        <DialogContent>
+        <DialogContent 
+          className="absolute"
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1001
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Copy Log Range</DialogTitle>
           </DialogHeader>
@@ -969,9 +995,18 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Saved Logs Dialog */}
+      {/* Saved Logs Dialog - positioned relative to console */}
       <Dialog open={showSavedLogsDialog} onOpenChange={setShowSavedLogsDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogContent 
+          className="max-w-4xl max-h-[80vh] absolute"
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1001
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Saved Log Collections</DialogTitle>
           </DialogHeader>

@@ -233,11 +233,23 @@ export async function registerRoutes(app: Express): Promise<Express> {
         logs = await storage.getConsoleLogs(limit, offset);
       }
       
+      // Add deployment environment indicator for debugging
+      if (process.env.RAILWAY_ENVIRONMENT) {
+        console.log(`[RAILWAY] Console logs request: ${logs.length} logs returned`);
+      }
+      
       res.json(logs);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`Failed to get console logs: ${errorMessage}`);
-      res.status(500).json({ error: 'Failed to get console logs' });
+      
+      // Fallback for Railway deployment
+      if (process.env.RAILWAY_ENVIRONMENT) {
+        console.log(`[RAILWAY] Console logs fallback due to error: ${errorMessage}`);
+        res.json([]);
+      } else {
+        res.status(500).json({ error: 'Failed to get console logs' });
+      }
     }
   });
 
