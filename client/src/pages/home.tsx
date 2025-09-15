@@ -25,6 +25,7 @@ import { downloadManager } from '@/lib/downloads';
 import type { TelegramSession } from '@shared/schema';
 import TextMemoPage from "@/pages/TextMemoPage";
 import Console from "@/components/Console";
+import PdfImg from "@/components/PdfImg";
 
 export default function Home() {
   const [currentView, setCurrentView] = useState('python-script');
@@ -32,6 +33,7 @@ export default function Home() {
   const [currentSession, setCurrentSession] = useState<TelegramSession | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+  const [isPdfImgOpen, setIsPdfImgOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -255,6 +257,7 @@ export default function Home() {
         onLogout={handleLogout}
         isDownloadDirectorySelected={downloadManager.isDownloadDirectorySelected()}
         onOpenConsole={() => setIsConsoleOpen(true)}
+        onOpenPdfImg={() => setIsPdfImgOpen(true)}
       />
 
       <main className="flex-1 overflow-y-auto relative">
@@ -291,6 +294,12 @@ export default function Home() {
       <Console 
         isOpen={isConsoleOpen} 
         onClose={() => setIsConsoleOpen(false)} 
+      />
+
+      {/* PdfImg Component */}
+      <PdfImg
+        isOpen={isPdfImgOpen}
+        onClose={() => setIsPdfImgOpen(false)}
       />
     </div>
   );

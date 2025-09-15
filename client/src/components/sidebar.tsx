@@ -21,6 +21,7 @@ import {
   Zap,
   FileText,
   Terminal,
+  ImageIcon,
 } from 'lucide-react';
 import type { TelegramSession } from '@shared/schema';
 
@@ -32,6 +33,7 @@ interface SidebarProps {
   onLogout: () => void;
   isDownloadDirectorySelected: boolean;
   onOpenConsole: () => void;
+  onOpenPdfImg: () => void;
 }
 
 const navigationItems = [
@@ -60,6 +62,7 @@ export function Sidebar({
   onLogout,
   isDownloadDirectorySelected,
   onOpenConsole,
+  onOpenPdfImg,
 }: SidebarProps) {
   const userInitials = session?.firstName && session?.lastName
     ? `${session.firstName[0]}${session.lastName[0]}`
@@ -152,16 +155,28 @@ export function Sidebar({
           </Button>
         </div>
         
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full justify-start"
-          onClick={onOpenConsole}
-          data-testid="button-open-console"
-        >
-          <Terminal className="w-4 h-4 mr-2" />
-          <span>Console</span>
-        </Button>
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 justify-start"
+            onClick={onOpenConsole}
+            data-testid="button-open-console"
+          >
+            <Terminal className="w-4 h-4 mr-2" />
+            <span>Console</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 justify-start"
+            onClick={onOpenPdfImg}
+            data-testid="button-open-pdfimg"
+          >
+            <ImageIcon className="w-4 h-4 mr-2" />
+            <span>PdfImg</span>
+          </Button>
+        </div>
         
         {session && (
           <Button
