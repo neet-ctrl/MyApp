@@ -426,8 +426,24 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   // Export saved logs as formatted HTML (console-like appearance)
   const exportSavedLogs = (collection: SavedLogCollection) => {
     try {
+      // Validate collection and logs data
+      if (!collection) {
+        throw new Error('Collection data is missing');
+      }
+      
+      if (!collection.logs || !Array.isArray(collection.logs)) {
+        throw new Error('Collection logs data is missing or invalid');
+      }
+      
+      if (collection.logs.length === 0) {
+        throw new Error('Collection has no logs to export');
+      }
+      
       // Escape HTML to prevent issues
       const escapeHtml = (unsafe: string) => {
+        if (typeof unsafe !== 'string') {
+          return String(unsafe || '');
+        }
         return unsafe
           .replace(/&/g, "&amp;")
           .replace(/</g, "&lt;")
@@ -437,7 +453,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       };
       
       const getLevelBadgeStyle = (level: string) => {
-        switch (level.toUpperCase()) {
+        switch ((level || 'INFO').toUpperCase()) {
           case 'ERROR':
             return 'background: #ef4444; color: white;';
           case 'WARN':
@@ -452,12 +468,17 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       };
       
       const formatLogEntry = (log: ConsoleLog, index: number) => {
-        const timestamp = escapeHtml(formatTimestamp(log.timestamp));
-        const level = escapeHtml(log.level.toUpperCase());
-        const message = escapeHtml(log.message);
+        // Validate log entry
+        if (!log) {
+          return `<div class="log-entry" style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 14px; color: #ef4444;">Invalid log entry</div>`;
+        }
+        
+        const timestamp = escapeHtml(formatTimestamp(log.timestamp || new Date().toISOString()));
+        const level = escapeHtml((log.level || 'INFO').toUpperCase());
+        const message = escapeHtml(log.message || 'No message');
         const source = log.source ? escapeHtml(log.source) : '';
         const metadata = log.metadata ? escapeHtml(JSON.stringify(log.metadata, null, 2)) : '';
-        const badgeStyle = getLevelBadgeStyle(log.level);
+        const badgeStyle = getLevelBadgeStyle(log.level || 'INFO');
         
         return `<div class="log-entry" style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 14px; display: flex; align-items: flex-start; gap: 8px; ${index % 2 === 0 ? '' : 'background-color: #f9fafb;'}">
             <span class="log-timestamp" style="color: #6b7280; font-size: 12px; white-space: nowrap; margin-top: 2px;">${timestamp}</span>
@@ -470,10 +491,12 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
           </div>`;
       };
       
-      const collectionName = escapeHtml(collection.name);
-      const savedTimestamp = escapeHtml(formatTimestamp(collection.savedAt));
+      const collectionName = escapeHtml(collection.name || 'Unnamed Collection');
+      const savedTimestamp = escapeHtml(formatTimestamp(collection.savedAt || new Date().toISOString()));
       const exportTimestamp = escapeHtml(new Date().toLocaleString());
+      const totalEntries = collection.totalEntries || collection.logs.length || 0;
       
+      // Generate the HTML content with exact console styling
       const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -510,9 +533,16 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             overflow: hidden;
+            min-height: 200px;
         }
         .log-entry:hover {
             background-color: #f1f5f9 !important;
+        }
+        .no-logs {
+            padding: 40px;
+            text-align: center;
+            color: #6b7280;
+            font-style: italic;
         }
         @media (max-width: 768px) {
             body { padding: 10px; }
@@ -531,25 +561,30 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         <h1>Console Logs Export</h1>
         <div class="header-info">
             <strong>Collection:</strong> ${collectionName}<br>
-            <strong>Total Entries:</strong> ${collection.totalEntries}<br>
+            <strong>Total Entries:</strong> ${totalEntries}<br>
             <strong>Saved:</strong> ${savedTimestamp}<br>
             <strong>Exported:</strong> ${exportTimestamp}
         </div>
     </div>
     <div class="logs-container">
-        ${collection.logs.map((log, index) => formatLogEntry(log, index)).join('')}
+        ${collection.logs && collection.logs.length > 0 
+          ? collection.logs.map((log, index) => formatLogEntry(log, index)).join('')
+          : '<div class="no-logs">No log entries found in this collection</div>'
+        }
     </div>
     <div style="margin-top: 20px; padding: 16px; background: #f8fafc; border-radius: 8px; text-align: center; color: #64748b; font-size: 12px;">
-        Generated by Enhanced Console • ${collection.logs.length} log entries
+        Generated by Enhanced Console • ${collection.logs ? collection.logs.length : 0} log entries
     </div>
 </body>
 </html>`;
       
+      // Create and download the file
       const dataBlob = new Blob([htmlContent], {type: 'text/html'});
       const url = URL.createObjectURL(dataBlob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `console-logs-${collection.name.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.html`;
+      const fileName = `console-logs-${(collection.name || 'collection').replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.html`;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -557,7 +592,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       
       toast({
         title: 'Export Complete',
-        description: `Log collection exported as formatted HTML file with ${collection.logs.length} entries`,
+        description: `Log collection exported as formatted HTML file with ${collection.logs ? collection.logs.length : 0} entries`,
       });
     } catch (error) {
       console.error('Export error:', error);
