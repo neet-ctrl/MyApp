@@ -376,21 +376,12 @@ export class DatabaseLiveCloningStorage implements IStorage {
           message: log.message,
           source: log.source || 'application',
           metadata: log.metadata || null,
-          timestamp: new Date().toISOString(),
         })
         .returning();
       return savedLog;
     } catch (error) {
       console.error('Failed to save console log to database:', error);
-      // For Railway compatibility, don't throw error - return a fallback
-      return {
-        id: Date.now(),
-        level: log.level,
-        message: log.message,
-        source: log.source || 'application',
-        metadata: log.metadata || null,
-        timestamp: new Date().toISOString(),
-      };
+      throw error;
     }
   }
 
