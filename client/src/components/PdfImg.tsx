@@ -186,6 +186,20 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
           <div className="flex items-center space-x-1 no-drag">
             <Button
               size="sm"
+              variant="outline"
+              onClick={() => {
+                const iframe = document.querySelector('#pdfimg-iframe') as HTMLIFrameElement;
+                if (iframe) {
+                  iframe.src = '/FinalCropper/public/molview/index.html';
+                }
+              }}
+              className="h-6 px-2 text-xs"
+              data-testid="button-molview"
+            >
+              🧬 MolView
+            </Button>
+            <Button
+              size="sm"
               variant="ghost"
               onClick={toggleMaximize}
               className="h-6 w-6 p-0"
@@ -209,7 +223,8 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
       {/* Content area with iframe */}
       <CardContent className="p-0 flex-1 overflow-hidden relative">
         <iframe
-          src="/public/FinalCropper/public/index.html"
+          id="pdfimg-iframe"
+          src="/FinalCropper/public/index.html"
           className="w-full h-full border-0"
           title="Advanced Image Cropper"
           allow="fullscreen; camera; microphone; clipboard-read; clipboard-write"
