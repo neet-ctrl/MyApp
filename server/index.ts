@@ -2,6 +2,10 @@ import express, { type Request, Response, NextFunction } from "express";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import session from "express-session";
+import multer from "multer";
+import archiver from "archiver";
+import fs from "fs";
+import path from "path";
 import { registerRoutes, startLiveCloningService } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { autoSetup } from "./auto-setup";
@@ -87,6 +91,102 @@ app.use((req, res, next) => {
 
     res.status(status).json({ message });
     throw err;
+  });
+
+  // MolView PHP endpoints replacement
+  const molviewUpload = multer({ dest: 'public/FinalCropper/public/molview/php/uploads/structures/' });
+  const dbUpload = multer({ dest: 'public/FinalCropper/public/molview/php/uploads/' });
+
+  // Serve MolView static files
+  app.use('/FinalCropper/public/molview', express.static('public/FinalCropper/public/molview'));
+
+  // MolView PHP endpoint replacements
+  app.get('/FinalCropper/public/molview/php/download_db.php', (req, res) => {
+    const dbPath = 'public/FinalCropper/public/molview/php/data/molview_library.db';
+    if (fs.existsSync(dbPath)) {
+      res.download(dbPath, 'molview_library.db');
+    } else {
+      res.status(404).send('Database not found');
+    }
+  });
+
+  app.post('/FinalCropper/public/molview/php/upload_db.php', dbUpload.single('database'), (req, res) => {
+    if (req.file) {
+      const targetPath = 'public/FinalCropper/public/molview/php/data/molview_library.db';
+      fs.copyFileSync(req.file.path, targetPath);
+      fs.unlinkSync(req.file.path);
+      res.json({ success: true, message: 'Database uploaded successfully' });
+    } else {
+      res.json({ success: false, message: 'No file uploaded' });
+    }
+  });
+
+  app.post('/FinalCropper/public/molview/php/upload.php', molviewUpload.single('structure'), (req, res) => {
+    if (req.file) {
+      const fileName = req.file.filename + '.mol';
+      const targetPath = path.join('public/FinalCropper/public/molview/php/uploads/structures/', fileName);
+      fs.renameSync(req.file.path, targetPath);
+      res.json({ 
+        success: true, 
+        filename: fileName,
+        path: '/FinalCropper/public/molview/php/uploads/structures/' + fileName
+      });
+    } else {
+      res.json({ success: false, message: 'No structure uploaded' });
+    }
+  });
+
+  app.get('/FinalCropper/public/molview/php/download.php', (req, res) => {
+    const files = req.query.files as string;
+    if (!files) {
+      return res.status(400).send('No files specified');
+    }
+    
+    const fileList = files.split(',');
+    const archive = archiver('zip');
+    
+    res.attachment('structures.zip');
+    archive.pipe(res);
+    
+    fileList.forEach(file => {
+      const filePath = path.join('public/FinalCropper/public/molview/php/uploads/structures/', file);
+      if (fs.existsSync(filePath)) {
+        archive.file(filePath, { name: file });
+      }
+    });
+    
+    archive.finalize();
+  });
+
+  // External data proxies to avoid CORS
+  app.get('/FinalCropper/public/molview/php/cod.php', async (req, res) => {
+    const id = req.query.id;
+    if (!id) return res.status(400).send('Missing ID');
+    
+    try {
+      const fetch = (await import('node-fetch')).default;
+      const response = await fetch(`http://www.crystallography.net/cod/${id}.cif`);
+      const data = await response.text();
+      res.set('Content-Type', 'text/plain');
+      res.send(data);
+    } catch (error) {
+      res.status(500).send('Error fetching COD data');
+    }
+  });
+
+  app.get('/FinalCropper/public/molview/php/cif.php', async (req, res) => {
+    const url = req.query.url as string;
+    if (!url) return res.status(400).send('Missing URL');
+    
+    try {
+      const fetch = (await import('node-fetch')).default;
+      const response = await fetch(url);
+      const data = await response.text();
+      res.set('Content-Type', 'text/plain');
+      res.send(data);
+    } catch (error) {
+      res.status(500).send('Error fetching CIF data');
+    }
   });
 
   // importantly only setup vite in development and after
