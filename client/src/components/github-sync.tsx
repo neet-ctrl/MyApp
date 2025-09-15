@@ -294,7 +294,9 @@ export function GitHubSync() {
     queryFn: async () => {
       const headers: HeadersInit = {};
       
-      // Add custom PAT if available
+      // Priority 1: Environment variables (server-side PAT)
+      // Priority 2: User-provided PAT
+      // Priority 3: Default fallback
       if (personalAccessToken && personalAccessToken.trim()) {
         headers['X-GitHub-PAT'] = personalAccessToken.trim();
       }
@@ -1118,21 +1120,30 @@ export function GitHubSync() {
                 <div>
                   <input
                     type="file"
-                    {...({ webkitdirectory: "" } as any)}
+                    {...({ webkitdirectory: "true" } as any)}
                     multiple
                     onChange={(e) => {
-                      if (e.target.files) {
-                        setSelectedFiles(Array.from(e.target.files));
+                      const target = e.target as HTMLInputElement;
+                      if (target.files && target.files.length > 0) {
+                        setSelectedFiles(Array.from(target.files));
+                        console.log('Folder selected:', target.files.length, 'files');
                       }
                     }}
                     className="hidden"
                     id="nodejs-folder-input"
                     data-testid="input-nodejs-folder"
+                    accept=""
                   />
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => document.getElementById('nodejs-folder-input')?.click()}
+                    onClick={() => {
+                      const input = document.getElementById('nodejs-folder-input') as HTMLInputElement;
+                      if (input) {
+                        input.value = ''; // Reset input
+                        input.click();
+                      }
+                    }}
                     className="w-full h-20 border-dashed"
                     data-testid="button-nodejs-select-folder"
                   >
@@ -1329,21 +1340,30 @@ export function GitHubSync() {
                     <div>
                       <input
                         type="file"
-                        {...({ webkitdirectory: "" } as any)}
+                        {...({ webkitdirectory: "true" } as any)}
                         multiple
                         onChange={(e) => {
-                          if (e.target.files) {
-                            setSelectedFiles(Array.from(e.target.files));
+                          const target = e.target as HTMLInputElement;
+                          if (target.files && target.files.length > 0) {
+                            setSelectedFiles(Array.from(target.files));
+                            console.log('Python folder selected:', target.files.length, 'files');
                           }
                         }}
                         className="hidden"
                         id="python-folder-input"
                         data-testid="input-python-folder"
+                        accept=""
                       />
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => document.getElementById('python-folder-input')?.click()}
+                        onClick={() => {
+                          const input = document.getElementById('python-folder-input') as HTMLInputElement;
+                          if (input) {
+                            input.value = ''; // Reset input
+                            input.click();
+                          }
+                        }}
                         className="w-full h-20 border-dashed"
                         data-testid="button-python-select-folder"
                       >
@@ -1487,15 +1507,26 @@ export function GitHubSync() {
             {/* Current status */}
             {githubSettingsData && (
               <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                {githubSettingsData.isDefaultActive ? (
+                {githubSettingsData.isEnvironmentActive ? (
+                  <p className="font-medium text-green-700 dark:text-green-300">
+                    ✓ Using GitHub PAT from environment variables (highest priority)
+                  </p>
+                ) : githubSettingsData.settings?.personalAccessToken ? (
+                  <p className="font-medium text-green-700 dark:text-green-300">
+                    ✓ Using custom Personal Access Token
+                  </p>
+                ) : githubSettingsData.hasDefaultPAT ? (
                   <p className="font-medium text-blue-700 dark:text-blue-300">
                     ✓ Using default GitHub token
                   </p>
                 ) : (
-                  <p className="font-medium text-green-700 dark:text-green-300">
-                    ✓ Using custom Personal Access Token
+                  <p className="font-medium text-red-700 dark:text-red-300">
+                    ⚠ No GitHub token configured
                   </p>
                 )}
+                <p className="mt-1 text-xs">
+                  Active source: {githubSettingsData.activeSource || 'none'}
+                </p>
               </div>
             )}
 

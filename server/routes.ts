@@ -106,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
   // =====================================================
   // TextMemo Management API
   // =====================================================
-  
+
   // Get all text memos
   app.get('/api/text-memos', async (req, res) => {
     try {
@@ -145,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
     try {
       // Validate request body using Zod schema
       const validatedData = insertTextMemoSchema.parse(req.body);
-      
+
       const memo = await storage.saveTextMemo(validatedData);
       res.status(201).json(memo);
     } catch (error) {
@@ -155,7 +155,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
           details: error.errors 
         });
       }
-      
+
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`Failed to create text memo: ${errorMessage}`);
       res.status(500).json({ error: 'Failed to create text memo' });
@@ -218,21 +218,21 @@ export async function registerRoutes(app: Express): Promise<Express> {
   // =====================================================
   // Console Logs API
   // =====================================================
-  
+
   // Get console logs with pagination
   app.get('/api/console-logs', async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 100;
       const offset = parseInt(req.query.offset as string) || 0;
       const level = req.query.level as string;
-      
+
       let logs;
       if (level) {
         logs = await storage.getConsoleLogsByLevel(level, limit);
       } else {
         logs = await storage.getConsoleLogs(limit, offset);
       }
-      
+
       res.json(logs);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -258,7 +258,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
   app.post('/api/console-logs/save-collection', async (req, res) => {
     try {
       const { name, logs, totalEntries } = req.body;
-      
+
       if (!name || !logs || !Array.isArray(logs)) {
         return res.status(400).json({ error: 'Name and logs array are required' });
       }
@@ -301,14 +301,14 @@ export async function registerRoutes(app: Express): Promise<Express> {
     try {
       const { id } = req.params;
       const collection = await storage.getLogCollection(parseInt(id));
-      
+
       if (!collection) {
         return res.status(404).json({ error: 'Log collection not found' });
       }
 
       // Parse logs data
       const logs = collection.logsData ? JSON.parse(collection.logsData) : [];
-      
+
       res.json({ 
         collection: {
           ...collection,
@@ -345,7 +345,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
       const decodedFolder = decodeURIComponent(folder);
       const decodedFilename = decodeURIComponent(filename);
       const filePath = path.join('./downloads', decodedFolder, decodedFilename);
-      
+
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ error: 'File not found' });
       }
@@ -353,14 +353,14 @@ export async function registerRoutes(app: Express): Promise<Express> {
       // Security check - make sure the path is within downloads directory
       const realPath = path.resolve(filePath);
       const downloadsPath = path.resolve('./downloads');
-      
+
       if (!realPath.startsWith(downloadsPath)) {
         return res.status(403).json({ error: 'Access denied' });
       }
 
       const stats = fs.statSync(filePath);
       const ext = path.extname(decodedFilename).toLowerCase();
-      
+
       // Set appropriate content type
       let contentType = 'application/octet-stream';
       if (ext === '.mp4') contentType = 'video/mp4';
@@ -373,12 +373,12 @@ export async function registerRoutes(app: Express): Promise<Express> {
       res.setHeader('Content-Length', stats.size);
       res.setHeader('Content-Disposition', `inline; filename="${decodedFilename}"`);
       res.setHeader('Accept-Ranges', 'bytes');
-      
+
       const stream = fs.createReadStream(filePath);
       stream.pipe(res);
-      
+
       logger.info(`Served file: ${decodedFilename} (${stats.size} bytes)`);
-      
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`Failed to serve file: ${errorMessage}`);
@@ -392,7 +392,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
       const decodedFolder = decodeURIComponent(folder);
       const decodedFilename = decodeURIComponent(filename);
       const filePath = path.join('./downloads', decodedFolder, decodedFilename);
-      
+
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ error: 'File not found' });
       }
@@ -400,7 +400,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
       // Security check
       const realPath = path.resolve(filePath);
       const downloadsPath = path.resolve('./downloads');
-      
+
       if (!realPath.startsWith(downloadsPath)) {
         return res.status(403).json({ error: 'Access denied' });
       }
@@ -408,7 +408,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
       fs.unlinkSync(filePath);
       logger.info(`Deleted file: ${decodedFilename}`);
       res.json({ success: true, message: 'File deleted successfully' });
-      
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`Failed to delete file: ${errorMessage}`);
@@ -421,19 +421,19 @@ export async function registerRoutes(app: Express): Promise<Express> {
     try {
       const { filename } = req.params;
       const decodedFilename = decodeURIComponent(filename);
-      
+
       // Only allow zip files
       if (!decodedFilename.endsWith('.zip')) {
         return res.status(400).json({ error: 'Only zip files are allowed' });
       }
-      
+
       // Only allow project-archive files for security
       if (!decodedFilename.startsWith('project-archive-')) {
         return res.status(403).json({ error: 'Access denied' });
       }
-      
+
       const filePath = path.join(process.cwd(), decodedFilename);
-      
+
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ error: 'Archive not found' });
       }
@@ -441,13 +441,13 @@ export async function registerRoutes(app: Express): Promise<Express> {
       // Security check - make sure the path is in the current directory
       const realPath = path.resolve(filePath);
       const rootPath = path.resolve(process.cwd());
-      
+
       if (!realPath.startsWith(rootPath) || realPath !== path.join(rootPath, decodedFilename)) {
         return res.status(403).json({ error: 'Access denied' });
       }
 
       const stats = fs.statSync(filePath);
-      
+
       // Set headers to force download and avoid authorization issues
       res.setHeader('Content-Type', 'application/zip');
       res.setHeader('Content-Length', stats.size);
@@ -457,12 +457,12 @@ export async function registerRoutes(app: Express): Promise<Express> {
       res.setHeader('Expires', '0');
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Accept-Ranges', 'bytes');
-      
+
       const stream = fs.createReadStream(filePath);
       stream.pipe(res);
-      
+
       logger.info(`Served archive: ${decodedFilename} (${stats.size} bytes)`);
-      
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`Failed to serve archive: ${errorMessage}`);
@@ -472,7 +472,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
 
   async function getDownloadHistory(downloadsDir: string): Promise<any> {
     const history: any[] = [];
-    
+
     if (!fs.existsSync(downloadsDir)) {
       return { downloads: [], totalFiles: 0, totalSize: 0 };
     }
@@ -489,13 +489,13 @@ export async function registerRoutes(app: Express): Promise<Express> {
       const folderPath = path.join(downloadsDir, folder);
       if (fs.existsSync(folderPath)) {
         const files = fs.readdirSync(folderPath, { withFileTypes: true });
-        
+
         for (const file of files) {
           if (file.isFile()) {
             const filePath = path.join(folderPath, file.name);
             const stats = fs.statSync(filePath);
             const ext = path.extname(file.name).toLowerCase();
-            
+
             let type = 'document';
             if (['.mp4', '.avi', '.mkv', '.mov'].includes(ext)) type = 'video';
             else if (['.mp3', '.wav', '.flac', '.m4a'].includes(ext)) type = 'audio';
@@ -513,27 +513,27 @@ export async function registerRoutes(app: Express): Promise<Express> {
               url: `/api/downloads/file/${encodeURIComponent(folder)}/${encodeURIComponent(file.name)}`,
               fullPath: filePath
             });
-            
+
             totalSize += stats.size;
             totalFiles++;
           }
         }
-        
+
         // Also check subdirectories in youtube folders
         if (folder.includes('youtube')) {
           const subDirs = fs.readdirSync(folderPath, { withFileTypes: true })
             .filter(dirent => dirent.isDirectory());
-          
+
           for (const subDir of subDirs) {
             const subDirPath = path.join(folderPath, subDir.name);
             const subFiles = fs.readdirSync(subDirPath, { withFileTypes: true });
-            
+
             for (const subFile of subFiles) {
               if (subFile.isFile()) {
                 const subFilePath = path.join(subDirPath, subFile.name);
                 const stats = fs.statSync(subFilePath);
                 const ext = path.extname(subFile.name).toLowerCase();
-                
+
                 let type = folder.includes('videos') ? 'video' : 'audio';
 
                 history.push({
@@ -548,7 +548,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
                   fullPath: subFilePath,
                   uploader: subDir.name
                 });
-                
+
                 totalSize += stats.size;
                 totalFiles++;
               }
@@ -572,21 +572,21 @@ export async function registerRoutes(app: Express): Promise<Express> {
   // Function to read Python bot download tracking
   async function getPythonBotDownloads(): Promise<any[]> {
     const downloads: any[] = [];
-    
+
     try {
       const configReader = require('../shared/config-reader').configReader;
       const pathsConfig = configReader.getPathsConfig();
       const downloadFilesPath = path.resolve(process.cwd(), pathsConfig.download_files.replace('./', ''));
-      
+
       if (fs.existsSync(downloadFilesPath)) {
         const data = JSON.parse(fs.readFileSync(downloadFilesPath, 'utf-8'));
-        
+
         for (const item of data) {
           // Check if the actual file still exists
           const fileName = item.new_filename || item.original_filename;
           if (fileName && fs.existsSync(path.join('./downloads', fileName))) {
             const stats = fs.statSync(path.join('./downloads', fileName));
-            
+
             downloads.push({
               id: `python_${item.message_id}`,
               fileName,
@@ -607,7 +607,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
     } catch (error) {
       logger.debug(`Could not read Python bot downloads: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    
+
     return downloads;
   }
 
@@ -618,7 +618,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
     try {
       const telegramConfig = configReader.getTelegramConfig();
       const { pairs, sessionString, configContent } = req.body;
-      
+
       if (!pairs || !Array.isArray(pairs) || pairs.length === 0) {
         return res.status(400).json({ error: 'Forward pairs are required' });
       }
@@ -635,16 +635,16 @@ export async function registerRoutes(app: Express): Promise<Express> {
       const forwarderPath = path.join(process.cwd(), 'bot_source', 'python-copier', 'forwarder.py');
       const configDir = path.join(process.cwd(), 'tmp', 'config');
       const configPath = path.join(configDir, 'copier_config.ini');
-      
+
       // Create directories if they don't exist
       fs.mkdirSync(configDir, { recursive: true });
-      
+
       // Use provided config content (properly formatted) or generate fallback
       let finalConfigContent = configContent;
       if (!finalConfigContent) {
         finalConfigContent = '; Telegram Chat Direct Copier Configuration\n';
         finalConfigContent += '; Generated by Telegram Manager\n\n';
-        
+
         pairs.forEach((pair: any) => {
           finalConfigContent += `[${pair.name}]\n`;
           finalConfigContent += `from = ${pair.fromChat}\n`;
@@ -652,7 +652,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
           finalConfigContent += `offset = ${pair.offset || 0}\n\n`;
         });
       }
-      
+
       // Write config file
       fs.writeFileSync(configPath, finalConfigContent);
 
@@ -691,20 +691,20 @@ export async function registerRoutes(app: Express): Promise<Express> {
       pythonCopier.stdout?.on('data', (data) => {
         const log = data.toString();
         const timestampedLog = `[STDOUT] ${new Date().toISOString()}: ${log}`;
-        
+
         // Add to current session logs (limited)
         pythonCopierStatus.logs.push(timestampedLog);
         if (pythonCopierStatus.logs.length > 100) {
           pythonCopierStatus.logs = pythonCopierStatus.logs.slice(-50);
         }
-        
+
         // Add to complete last forwarding log (unlimited)
         if (lastForwardingLog) {
           lastForwardingLog.logs.push(timestampedLog);
         }
-        
+
         console.log('Python Copier STDOUT:', log);
-        
+
         // Parse logs to extract progress info
         if (log.includes('Forwarded message')) {
           pythonCopierStatus.processedMessages++;
@@ -720,18 +720,18 @@ export async function registerRoutes(app: Express): Promise<Express> {
       pythonCopier.stderr?.on('data', (data) => {
         const log = data.toString();
         const timestampedLog = `[STDERR] ${new Date().toISOString()}: ${log}`;
-        
+
         // Add to current session logs (limited)
         pythonCopierStatus.logs.push(timestampedLog);
         if (pythonCopierStatus.logs.length > 100) {
           pythonCopierStatus.logs = pythonCopierStatus.logs.slice(-50);
         }
-        
+
         // Add to complete last forwarding log (unlimited)
         if (lastForwardingLog) {
           lastForwardingLog.logs.push(timestampedLog);
         }
-        
+
         console.error('Python Copier STDERR:', log);
       });
 
@@ -739,7 +739,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
         console.log(`Python copier process exited with code ${code}`);
         pythonCopierStatus.running = false;
         pythonCopier = null;
-        
+
         // Finalize last forwarding log
         if (lastForwardingLog) {
           lastForwardingLog.endTime = new Date().toISOString();
@@ -802,30 +802,30 @@ export async function registerRoutes(app: Express): Promise<Express> {
   app.post('/api/python-copier/update-offset', (req, res) => {
     try {
       const { pairName, newOffset } = req.body;
-      
+
       if (!pairName || newOffset === undefined) {
         return res.status(400).json({ error: 'Pair name and new offset are required' });
       }
 
       const configDir = path.join(process.cwd(), 'tmp', 'config');
       const configPath = path.join(configDir, 'copier_config.ini');
-      
+
       if (!fs.existsSync(configPath)) {
         return res.status(404).json({ error: 'Config file not found' });
       }
 
       // Read current config
       let configContent = fs.readFileSync(configPath, 'utf8');
-      
+
       // Update the specific pair's offset
       const lines = configContent.split('\n');
       let inTargetSection = false;
       let updatedLines: string[] = [];
-      
+
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const trimmed = line.trim();
-        
+
         if (trimmed === `[${pairName}]`) {
           inTargetSection = true;
           updatedLines.push(line);
@@ -838,11 +838,11 @@ export async function registerRoutes(app: Express): Promise<Express> {
           updatedLines.push(line);
         }
       }
-      
+
       // Write updated config back
       const updatedConfigContent = updatedLines.join('\n');
       fs.writeFileSync(configPath, updatedConfigContent);
-      
+
       res.json({ success: true, message: 'Offset updated successfully' });
     } catch (error) {
       console.error('Failed to update offset:', error);
@@ -865,7 +865,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
       if (!lastForwardingLog) {
         return res.json({ hasLog: false, message: 'No previous forwarding log available' });
       }
-      
+
       res.json({ 
         hasLog: true,
         log: lastForwardingLog
@@ -881,11 +881,11 @@ export async function registerRoutes(app: Express): Promise<Express> {
     try {
       const logs = pythonCopierStatus.logs.length > 0 ? pythonCopierStatus.logs : 
                    (lastForwardingLog?.logs || []);
-                   
+
       // Look for the last forwarded message log (Python format)
       let lastOffset = null;
       let pairName = null;
-      
+
       for (let i = logs.length - 1; i >= 0; i--) {
         const log = logs[i];
         // Try multiple patterns for Python copier logs
@@ -893,7 +893,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
                    log.match(/message.*?id\s*[=:]\s*(\d+).*?pair\s*[=:]\s*(.+?)(?:\s|$)/i) ||  // Alternative format
                    log.match(/offset.*?(\d+).*?pair.*?(.+?)(?:\s|$)/i) ||  // Offset format
                    log.match(/(\d+).*?forwarded.*?from\s+(.+?)(?:\s|$)/i);  // General format
-        
+
         if (match) {
           lastOffset = parseInt(match[1]);
           pairName = match[2] ? match[2].trim() : 'Unknown Pair';
@@ -903,7 +903,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
           }
         }
       }
-      
+
       if (lastOffset !== null) {
         res.json({ 
           hasOffset: true, 
@@ -927,7 +927,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
   app.post('/api/python-copier/update-offset', (req, res) => {
     try {
       const { pairName, newOffset } = req.body;
-      
+
       if (!pairName || newOffset === undefined) {
         return res.status(400).json({ error: 'Pair name and new offset are required' });
       }
@@ -935,10 +935,10 @@ export async function registerRoutes(app: Express): Promise<Express> {
       // Update offset in Python copier config file
       const configDir = path.join(process.cwd(), 'tmp', 'config');
       const configPath = path.join(configDir, 'copier_config.ini');
-      
+
       if (fs.existsSync(configPath)) {
         let configContent = fs.readFileSync(configPath, 'utf8');
-        
+
         // Update the offset for the specific pair using regex with escaped pair name
         const escapedPairName = escapeRegex(pairName);
         const pairRegex = new RegExp(`(\\[${escapedPairName}\\][\\s\\S]*?offset\\s*=\\s*)\\d+`, 'i');
@@ -963,17 +963,17 @@ export async function registerRoutes(app: Express): Promise<Express> {
     try {
       const configDir = path.join(process.cwd(), 'tmp', 'config');
       const configPath = path.join(configDir, 'copier_config.ini');
-      
+
       let configContent = '';
       let pairs: any[] = [];
-      
+
       if (fs.existsSync(configPath)) {
         configContent = fs.readFileSync(configPath, 'utf8');
-        
+
         // Parse the config file to extract pairs
         const lines = configContent.split('\n');
         let currentPair: any = null;
-        
+
         for (const line of lines) {
           const trimmed = line.trim();
           if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
@@ -1002,12 +1002,12 @@ export async function registerRoutes(app: Express): Promise<Express> {
             }
           }
         }
-        
+
         if (currentPair) {
           pairs.push(currentPair);
         }
       }
-      
+
       res.json({ configContent, pairs });
     } catch (error) {
       console.error('Failed to load config:', error);
@@ -1020,16 +1020,16 @@ export async function registerRoutes(app: Express): Promise<Express> {
       const { pairs, configContent } = req.body;
       const configDir = path.join(process.cwd(), 'tmp', 'config');
       const configPath = path.join(configDir, 'copier_config.ini');
-      
+
       // Create directory if it doesn't exist
       fs.mkdirSync(configDir, { recursive: true });
-      
+
       // Use provided config content or generate from pairs
       const content = configContent || generateConfigContent(pairs);
-      
+
       // Write config file
       fs.writeFileSync(configPath, content);
-      
+
       res.json({ success: true, message: 'Configuration saved successfully' });
     } catch (error) {
       console.error('Failed to save config:', error);
@@ -1041,20 +1041,20 @@ export async function registerRoutes(app: Express): Promise<Express> {
   app.post('/api/python-copier/config/custom', (req, res) => {
     try {
       const { configContent } = req.body;
-      
+
       if (!configContent || typeof configContent !== 'string') {
         return res.status(400).json({ error: 'Config content is required' });
       }
-      
+
       const configDir = path.join(process.cwd(), 'tmp', 'config');
       const configPath = path.join(configDir, 'copier_config.ini');
-      
+
       // Create directory if it doesn't exist
       fs.mkdirSync(configDir, { recursive: true });
-      
+
       // Write the custom config content directly
       fs.writeFileSync(configPath, configContent);
-      
+
       res.json({ success: true, message: 'Custom configuration saved successfully' });
     } catch (error) {
       console.error('Failed to save custom config:', error);
@@ -1066,7 +1066,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
   function generateConfigContent(pairs: any[]): string {
     let content = '; Telegram Chat Direct Copier Configuration\n';
     content += '; Generated by Telegram Manager\n\n';
-    
+
     pairs.forEach((pair: any) => {
       content += `[${pair.name}]\n`;
       content += `from = ${pair.fromChat}\n`;
@@ -1077,7 +1077,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
                      pair.offset !== undefined ? pair.offset : 0;
       content += `offset = ${offset}\n\n`;
     });
-    
+
     return content;
   }
 
@@ -1085,14 +1085,14 @@ export async function registerRoutes(app: Express): Promise<Express> {
   app.post('/api/python-copier/test-session', async (req, res) => {
     try {
       const { sessionString } = req.body;
-      
+
       if (!sessionString) {
         return res.status(400).json({ error: 'Session string is required' });
       }
 
       const telegramConfig = configReader.getTelegramConfig();
       const testScriptPath = path.join(process.cwd(), 'bot_source', 'python-copier', 'test_session.py');
-      
+
       // Create a simple test script to verify session
       const testScript = `
 import asyncio
@@ -1171,7 +1171,7 @@ if __name__ == "__main__":
   app.post('/api/python-copier/start-pair', async (req, res) => {
     try {
       const { pairId, sessionString } = req.body;
-      
+
       if (!pairId || !sessionString) {
         return res.status(400).json({ error: 'Pair ID and session string are required' });
       }
@@ -1197,7 +1197,7 @@ if __name__ == "__main__":
         pythonCopierStatus.running = false;
         pythonCopierStatus.isPaused = true;
       }
-      
+
       res.json({ 
         success: true, 
         message: 'Python copier paused',
@@ -1214,7 +1214,7 @@ if __name__ == "__main__":
       // Resume would restart the copier with current config
       // For now, return success
       pythonCopierStatus.isPaused = false;
-      
+
       res.json({ 
         success: true, 
         message: 'Python copier resumed',
@@ -1244,12 +1244,12 @@ if __name__ == "__main__":
     const timestamp = new Date().toISOString();
     const logMessage = `[${timestamp}] ${message}`;
     jsCopierStatus.logs.push(logMessage);
-    
+
     // Keep only last 1000 log entries
     if (jsCopierStatus.logs.length > 1000) {
       jsCopierStatus.logs = jsCopierStatus.logs.slice(-1000);
     }
-    
+
     jsCopierStatus.lastActivity = timestamp;
     logger.info(`[JS Copier] ${message}`);
   };
@@ -1260,13 +1260,13 @@ if __name__ == "__main__":
     if (chatId.startsWith('@')) {
       return chatId;
     }
-    
+
     // Handle numeric IDs
     const numericId = parseInt(chatId);
     if (!isNaN(numericId)) {
       return numericId;
     }
-    
+
     return chatId;
   };
 
@@ -1274,14 +1274,14 @@ if __name__ == "__main__":
   const generateJSConfigContent = (pairs: any[]): string => {
     let content = '; Telegram Chat Direct Copier Configuration (JavaScript/GramJS)\n';
     content += '; Generated by Telegram Manager - JS Copier\n\n';
-    
+
     pairs.forEach((pair: any) => {
       content += `[${pair.name}]\n`;
       content += `from = ${pair.fromChat}\n`;
       content += `to = ${pair.toChat}\n`;
       content += `offset = ${pair.currentOffset || 0}\n\n`;
     });
-    
+
     return content;
   };
 
@@ -1289,7 +1289,7 @@ if __name__ == "__main__":
   app.post('/api/js-copier/test-session', async (req, res) => {
     try {
       const { sessionString } = req.body;
-      
+
       if (!sessionString || typeof sessionString !== 'string') {
         return res.status(400).json({ error: 'Session string is required' });
       }
@@ -1316,7 +1316,7 @@ if __name__ == "__main__":
         jsCopierStatus.currentUserInfo = result.userInfo;
 
         addJSCopierLog(`Session valid for user: ${result.userInfo.firstName} (@${result.userInfo.username})`);
-        
+
         res.json({ 
           success: true, 
           userInfo: result.userInfo,
@@ -1338,7 +1338,7 @@ if __name__ == "__main__":
     try {
       const telegramConfig = configReader.getTelegramConfig();
       const { pairs, sessionString, configContent } = req.body;
-      
+
       if (!pairs || !Array.isArray(pairs) || pairs.length === 0) {
         return res.status(400).json({ error: 'Forward pairs are required' });
       }
@@ -1355,10 +1355,10 @@ if __name__ == "__main__":
 
       const configDir = path.join(process.cwd(), 'tmp', 'config');
       const configPath = path.join(configDir, 'js_copier_config.ini');
-      
+
       // Create directories if they don't exist
       fs.mkdirSync(configDir, { recursive: true });
-      
+
       // Use provided config content or generate from pairs
       let finalConfigContent = configContent;
       if (!finalConfigContent) {
@@ -1410,10 +1410,10 @@ if __name__ == "__main__":
     try {
       const configDir = path.join(process.cwd(), 'tmp', 'config');
       const configPath = path.join(configDir, 'js_copier_config.ini');
-      
+
       if (fs.existsSync(configPath)) {
         let configContent = fs.readFileSync(configPath, 'utf8');
-        
+
         // Update the offset for the specific pair using regex with escaped pair name
         const escapedPairName = escapeRegex(pairName);
         const pairRegex = new RegExp(`(\\[${escapedPairName}\\][\\s\\S]*?offset\\s*=\\s*)\\d+`, 'i');
@@ -1516,7 +1516,7 @@ if __name__ == "__main__":
 
                   messagesForwarded++;
                   jsCopierStatus.processedMessages++;
-                  
+
                   addJSCopierLog(`Forwarded message with id = ${message.id} from ${pair.name}`);
 
                   // Small delay to avoid rate limiting like Python
@@ -1604,7 +1604,7 @@ if __name__ == "__main__":
         lastJSForwardingLog.endTime = new Date().toISOString();
         lastJSForwardingLog.status = 'failed'; // Stopped manually
         lastJSForwardingLog.logs = [...jsCopierStatus.logs];
-        
+
         addJSCopierLog('JS copier stopped by user');
       }
 
@@ -1623,7 +1623,7 @@ if __name__ == "__main__":
         currentUserInfo: undefined,
         logs: []
       };
-      
+
       res.json({ 
         success: true, 
         message: 'JS copier stopped successfully',
@@ -1663,17 +1663,17 @@ if __name__ == "__main__":
     try {
       const configDir = path.join(process.cwd(), 'tmp', 'config');
       const configPath = path.join(configDir, 'js_copier_config.ini');
-      
+
       let configContent = '';
       let pairs: any[] = [];
-      
+
       if (fs.existsSync(configPath)) {
         configContent = fs.readFileSync(configPath, 'utf8');
-        
+
         // Parse config to extract pairs (simplified parsing)
         const lines = configContent.split('\n');
         let currentPair: any = null;
-        
+
         for (const line of lines) {
           const trimmed = line.trim();
           if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
@@ -1701,7 +1701,7 @@ if __name__ == "__main__":
         }
         if (currentPair) pairs.push(currentPair);
       }
-      
+
       res.json({ 
         pairs,
         configContent,
@@ -1720,14 +1720,14 @@ if __name__ == "__main__":
       const { pairs, configContent } = req.body;
       const configDir = path.join(process.cwd(), 'tmp', 'config');
       const configPath = path.join(configDir, 'js_copier_config.ini');
-      
+
       // Create directory if it doesn't exist
       fs.mkdirSync(configDir, { recursive: true });
-      
+
       // Use provided config content or generate from pairs
       const content = configContent || generateJSConfigContent(pairs);
       fs.writeFileSync(configPath, content, 'utf8');
-      
+
       res.json({ success: true, message: 'JS copier config saved successfully' });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -1740,19 +1740,19 @@ if __name__ == "__main__":
   app.post('/api/js-copier/config/custom', (req, res) => {
     try {
       const { configContent } = req.body;
-      
+
       if (!configContent || typeof configContent !== 'string') {
         return res.status(400).json({ error: 'Config content is required' });
       }
-      
+
       const configDir = path.join(process.cwd(), 'tmp', 'config');
       const configPath = path.join(configDir, 'js_copier_config.ini');
-      
+
       // Create directory if it doesn't exist
       fs.mkdirSync(configDir, { recursive: true });
-      
+
       fs.writeFileSync(configPath, configContent, 'utf8');
-      
+
       res.json({ success: true, message: 'Custom JS copier config saved successfully' });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -1767,7 +1767,7 @@ if __name__ == "__main__":
       if (!lastJSForwardingLog) {
         return res.json({ hasLog: false, message: 'No previous forwarding log available' });
       }
-      
+
       res.json({ 
         hasLog: true,
         log: lastJSForwardingLog
@@ -1784,11 +1784,11 @@ if __name__ == "__main__":
     try {
       const logs = jsCopierStatus.logs.length > 0 ? jsCopierStatus.logs : 
                    (lastJSForwardingLog?.logs || []);
-                   
+
       // Look for the last forwarded message log (JS format is very specific)
       let lastOffset = null;
       let pairName = null;
-      
+
       for (let i = logs.length - 1; i >= 0; i--) {
         const log = logs[i];
         // Match exact JS copier log format: "Forwarded message with id = 1234 from PairName"
@@ -1799,7 +1799,7 @@ if __name__ == "__main__":
           break;
         }
       }
-      
+
       if (lastOffset !== null) {
         res.json({ 
           hasOffset: true, 
@@ -1824,18 +1824,18 @@ if __name__ == "__main__":
   app.post('/api/js-copier/update-offset', (req, res) => {
     try {
       const { pairName, newOffset } = req.body;
-      
+
       if (!pairName || newOffset === undefined) {
         return res.status(400).json({ error: 'Pair name and new offset are required' });
       }
 
       // Update offset in JS copier config file
       updateJSCopierOffset(pairName, newOffset);
-      
+
       // Also update in memory config if available
       const configDir = path.join(process.cwd(), 'tmp', 'config');
       const configPath = path.join(configDir, 'js_copier_config.ini');
-      
+
       let updatedPairs = 0;
       if (fs.existsSync(configPath)) {
         // Re-read and parse the updated config to refresh the pairs
@@ -1860,7 +1860,7 @@ if __name__ == "__main__":
   app.post('/api/js-copier/start-pair', async (req, res) => {
     try {
       const { pairId, sessionString } = req.body;
-      
+
       if (!pairId || !sessionString) {
         return res.status(400).json({ error: 'Pair ID and session string are required' });
       }
@@ -1886,7 +1886,7 @@ if __name__ == "__main__":
         jsCopierStatus.isPaused = true;
         jsCopierStatus.running = false;
       }
-      
+
       res.json({ 
         success: true, 
         message: 'JS copier paused',
@@ -1904,7 +1904,7 @@ if __name__ == "__main__":
     try {
       // Resume would restart the copier with current config
       jsCopierStatus.isPaused = false;
-      
+
       res.json({ 
         success: true, 
         message: 'JS copier resumed',
@@ -1930,7 +1930,7 @@ if __name__ == "__main__":
   app.post('/api/live-cloning/start', async (req, res) => {
     try {
       const { sessionString, entityLinks, wordFilters, settings } = req.body;
-      
+
       if (!sessionString) {
         return res.status(400).json({ error: 'Session string is required' });
       }
@@ -1945,7 +1945,7 @@ if __name__ == "__main__":
       const liveClonerPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'live_cloner.py');
       const configDir = path.join(process.cwd(), 'tmp', 'config');
       const configPath = path.join(configDir, 'live_cloning_config.json');
-      
+
       // Ensure config directory exists
       if (!fs.existsSync(configDir)) {
         fs.mkdirSync(configDir, { recursive: true });
@@ -1953,7 +1953,7 @@ if __name__ == "__main__":
 
       // Generate unique instance ID
       const instanceId = `live_cloning_${Date.now()}`;
-      
+
       // Prepare configuration
       const config = {
         api_id: parseInt(telegramConfig.api_id),
@@ -1965,7 +1965,7 @@ if __name__ == "__main__":
         entities: entityLinks || [],
         filters: wordFilters || []
       };
-      
+
       // Write config file
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
@@ -1999,35 +1999,35 @@ if __name__ == "__main__":
       liveCloningProcess.stdout?.on('data', (data) => {
         const log = data.toString();
         const timestampedLog = `[STDOUT] ${new Date().toISOString()}: ${log}`;
-        
+
         liveCloningStatus.logs.push(timestampedLog);
         if (liveCloningStatus.logs.length > 100) {
           liveCloningStatus.logs = liveCloningStatus.logs.slice(-50);
         }
-        
+
         console.log('Live Cloning STDOUT:', log);
-        
+
         // Parse logs for progress info
         if (log.includes('message forwarded') || log.includes('Message sent')) {
           liveCloningStatus.processedMessages++;
         }
-        
+
         liveCloningStatus.lastActivity = new Date().toISOString();
       });
-      
+
       liveCloningProcess.stderr?.on('data', (data) => {
         const log = data.toString();
         const timestampedLog = `[STDERR] ${new Date().toISOString()}: ${log}`;
-        
+
         liveCloningStatus.logs.push(timestampedLog);
         if (liveCloningStatus.logs.length > 100) {
           liveCloningStatus.logs = liveCloningStatus.logs.slice(-50);
         }
-        
+
         console.error('Live Cloning STDERR:', log);
         liveCloningStatus.lastActivity = new Date().toISOString();
       });
-      
+
       liveCloningProcess.on('close', (code) => {
         console.log(`Live cloning process exited with code ${code}`);
         liveCloningStatus.running = false;
@@ -2041,7 +2041,7 @@ if __name__ == "__main__":
         instanceId: instanceId,
         status: liveCloningStatus 
       });
-      
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Failed to start live cloning:', errorMessage);
@@ -2055,7 +2055,7 @@ if __name__ == "__main__":
       if (liveCloningProcess) {
         liveCloningProcess.kill('SIGTERM');
         liveCloningProcess = null;
-        
+
         setTimeout(() => {
           if (liveCloningProcess && !liveCloningProcess.killed) {
             liveCloningProcess.kill('SIGKILL');
@@ -2066,13 +2066,13 @@ if __name__ == "__main__":
 
       liveCloningStatus.running = false;
       liveCloningStatus.lastActivity = new Date().toISOString();
-      
+
       res.json({ 
         success: true, 
         message: 'Live cloning stopped successfully',
         status: liveCloningStatus 
       });
-      
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Failed to stop live cloning:', errorMessage);
@@ -2094,13 +2094,13 @@ if __name__ == "__main__":
   app.put('/api/live-cloning/settings', async (req, res) => {
     try {
       const { botEnabled, filterWords, addSignature, signature } = req.body;
-      
+
       // Update in-memory status
       if (typeof botEnabled === 'boolean') liveCloningStatus.botEnabled = botEnabled;
       if (typeof filterWords === 'boolean') liveCloningStatus.filterWords = filterWords;
       if (typeof addSignature === 'boolean') liveCloningStatus.addSignature = addSignature;
       if (typeof signature === 'string') liveCloningStatus.signature = signature;
-      
+
       liveCloningStatus.lastActivity = new Date().toISOString();
 
       // Always persist settings in storage (regardless of running state)
@@ -2111,21 +2111,21 @@ if __name__ == "__main__":
           addSignature: liveCloningStatus.addSignature,
           signature: liveCloningStatus.signature
         };
-        
+
         // Store in a persistent config that survives restarts
         const persistentConfigPath = path.join(process.cwd(), 'config', 'live_cloning_persistent_settings.json');
         fs.writeFileSync(persistentConfigPath, JSON.stringify(settingsToStore, null, 2));
-        
+
         // Also update the actual bot config file that the Python bot reads
         const botConfigPath = path.resolve(process.cwd(), 'bot_source', 'live-cloning', 'plugins', 'jsons', 'config.json');
         console.log('🔍 Checking bot config path:', botConfigPath, 'exists:', fs.existsSync(botConfigPath));
-        
+
         if (fs.existsSync(botConfigPath)) {
           try {
             let botConfig = {};
             const botConfigData = fs.readFileSync(botConfigPath, 'utf8');
             botConfig = JSON.parse(botConfigData);
-            
+
             // Update bot config with new settings
             Object.assign(botConfig, {
               bot_enabled: liveCloningStatus.botEnabled,
@@ -2133,7 +2133,7 @@ if __name__ == "__main__":
               add_signature: liveCloningStatus.addSignature,
               signature: liveCloningStatus.signature || ""
             });
-            
+
             fs.writeFileSync(botConfigPath, JSON.stringify(botConfig, null, 2));
             console.log('✅ Updated bot config file:', botConfigPath);
           } catch (botConfigError) {
@@ -2147,10 +2147,10 @@ if __name__ == "__main__":
       }
 
       // If bot is running, update the config file and notify the bot process
-      if (liveCloningStatus.running && liveCloningStatus.instanceId) {
+      if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
         const configDir = path.join(process.cwd(), 'tmp', 'config');
         const configPath = path.join(configDir, 'live_cloning_config.json');
-        
+
         try {
           // Read current config
           let config: any = {};
@@ -2158,16 +2158,16 @@ if __name__ == "__main__":
             const configData = fs.readFileSync(configPath, 'utf8');
             config = JSON.parse(configData);
           }
-          
+
           // Update config with new settings
           if (typeof botEnabled === 'boolean') config.bot_enabled = botEnabled;
           if (typeof filterWords === 'boolean') config.filter_words = filterWords;
           if (typeof addSignature === 'boolean') config.add_signature = addSignature;
           if (typeof signature === 'string') config.signature = signature;
-          
+
           // Write updated config
           fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-          
+
           // Persist settings in storage if instance exists
           if (liveCloningStatus.instanceId) {
             try {
@@ -2184,7 +2184,7 @@ if __name__ == "__main__":
               console.error('Error updating instance in storage:', storageError);
             }
           }
-          
+
         } catch (error) {
           console.error('Error updating bot config:', error);
         }
@@ -2200,7 +2200,7 @@ if __name__ == "__main__":
           signature: liveCloningStatus.signature
         }
       });
-      
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Failed to update settings:', errorMessage);
@@ -2235,7 +2235,7 @@ if __name__ == "__main__":
   app.post('/api/live-cloning/entity-links', async (req, res) => {
     try {
       const { instanceId, fromEntity, toEntity } = req.body;
-      
+
       if (!instanceId || !fromEntity || !toEntity) {
         return res.status(400).json({ error: 'Instance ID, from entity, and to entity are required' });
       }
@@ -2243,11 +2243,11 @@ if __name__ == "__main__":
       // CRITICAL: Resolve entities first before storing (like original Python does)
       // This ensures entities exist and are valid in the Telegram session
       let resolvedFromEntity, resolvedToEntity;
-      
+
       try {
         // Get current session string using same logic as startLiveCloningService
         let sessionString = process.env.LIVE_CLONING_SESSION;
-        
+
         // Try to get from persistent settings file if not in env (same as startLiveCloningService)
         if (!sessionString) {
           try {
@@ -2260,7 +2260,7 @@ if __name__ == "__main__":
             console.log('Could not read persistent settings for session');
           }
         }
-        
+
         // Fallback to hardcoded session (same as used by Python live cloning service)
         if (!sessionString) {
           sessionString = "1BVtsOMQBu1MCySasHg5HgnkWT88tu1InjQlIpLdYBk6sQ8AbeLDQnDA3ozJtwCM-tFczcZGyCrvXYBOZZ8p0xEfPVelOUGRx2I3fF7Bp3WxrliIG1EO9S0p5578d3j810CHKkdkgUtqf79d7N-NDAAZ8SPP71bFjqTdZbj4GjzcPIBGM5o5oxNjKP86u8q1MlDwXHbcjv3VHEkIBN3704qI9-xDIr0pqEauUjUnpEDC72eX4y4iWqVWS2mWNKnwBSt3zU9qiFQ_l7xVFsfgG0quxQs3x-BE9m7_5eZ7XRZz2_UPole8otKxkOB3J7LYZSvhNsUv-WuMVXA4SZuZ_XTn9OubHJLE=";
@@ -2268,9 +2268,9 @@ if __name__ == "__main__":
         }
 
         const telegramConfig = configReader.getTelegramConfig();
-        
+
         // Create temporary client for entity resolution
-        
+
         const client = new TelegramClient(
           new StringSession(sessionString),
           parseInt(telegramConfig.api_id),
@@ -2290,37 +2290,37 @@ if __name__ == "__main__":
           await client.connect();
           clientConnected = true;
           console.log('✅ Connected to Telegram for entity resolution');
-          
+
           // First, sync dialogs to ensure entities are available
           console.log('📥 Syncing dialogs to ensure entities are loaded...');
           const dialogs = await client.getDialogs();
           console.log(`✅ Synced ${dialogs.length} dialogs`);
-          
+
           // Resolve both entities like original Python code does
           try {
             console.log(`🔍 Resolving source entity: ${fromEntity}`);
             resolvedFromEntity = await client.getEntity(fromEntity);
             const fromEntityName = (resolvedFromEntity as any).title || (resolvedFromEntity as any).firstName || 'Unknown';
             console.log(`✅ Source entity resolved: ${resolvedFromEntity.id} (${fromEntityName})`);
-            
+
             console.log(`🔍 Resolving target entity: ${toEntity}`);
             resolvedToEntity = await client.getEntity(toEntity);
             const toEntityName = (resolvedToEntity as any).title || (resolvedToEntity as any).firstName || 'Unknown';
             console.log(`✅ Target entity resolved: ${resolvedToEntity.id} (${toEntityName})`);
-            
+
           } catch (entityError: any) {
             console.error('❌ Direct entity resolution failed, searching in dialogs...', entityError.message);
-            
+
             // Fallback: Search in already synced dialogs
             console.log('🔍 Searching for entities in synced dialogs...');
-            
+
             // Try to find entities in dialogs with better matching logic
             for (const dialog of dialogs) {
               if (dialog.entity) {
                 const entityId = dialog.entity.id.toString();
                 const entityUsername = (dialog.entity as any).username || '';
                 const entityTitle = (dialog.entity as any).title || (dialog.entity as any).firstName || '';
-                
+
                 // Enhanced matching for source entity
                 if (!resolvedFromEntity) {
                   const fromStr = fromEntity.toString();
@@ -2335,7 +2335,7 @@ if __name__ == "__main__":
                     console.log(`✅ Found source entity in dialogs: ${resolvedFromEntity.id} (${entityTitle})`);
                   }
                 }
-                
+
                 // Enhanced matching for target entity
                 if (!resolvedToEntity) {
                   const toStr = toEntity.toString();
@@ -2350,19 +2350,19 @@ if __name__ == "__main__":
                     console.log(`✅ Found target entity in dialogs: ${resolvedToEntity.id} (${entityTitle})`);
                   }
                 }
-                
+
                 // Break early if both found
                 if (resolvedFromEntity && resolvedToEntity) {
                   break;
                 }
               }
             }
-            
+
             if (!resolvedFromEntity || !resolvedToEntity) {
               const missingEntities = [];
               if (!resolvedFromEntity) missingEntities.push(`source: ${fromEntity}`);
               if (!resolvedToEntity) missingEntities.push(`target: ${toEntity}`);
-              
+
               throw new Error(
                 `Could not resolve entities: ${missingEntities.join(', ')}. ` +
                 `Make sure the bot account is joined to both chats. ` +
@@ -2370,7 +2370,7 @@ if __name__ == "__main__":
               );
             }
           }
-          
+
         } finally {
           // Always disconnect the client if it was connected
           if (clientConnected) {
@@ -2382,7 +2382,7 @@ if __name__ == "__main__":
             }
           }
         }
-        
+
       } catch (resolutionError: any) {
         return res.status(400).json({ 
           error: `Entity resolution failed: ${resolutionError.message}` 
@@ -2393,56 +2393,47 @@ if __name__ == "__main__":
       // No database writes - config.json is the authoritative source for both web and Python
       try {
         const configPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
-        
+
         if (!fs.existsSync(configPath)) {
           return res.status(500).json({ error: 'Configuration file not found' });
         }
-        
+
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
         const entityPairs = config.entities || [];
-        
+
         // Convert resolved entities to numeric IDs (exactly like Python bot expects)
         const fromId = Number(resolvedFromEntity.id);
         const toId = Number(resolvedToEntity.id);
-        
+
         // Check for duplicates before adding
         const isDuplicate = entityPairs.some((pair: any[]) => 
           Number(pair[0]) === fromId && Number(pair[1]) === toId
         );
-        
+
         if (isDuplicate) {
           return res.status(400).json({ 
             error: `Entity link already exists: ${fromId} → ${toId}` 
           });
         }
-        
+
         // Add new entity pair in exact Python format [[sourceId, targetId]]
         entityPairs.push([fromId, toId]);
-        
+
         // Save to config.json (single source of truth)
         config.entities = entityPairs;
         fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-        
+
         console.log(`✅ Added entity link to config.json: ${fromId} → ${toId}`);
         console.log(`📝 Total entity links: ${entityPairs.length}`, entityPairs);
-        
-        // Create response in format expected by frontend
-        const newLink = {
-          id: entityPairs.length, // Use array length as ID
-          instanceId,
-          fromEntity: fromId.toString(),
-          toEntity: toId.toString(),
-          isActive: true
-        };
-        
+
         // Sync with running bot if active
         if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
           await syncEntityLinksWithBot();
           console.log(`✅ Synced new entity link with running bot: ${fromId} → ${toId}`);
         }
-        
+
         res.json({ success: true, link: newLink });
-        
+
       } catch (configError: any) {
         console.error('❌ Error writing to config.json:', configError);
         return res.status(500).json({ 
@@ -2458,19 +2449,19 @@ if __name__ == "__main__":
   app.get('/api/live-cloning/entity-links/:instanceId', async (req, res) => {
     try {
       const { instanceId } = req.params;
-      
+
       // CRITICAL: Read entity links directly from config.json (same source as Python bot)
       // This ensures 100% synchronization between web and Telegram interfaces
       try {
         const configPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
-        
+
         if (!fs.existsSync(configPath)) {
           return res.json({ links: [] });
         }
-        
+
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
         const entityPairs = config.entities || [];
-        
+
         // Convert the Python format [[sourceId, targetId]] to the frontend format
         const links = entityPairs.map((pair: any[], index: number) => ({
           id: index + 1, // Generate sequential IDs for frontend
@@ -2479,10 +2470,10 @@ if __name__ == "__main__":
           toEntity: pair[1].toString(),
           isActive: true
         }));
-        
+
         console.log(`📖 Read ${links.length} entity links directly from config.json:`, entityPairs);
         res.json({ links });
-        
+
       } catch (configError: any) {
         console.error('❌ Error reading from config.json:', configError);
         // No fallback - config.json is the single source of truth
@@ -2500,7 +2491,7 @@ if __name__ == "__main__":
     try {
       const { id } = req.params;
       const { fromEntity, toEntity, isActive } = req.body;
-      
+
       if (!fromEntity || !toEntity) {
         return res.status(400).json({ error: 'From entity and to entity are required' });
       }
@@ -2510,24 +2501,24 @@ if __name__ == "__main__":
         toEntity,
         isActive: isActive !== undefined ? isActive : true
       });
-      
+
       if (updated) {
         // CRITICAL: Update main config.json file after entity link update
         try {
           const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
-          
+
           // Get all entity links for this instance
           if (liveCloningStatus.instanceId) {
             const allLinks = await storage.getEntityLinks(liveCloningStatus.instanceId);
-            
+
             // Convert to numeric IDs - ensure we have proper numbers, not strings or usernames
             const entityPairs = allLinks.map(link => {
               const fromId = !isNaN(Number(link.fromEntity)) ? Number(link.fromEntity) : link.fromEntity;
               const toId = !isNaN(Number(link.toEntity)) ? Number(link.toEntity) : link.toEntity;
               return [fromId, toId];
             });
-            
-            // Update ONLY the main Python config.json file
+
+            // Update ONLY the main config.json file
             if (fs.existsSync(originalConfigPath)) {
               const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
               originalConfig.entities = entityPairs;
@@ -2538,7 +2529,7 @@ if __name__ == "__main__":
         } catch (syncError) {
           console.error('⚠️ Error updating Python config after entity link update:', syncError);
         }
-        
+
         // Sync with running bot if active
         if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
           try {
@@ -2548,7 +2539,7 @@ if __name__ == "__main__":
             console.error('⚠️ Error syncing update with running bot:', syncError);
           }
         }
-        
+
         res.json({ success: true, link: updated });
       } else {
         res.status(404).json({ error: 'Entity link not found' });
@@ -2562,39 +2553,39 @@ if __name__ == "__main__":
   app.delete('/api/live-cloning/entity-links/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      
+
       // CRITICAL: Read directly from config.json to match Telegram unlink behavior
       const configPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
-      
+
       if (!fs.existsSync(configPath)) {
         return res.status(404).json({ error: 'Configuration file not found' });
       }
-      
+
       const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
       const entityPairs = config.entities || [];
-      
+
       // Find the entity link to delete by ID (ID is 1-based index)
       const linkIndex = parseInt(id) - 1;
       if (linkIndex < 0 || linkIndex >= entityPairs.length) {
         return res.status(404).json({ error: 'Entity link not found' });
       }
-      
+
       const targetPair = entityPairs[linkIndex];
       const sourceEntity = targetPair[0];
-      
+
       // CRITICAL: Remove ALL entity pairs with the same source entity (like Telegram unlink)
       // This matches exactly how the Telegram "unlink" command works
       const originalCount = entityPairs.length;
       const filteredPairs = entityPairs.filter((pair: any[]) => pair[0] !== sourceEntity);
       const removedCount = originalCount - filteredPairs.length;
-      
+
       // Update config.json with remaining entity pairs
       config.entities = filteredPairs;
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-      
+
       console.log(`🗑️ Unlinked source entity ${sourceEntity}: removed ${removedCount} entity link(s)`);
       console.log(`📝 Remaining entity links: ${filteredPairs.length}`, filteredPairs);
-      
+
       // Also update database to keep it in sync (though config.json is authoritative)
       try {
         if (liveCloningStatus.instanceId) {
@@ -2609,7 +2600,7 @@ if __name__ == "__main__":
       } catch (dbError) {
         console.warn('⚠️ Could not sync database deletion, but config.json is updated:', dbError);
       }
-      
+
       // Sync with running bot if active
       if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
         try {
@@ -2619,13 +2610,13 @@ if __name__ == "__main__":
           console.error('⚠️ Error syncing unlink with running bot:', syncError);
         }
       }
-      
+
       res.json({ 
         success: true, 
         message: `Unlinked source entity ${sourceEntity} (removed ${removedCount} link(s))`,
         removedCount 
       });
-      
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ error: errorMessage });
@@ -2636,7 +2627,7 @@ if __name__ == "__main__":
   app.post('/api/live-cloning/word-filters', async (req, res) => {
     try {
       const { instanceId, fromWord, toWord } = req.body;
-      
+
       if (!instanceId || !fromWord || !toWord) {
         return res.status(400).json({ error: 'Instance ID, from word, and to word are required' });
       }
@@ -2651,19 +2642,19 @@ if __name__ == "__main__":
       // CRITICAL: Save word filters to main config.json file
       try {
         const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
-        
+
         // Get all word filters for this instance
         const allFilters = await storage.getWordFilters(instanceId);
         const filterPairs = allFilters.map(filter => [filter.fromWord, filter.toWord]);
-        
-        // Update ONLY the main Python config.json file
+
+        // Update ONLY the main config.json file
         if (fs.existsSync(originalConfigPath)) {
           const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
           originalConfig.filters = filterPairs;
           fs.writeFileSync(originalConfigPath, JSON.stringify(originalConfig, null, 2));
           console.log(`✅ Updated main config.json with ${filterPairs.length} word filters:`, filterPairs);
         }
-        
+
         // Sync with running bot if active
         if (liveCloningStatus.running && liveCloningProcess && liveCloningStatus.instanceId) {
           await syncEntityLinksWithBot();
@@ -2695,7 +2686,7 @@ if __name__ == "__main__":
     try {
       const { id } = req.params;
       const { fromWord, toWord, isActive } = req.body;
-      
+
       if (!fromWord || !toWord) {
         return res.status(400).json({ error: 'From word and to word are required' });
       }
@@ -2705,18 +2696,18 @@ if __name__ == "__main__":
         toWord,
         isActive: isActive !== undefined ? isActive : true
       });
-      
+
       if (updated) {
         // CRITICAL: Update main config.json file after word filter update
         try {
           const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
-          
+
           // Get all word filters for this instance
           if (liveCloningStatus.instanceId) {
             const allFilters = await storage.getWordFilters(liveCloningStatus.instanceId);
             const filterPairs = allFilters.map(filter => [filter.fromWord, filter.toWord]);
-            
-            // Update ONLY the main Python config.json file
+
+            // Update ONLY the main config.json file
             if (fs.existsSync(originalConfigPath)) {
               const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
               originalConfig.filters = filterPairs;
@@ -2727,7 +2718,7 @@ if __name__ == "__main__":
         } catch (syncError) {
           console.error('⚠️ Error updating Python config after word filter update:', syncError);
         }
-        
+
         res.json({ success: true, filter: updated });
       } else {
         res.status(404).json({ error: 'Word filter not found' });
@@ -2742,18 +2733,18 @@ if __name__ == "__main__":
     try {
       const { id } = req.params;
       const deleted = await storage.deleteWordFilter(parseInt(id));
-      
+
       if (deleted) {
         // CRITICAL: Update main config.json file after word filter deletion
         try {
           const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
-          
+
           // Get remaining word filters after deletion
           if (liveCloningStatus.instanceId) {
             const allFilters = await storage.getWordFilters(liveCloningStatus.instanceId);
             const filterPairs = allFilters.map(filter => [filter.fromWord, filter.toWord]);
-            
-            // Update ONLY the main Python config.json file
+
+            // Update ONLY the main config.json file
             if (fs.existsSync(originalConfigPath)) {
               const originalConfig = JSON.parse(fs.readFileSync(originalConfigPath, 'utf8'));
               originalConfig.filters = filterPairs;
@@ -2764,7 +2755,7 @@ if __name__ == "__main__":
         } catch (syncError) {
           console.error('⚠️ Error updating Python config after word filter deletion:', syncError);
         }
-        
+
         res.json({ success: true, message: 'Word filter deleted' });
       } else {
         res.status(404).json({ error: 'Word filter not found' });
@@ -2779,7 +2770,7 @@ if __name__ == "__main__":
   app.post('/api/live-cloning/instances', async (req, res) => {
     try {
       const { instanceId, sessionString, config } = req.body;
-      
+
       if (!instanceId || !sessionString || !config) {
         return res.status(400).json({ error: 'Instance ID, session string, and config are required' });
       }
@@ -2798,14 +2789,14 @@ if __name__ == "__main__":
         if (fs.existsSync(persistentConfigPath)) {
           existingSettings = JSON.parse(fs.readFileSync(persistentConfigPath, 'utf8'));
         }
-        
+
         // Update with new session string for auto-start
         const updatedSettings = {
           ...existingSettings,
           sessionString: sessionString, // Store for auto-start capability
           lastSessionSaved: new Date().toISOString()
         };
-        
+
         fs.writeFileSync(persistentConfigPath, JSON.stringify(updatedSettings, null, 2));
         console.log('✅ Session string persisted for 24/7 auto-start functionality');
       } catch (error) {
@@ -2833,7 +2824,7 @@ if __name__ == "__main__":
     try {
       const { instanceId } = req.params;
       const instance = await storage.getLiveCloningInstance(instanceId);
-      
+
       if (instance) {
         res.json({ instance });
       } else {
@@ -2848,16 +2839,16 @@ if __name__ == "__main__":
   app.delete('/api/live-cloning/instances/:instanceId', async (req, res) => {
     try {
       const { instanceId } = req.params;
-      
+
       // Stop process if running for this instance
       if (liveCloningStatus.instanceId === instanceId && liveCloningProcess) {
         liveCloningProcess.kill('SIGTERM');
         liveCloningProcess = null;
         liveCloningStatus.running = false;
       }
-      
+
       const deleted = await storage.deleteLiveCloningInstance(instanceId);
-      
+
       if (deleted) {
         res.json({ success: true, message: 'Instance deleted' });
       } else {
@@ -2881,7 +2872,7 @@ if __name__ == "__main__":
       const downloadsConfig = configReader.getDownloadsConfig();
       const featuresConfig = configReader.getFeaturesConfig();
       const systemConfig = configReader.getSystemConfig();
-      
+
       // Allow override from request body, but use config file as defaults
       const { 
         api_id = telegramConfig.api_id, 
@@ -2913,7 +2904,7 @@ if __name__ == "__main__":
 
       // Resolve download path
       const resolvedDownloadPath = path.resolve(process.cwd(), download_path.replace('./', ''));
-      
+
       // Create download directories
       fs.mkdirSync(resolvedDownloadPath, { recursive: true });
       fs.mkdirSync(path.join(resolvedDownloadPath, 'completed'), { recursive: true });
@@ -3207,40 +3198,63 @@ if __name__ == "__main__":
 
   // Store for active forwarding jobs
   // GitHub PAT and Sync Routes
-  
-  // Helper function to get GitHub PAT token
-  const getGitHubToken = async (req: any): Promise<string | null> => {
-    // Check for PAT in Authorization header
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      return authHeader.substring(7);
+
+  // Helper function to get GitHub access token with proper priority
+  const getGitHubAccessToken = async (customPAT?: string): Promise<string> => {
+    // Priority 1: Environment variables (server-side configuration)
+    const envPAT = process.env.GITHUB_PAT || process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+    if (envPAT && envPAT.trim()) {
+      logger.debug('Using GitHub PAT from environment variables');
+      return envPAT.trim();
     }
-    
-    // Check for PAT in custom header
-    const patHeader = req.headers['x-github-pat'];
-    if (patHeader) {
-      return patHeader;
+
+    // Priority 2: Custom PAT from header (user-provided)
+    if (customPAT && customPAT.trim()) {
+      logger.debug('Using GitHub PAT from request header');
+      return customPAT.trim();
     }
-    
-    // Use default PAT with full GitHub permissions
-    return await storage.getDefaultGitHubPAT();
+
+    // Priority 3: User settings PAT
+    try {
+      const userId = 'default-user';
+      const settings = await storage.getGitHubSettings(userId);
+      if (settings?.personalAccessToken) {
+        logger.debug('Using GitHub PAT from user settings');
+        return settings.personalAccessToken;
+      }
+    } catch (error) {
+      logger.warn(`Failed to get user GitHub settings: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    // Priority 4: Default/system PAT (hardcoded fallback)
+    try {
+      const defaultPAT = await storage.getDefaultGitHubPAT();
+      if (defaultPAT) {
+        logger.debug('Using default GitHub PAT');
+        return defaultPAT;
+      }
+    } catch (error) {
+      logger.warn(`Failed to get default GitHub PAT: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    throw new Error('No GitHub Personal Access Token available. Please set GITHUB_PAT environment variable or configure a custom PAT.');
   };
-  
+
   // Get GitHub user repositories
   app.get('/api/github/repos', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub Personal Access Token provided' });
       }
-      
+
       const response = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'User-Agent': 'TelegramManager-GitHubSync',
         },
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         return res.status(response.status).json({ 
@@ -3248,10 +3262,10 @@ if __name__ == "__main__":
           details: errorData.message || response.statusText
         });
       }
-      
+
       const repos = await response.json();
       res.json({ repos });
-      
+
     } catch (error) {
       logger.error(`Failed to fetch GitHub repos: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ 
@@ -3260,29 +3274,29 @@ if __name__ == "__main__":
       });
     }
   });
-  
+
   // Get GitHub user info
   app.get('/api/github/user', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub Personal Access Token provided' });
       }
-      
+
       const response = await fetch('https://api.github.com/user', {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'User-Agent': 'TelegramManager-GitHubSync',
         },
       });
-      
+
       if (!response.ok) {
         return res.status(response.status).json({ error: 'Failed to fetch user info' });
       }
-      
+
       const user = await response.json();
       res.json({ user });
-      
+
     } catch (error) {
       logger.error(`Failed to fetch GitHub user: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ 
@@ -3291,21 +3305,21 @@ if __name__ == "__main__":
       });
     }
   });
-  
+
   // Create new GitHub repository
   app.post('/api/github/repos', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub Personal Access Token provided' });
       }
-      
+
       const { name, private: isPrivate = false, description = '' } = req.body;
-      
+
       if (!name) {
         return res.status(400).json({ error: 'Repository name is required' });
       }
-      
+
       const response = await fetch('https://api.github.com/user/repos', {
         method: 'POST',
         headers: {
@@ -3320,7 +3334,7 @@ if __name__ == "__main__":
           auto_init: true,
         }),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         return res.status(response.status).json({ 
@@ -3328,10 +3342,10 @@ if __name__ == "__main__":
           details: errorData.message || response.statusText
         });
       }
-      
+
       const repo = await response.json();
       res.json({ repo });
-      
+
     } catch (error) {
       logger.error(`Failed to create GitHub repo: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ 
@@ -3340,17 +3354,17 @@ if __name__ == "__main__":
       });
     }
   });
-  
+
   // Get repository packages
   app.get('/api/github/repos/:owner/:repo/packages', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub Personal Access Token provided' });
       }
-      
+
       const { owner, repo } = req.params;
-      
+
       const response = await fetch(`https://api.github.com/orgs/${owner}/packages?package_type=container`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -3358,14 +3372,14 @@ if __name__ == "__main__":
           'Accept': 'application/vnd.github.v3+json',
         },
       });
-      
+
       if (!response.ok && response.status !== 404) {
         return res.status(response.status).json({ error: 'Failed to fetch packages' });
       }
-      
+
       const packages = response.status === 404 ? [] : await response.json();
       res.json(packages);
-      
+
     } catch (error) {
       logger.error(`Failed to fetch packages: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ error: 'Failed to fetch packages' });
@@ -3375,27 +3389,27 @@ if __name__ == "__main__":
   // Get repository releases
   app.get('/api/github/repos/:owner/:repo/releases', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub Personal Access Token provided' });
       }
-      
+
       const { owner, repo } = req.params;
-      
+
       const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'User-Agent': 'TelegramManager-GitHubSync',
         },
       });
-      
+
       if (!response.ok) {
         return res.status(response.status).json({ error: 'Failed to fetch releases' });
       }
-      
+
       const releases = await response.json();
       res.json(releases);
-      
+
     } catch (error) {
       logger.error(`Failed to fetch releases: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ error: 'Failed to fetch releases' });
@@ -3405,27 +3419,27 @@ if __name__ == "__main__":
   // Get repository deployments
   app.get('/api/github/repos/:owner/:repo/deployments', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub Personal Access Token provided' });
       }
-      
+
       const { owner, repo } = req.params;
-      
+
       const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/deployments`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'User-Agent': 'TelegramManager-GitHubSync',
         },
       });
-      
+
       if (!response.ok) {
         return res.status(response.status).json({ error: 'Failed to fetch deployments' });
       }
-      
+
       const deployments = await response.json();
       res.json(deployments);
-      
+
     } catch (error) {
       logger.error(`Failed to fetch deployments: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ error: 'Failed to fetch deployments' });
@@ -3435,27 +3449,27 @@ if __name__ == "__main__":
   // Get repository environments
   app.get('/api/github/repos/:owner/:repo/environments', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub Personal Access Token provided' });
       }
-      
+
       const { owner, repo } = req.params;
-      
+
       const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/environments`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'User-Agent': 'TelegramManager-GitHubSync',
         },
       });
-      
+
       if (!response.ok && response.status !== 404) {
         return res.status(response.status).json({ error: 'Failed to fetch environments' });
       }
-      
+
       const environments = response.status === 404 ? { environments: [] } : await response.json();
       res.json(environments.environments || []);
-      
+
     } catch (error) {
       logger.error(`Failed to fetch environments: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ error: 'Failed to fetch environments' });
@@ -3465,13 +3479,13 @@ if __name__ == "__main__":
   // Get repository discussions
   app.get('/api/github/repos/:owner/:repo/discussions', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub Personal Access Token provided' });
       }
-      
+
       const { owner, repo } = req.params;
-      
+
       // GitHub GraphQL API for discussions
       const query = `
         query {
@@ -3490,7 +3504,7 @@ if __name__ == "__main__":
           }
         }
       `;
-      
+
       const response = await fetch('https://api.github.com/graphql', {
         method: 'POST',
         headers: {
@@ -3500,15 +3514,15 @@ if __name__ == "__main__":
         },
         body: JSON.stringify({ query }),
       });
-      
+
       if (!response.ok) {
         return res.status(response.status).json({ error: 'Failed to fetch discussions' });
       }
-      
+
       const data = await response.json();
       const discussions = data.data?.repository?.discussions?.nodes || [];
       res.json(discussions);
-      
+
     } catch (error) {
       logger.error(`Failed to fetch discussions: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ error: 'Failed to fetch discussions' });
@@ -3518,13 +3532,13 @@ if __name__ == "__main__":
   // Get repository projects
   app.get('/api/github/repos/:owner/:repo/projects', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub Personal Access Token provided' });
       }
-      
+
       const { owner, repo } = req.params;
-      
+
       const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/projects`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -3532,14 +3546,14 @@ if __name__ == "__main__":
           'Accept': 'application/vnd.github.inertia-preview+json',
         },
       });
-      
+
       if (!response.ok) {
         return res.status(response.status).json({ error: 'Failed to fetch projects' });
       }
-      
+
       const projects = await response.json();
       res.json(projects);
-      
+
     } catch (error) {
       logger.error(`Failed to fetch projects: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ error: 'Failed to fetch projects' });
@@ -3549,25 +3563,25 @@ if __name__ == "__main__":
   // Get notifications
   app.get('/api/github/notifications', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub Personal Access Token provided' });
       }
-      
+
       const response = await fetch('https://api.github.com/notifications', {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'User-Agent': 'TelegramManager-GitHubSync',
         },
       });
-      
+
       if (!response.ok) {
         return res.status(response.status).json({ error: 'Failed to fetch notifications' });
       }
-      
+
       const notifications = await response.json();
       res.json(notifications);
-      
+
     } catch (error) {
       logger.error(`Failed to fetch notifications: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ error: 'Failed to fetch notifications' });
@@ -3577,13 +3591,13 @@ if __name__ == "__main__":
   // Archive repository
   app.post('/api/github/repos/:owner/:repo/archive', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub Personal Access Token provided' });
       }
-      
+
       const { owner, repo } = req.params;
-      
+
       const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
         method: 'PATCH',
         headers: {
@@ -3595,14 +3609,14 @@ if __name__ == "__main__":
           archived: true
         }),
       });
-      
+
       if (!response.ok) {
         return res.status(response.status).json({ error: 'Failed to archive repository' });
       }
-      
+
       const result = await response.json();
       res.json(result);
-      
+
     } catch (error) {
       logger.error(`Failed to archive repository: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ error: 'Failed to archive repository' });
@@ -3612,25 +3626,25 @@ if __name__ == "__main__":
   // Get user gists
   app.get('/api/github/gists', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub Personal Access Token provided' });
       }
-      
+
       const response = await fetch('https://api.github.com/gists', {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'User-Agent': 'TelegramManager-GitHubSync',
         },
       });
-      
+
       if (!response.ok) {
         return res.status(response.status).json({ error: 'Failed to fetch gists' });
       }
-      
+
       const gists = await response.json();
       res.json(gists);
-      
+
     } catch (error) {
       logger.error(`Failed to fetch gists: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ error: 'Failed to fetch gists' });
@@ -3640,25 +3654,25 @@ if __name__ == "__main__":
   // Get user SSH keys
   app.get('/api/github/user/keys', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub Personal Access Token provided' });
       }
-      
+
       const response = await fetch('https://api.github.com/user/keys', {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'User-Agent': 'TelegramManager-GitHubSync',
         },
       });
-      
+
       if (!response.ok) {
         return res.status(response.status).json({ error: 'Failed to fetch SSH keys' });
       }
-      
+
       const keys = await response.json();
       res.json(keys);
-      
+
     } catch (error) {
       logger.error(`Failed to fetch SSH keys: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ error: 'Failed to fetch SSH keys' });
@@ -3668,54 +3682,54 @@ if __name__ == "__main__":
   // Get user GPG keys
   app.get('/api/github/user/gpg-keys', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub Personal Access Token provided' });
       }
-      
+
       const response = await fetch('https://api.github.com/user/gpg_keys', {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'User-Agent': 'TelegramManager-GitHubSync',
         },
       });
-      
+
       if (!response.ok) {
         return res.status(response.status).json({ error: 'Failed to fetch GPG keys' });
       }
-      
+
       const keys = await response.json();
       res.json(keys);
-      
+
     } catch (error) {
       logger.error(`Failed to fetch GPG keys: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ error: 'Failed to fetch GPG keys' });
     }
   });
-  
+
   // Sync files to GitHub repository
   app.post('/api/github/sync', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'Not authenticated with GitHub' });
       }
-      
+
       const { repoFullName, files, targetPath = '' } = req.body;
-      
+
       if (!repoFullName || !files || !Array.isArray(files)) {
         return res.status(400).json({ error: 'Repository name and files are required' });
       }
-      
+
       // Import utilities dynamically to avoid circular dependencies
       const { validateGitHubRepo } = await import('./utils/github-uploader');
-      
+
       // Skip validation - proceed directly to upload with token
       logger.info(`Proceeding with upload to ${repoFullName} using token`);
-      
+
       // Import the existing uploadToGitHub function
       const { uploadToGitHub } = await import('./utils/github-uploader');
-      
+
       // Convert files to the expected format
       const project = {
         name: 'uploaded-files',
@@ -3728,12 +3742,12 @@ if __name__ == "__main__":
         })),
         totalSize: files.reduce((total: number, file: any) => total + Buffer.byteLength(file.content, file.encoding || 'utf8'), 0)
       };
-      
+
       logger.info(`Starting sync of ${project.files.length} files to ${repoFullName}${targetPath ? ` (target: ${targetPath})` : ''}`);
-      
+
       // Upload to GitHub
       const result = await uploadToGitHub(project, repoFullName, accessToken);
-      
+
       if (result.success) {
         logger.info(`✅ Sync completed successfully: ${result.filesUploaded} files uploaded to ${repoFullName}`);
         res.json({ 
@@ -3757,7 +3771,7 @@ if __name__ == "__main__":
           errors: result.errors
         });
       }
-      
+
     } catch (error) {
       logger.error(`Failed to start GitHub sync: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ 
@@ -3770,22 +3784,22 @@ if __name__ == "__main__":
   // Chunked sync endpoint - for better handling of large files/folders
   app.post('/api/github/sync-chunked', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'Not authenticated with GitHub' });
       }
-      
+
       const { repoFullName, files, targetPath = '', chunkIndex = 0, totalChunks = 1 } = req.body;
-      
+
       if (!repoFullName || !files || !Array.isArray(files)) {
         return res.status(400).json({ error: 'Repository name and files are required' });
       }
-      
+
       logger.info(`Processing chunk ${chunkIndex + 1}/${totalChunks} with ${files.length} files for ${repoFullName}`);
-      
+
       // Import the existing uploadToGitHub function
       const { uploadToGitHub } = await import('./utils/github-uploader');
-      
+
       // Convert files to the expected format
       const project = {
         name: `uploaded-files-chunk-${chunkIndex}`,
@@ -3798,15 +3812,15 @@ if __name__ == "__main__":
         })),
         totalSize: files.reduce((total: number, file: any) => total + Buffer.byteLength(file.content, file.encoding || 'utf8'), 0)
       };
-      
+
       // Upload this chunk to GitHub with progress callback
       const result = await uploadToGitHub(project, repoFullName, accessToken, (progress) => {
         // We could implement real-time progress updates via WebSocket here if needed
         logger.debug(`Chunk ${chunkIndex + 1}/${totalChunks} progress: ${progress.filesProcessed}/${progress.totalFiles}`);
       });
-      
+
       const isLastChunk = chunkIndex === totalChunks - 1;
-      
+
       if (result.success || result.filesUploaded > 0) {
         logger.info(`✅ Chunk ${chunkIndex + 1}/${totalChunks} completed: ${result.filesUploaded} files uploaded`);
         res.json({
@@ -3834,7 +3848,7 @@ if __name__ == "__main__":
           errors: result.errors
         });
       }
-      
+
     } catch (error) {
       logger.error(`Failed to process chunk: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({
@@ -3847,66 +3861,66 @@ if __name__ == "__main__":
   // Python sync endpoint - execute Python code for GitHub sync (for large projects)
   app.post('/api/github/python-sync', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'Not authenticated with GitHub' });
       }
-      
+
       const { files, repoFullName, targetPath = '' } = req.body;
-      
+
       if (!files || !Array.isArray(files) || files.length === 0) {
         return res.status(400).json({ error: 'Files are required for Python sync' });
       }
-      
+
       if (!repoFullName) {
         return res.status(400).json({ error: 'Repository name is required' });
       }
-      
+
       logger.info(`Starting Python sync of ${files.length} files to ${repoFullName}${targetPath ? ` (target: ${targetPath})` : ''}`);
-      
+
       // Generate Python script to handle the file uploads
       const processedCode = generatePythonUploadScript(files, repoFullName, targetPath, accessToken);
-      
+
       // Import Python execution utilities
       const { spawn } = await import('child_process');
       const { writeFileSync, unlinkSync } = await import('fs');
       const { join } = await import('path');
       const { tmpdir } = await import('os');
-      
+
       // Create a temporary Python file
       const tempDir = tmpdir();
       const scriptPath = join(tempDir, `github_sync_${Date.now()}.py`);
-      
+
       try {
         writeFileSync(scriptPath, processedCode);
-        
+
         // Execute Python script
         const pythonProcess = spawn('python3', [scriptPath], {
           stdio: ['pipe', 'pipe', 'pipe'],
           env: { ...process.env }
         });
-        
+
         let output = '';
         let errorOutput = '';
-        
+
         pythonProcess.stdout.on('data', (data) => {
           output += data.toString();
         });
-        
+
         pythonProcess.stderr.on('data', (data) => {
           errorOutput += data.toString();
         });
-        
+
         pythonProcess.on('close', (code) => {
           clearTimeout(timeoutHandle);
-          
+
           // Clean up temporary file
           try {
             unlinkSync(scriptPath);
           } catch (e) {
             logger.warn(`Failed to delete temporary script file: ${e}`);
           }
-          
+
           if (!res.headersSent) {
             if (code === 0) {
               logger.info(`✅ Python sync completed successfully for ${repoFullName}`);
@@ -3932,17 +3946,17 @@ if __name__ == "__main__":
             }
           }
         });
-        
+
         pythonProcess.on('error', (error) => {
           clearTimeout(timeoutHandle);
-          
+
           // Clean up temporary file
           try {
             unlinkSync(scriptPath);
           } catch (e) {
             logger.warn(`Failed to delete temporary script file: ${e}`);
           }
-          
+
           if (!res.headersSent) {
             logger.error(`Failed to execute Python script: ${error.message}`);
             res.status(500).json({
@@ -3952,7 +3966,7 @@ if __name__ == "__main__":
             });
           }
         });
-        
+
         // Set a longer timeout for large file uploads - 30 minutes
         const timeoutHandle = setTimeout(() => {
           if (!pythonProcess.killed) {
@@ -3966,7 +3980,7 @@ if __name__ == "__main__":
             }
           }
         }, 30 * 60 * 1000); // 30 minutes timeout
-        
+
       } catch (fileError) {
         logger.error(`Failed to create/execute Python script: ${fileError}`);
         return res.status(500).json({
@@ -3975,7 +3989,7 @@ if __name__ == "__main__":
           status: 'error'
         });
       }
-      
+
     } catch (error) {
       logger.error(`Failed to start Python sync: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({
@@ -3985,7 +3999,7 @@ if __name__ == "__main__":
       });
     }
   });
-  
+
   // Clear GitHub PAT (logout equivalent)
   app.post('/api/github/logout', (req, res) => {
     // No session token to clear in PAT mode, just return success
@@ -3998,7 +4012,7 @@ if __name__ == "__main__":
       const userId = 'default-user';
       const settings = await storage.getGitHubSettings(userId);
       const defaultPAT = await storage.getDefaultGitHubPAT();
-      
+
       res.json({ 
         settings,
         hasDefaultPAT: !!defaultPAT,
@@ -4018,22 +4032,37 @@ if __name__ == "__main__":
     try {
       const userId = 'default-user';
       const { personalAccessToken } = req.body;
-      
+
       if (!personalAccessToken || personalAccessToken.trim() === '') {
         return res.status(400).json({ error: 'Personal Access Token is required' });
+      }
+
+      // Test the PAT by making a simple API call
+      const testResponse = await fetch('https://api.github.com/user', {
+        headers: {
+          'Authorization': `Bearer ${personalAccessToken}`,
+          'User-Agent': 'TelegramManager-GitHubSync',
+        },
+      });
+
+      if (!testResponse.ok) {
+        return res.status(400).json({ 
+          error: 'Invalid or expired Personal Access Token',
+          valid: false
+        });
       }
 
       // Validate PAT format (GitHub PATs start with ghp_, github_pat_, etc.)
       if (!personalAccessToken.match(/^(ghp_|github_pat_|gho_|ghu_|ghs_|ghr_)/)) {
         return res.status(400).json({ error: 'Invalid GitHub Personal Access Token format' });
       }
-      
+
       const settings = await storage.saveGitHubSettings(userId, {
         userId,
         personalAccessToken: personalAccessToken.trim(),
         isDefault: false,
       });
-      
+
       res.json({ settings, message: 'GitHub PAT saved successfully' });
     } catch (error) {
       logger.error(`Failed to save GitHub settings: ${error instanceof Error ? error.message : String(error)}`);
@@ -4068,7 +4097,7 @@ if __name__ == "__main__":
   app.post('/api/git-control/tokens', async (req, res) => {
     try {
       const { label, token } = req.body;
-      
+
       if (!label || !token) {
         return res.status(400).json({ error: 'Label and token are required' });
       }
@@ -4111,7 +4140,7 @@ if __name__ == "__main__":
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteGitTokenConfig(id);
-      
+
       if (!success) {
         return res.status(404).json({ error: 'Token not found' });
       }
@@ -4126,7 +4155,7 @@ if __name__ == "__main__":
   // GitHub Scopes and Rate Limit
   app.get('/api/git-control/scopes', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubAccessToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub token provided' });
       }
@@ -4168,7 +4197,7 @@ if __name__ == "__main__":
   // Repository Management
   app.get('/api/git-control/repos/:owner/:repo', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) return res.status(401).json({ error: 'No GitHub token provided' });
 
       const { owner, repo } = req.params;
@@ -4194,7 +4223,7 @@ if __name__ == "__main__":
   // Repository Branches
   app.get('/api/git-control/repos/:owner/:repo/branches', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) return res.status(401).json({ error: 'No GitHub token provided' });
 
       const { owner, repo } = req.params;
@@ -4220,13 +4249,13 @@ if __name__ == "__main__":
   // Repository Contents (Files/Folders)
   app.get('/api/git-control/repos/:owner/:repo/contents/*?', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) return res.status(401).json({ error: 'No GitHub token provided' });
 
       const { owner, repo } = req.params;
       const path = (req.params as any)[0] || ''; // Get the path from the wildcard
       const ref = req.query.ref as string; // Optional branch/ref parameter
-      
+
       let url = `https://api.github.com/repos/${owner}/${repo}/contents`;
       if (path) url += `/${path}`;
       if (ref) url += `?ref=${ref}`;
@@ -4253,7 +4282,7 @@ if __name__ == "__main__":
   // Create or Update File
   app.put('/api/git-control/repos/:owner/:repo/contents/*', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) return res.status(401).json({ error: 'No GitHub token provided' });
 
       const { owner, repo } = req.params;
@@ -4298,7 +4327,7 @@ if __name__ == "__main__":
   // Delete File
   app.delete('/api/git-control/repos/:owner/:repo/contents/*', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) return res.status(401).json({ error: 'No GitHub token provided' });
 
       const { owner, repo } = req.params;
@@ -4342,7 +4371,7 @@ if __name__ == "__main__":
   // Repository Collaborators
   app.get('/api/git-control/repos/:owner/:repo/collaborators', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) return res.status(401).json({ error: 'No GitHub token provided' });
 
       const { owner, repo } = req.params;
@@ -4368,7 +4397,7 @@ if __name__ == "__main__":
   // Star/Unstar Repository
   app.put('/api/git-control/repos/:owner/:repo/star', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) return res.status(401).json({ error: 'No GitHub token provided' });
 
       const { owner, repo } = req.params;
@@ -4393,7 +4422,7 @@ if __name__ == "__main__":
 
   app.delete('/api/git-control/repos/:owner/:repo/star', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) return res.status(401).json({ error: 'No GitHub token provided' });
 
       const { owner, repo } = req.params;
@@ -4419,7 +4448,7 @@ if __name__ == "__main__":
   // Fork Repository
   app.post('/api/git-control/repos/:owner/:repo/fork', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) return res.status(401).json({ error: 'No GitHub token provided' });
 
       const { owner, repo } = req.params;
@@ -4456,7 +4485,7 @@ if __name__ == "__main__":
   // Delete Repository
   app.delete('/api/git-control/repos/:owner/:repo', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) return res.status(401).json({ error: 'No GitHub token provided' });
 
       const { owner, repo } = req.params;
@@ -4486,7 +4515,7 @@ if __name__ == "__main__":
   // Repository Webhooks
   app.get('/api/git-control/repos/:owner/:repo/webhooks', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) return res.status(401).json({ error: 'No GitHub token provided' });
 
       const { owner, repo } = req.params;
@@ -4512,8 +4541,10 @@ if __name__ == "__main__":
   // Repository Pull Requests  
   app.get('/api/git-control/repos/:owner/:repo/pulls', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
-      if (!accessToken) return res.status(401).json({ error: 'No GitHub token provided' });
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
+      if (!accessToken) {
+        return res.status(401).json({ error: 'No GitHub token provided' });
+      }
 
       const { owner, repo } = req.params;
       const { state = 'open' } = req.query;
@@ -4539,7 +4570,7 @@ if __name__ == "__main__":
   // Repository Management
   app.get('/api/git-control/repos/:owner/:repo', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub token provided' });
       }
@@ -4566,7 +4597,7 @@ if __name__ == "__main__":
 
   app.patch('/api/git-control/repos/:owner/:repo/settings', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub token provided' });
       }
@@ -4609,7 +4640,7 @@ if __name__ == "__main__":
   // Branch Management
   app.get('/api/git-control/repos/:owner/:repo/branches', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub token provided' });
       }
@@ -4636,7 +4667,7 @@ if __name__ == "__main__":
 
   app.post('/api/git-control/repos/:owner/:repo/branches', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub token provided' });
       }
@@ -4693,7 +4724,7 @@ if __name__ == "__main__":
   // Collaborators Management
   app.get('/api/git-control/repos/:owner/:repo/collaborators', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub token provided' });
       }
@@ -4720,7 +4751,7 @@ if __name__ == "__main__":
 
   app.put('/api/git-control/repos/:owner/:repo/collaborators/:username', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub token provided' });
       }
@@ -4753,7 +4784,7 @@ if __name__ == "__main__":
   // Webhooks Management
   app.get('/api/git-control/repos/:owner/:repo/webhooks', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub token provided' });
       }
@@ -4780,7 +4811,7 @@ if __name__ == "__main__":
 
   app.post('/api/git-control/repos/:owner/:repo/webhooks', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub token provided' });
       }
@@ -4826,7 +4857,7 @@ if __name__ == "__main__":
   // Pull Requests
   app.get('/api/git-control/repos/:owner/:repo/pulls', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub token provided' });
       }
@@ -4855,7 +4886,7 @@ if __name__ == "__main__":
 
   app.post('/api/git-control/repos/:owner/:repo/pulls', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub token provided' });
       }
@@ -4898,7 +4929,7 @@ if __name__ == "__main__":
   // Commits and Activity
   app.get('/api/git-control/repos/:owner/:repo/commits', async (req, res) => {
     try {
-      const accessToken = await getGitHubToken(req);
+      const accessToken = await getGitHubToken(req.headers['authorization']?.substring(7));
       if (!accessToken) {
         return res.status(401).json({ error: 'No GitHub token provided' });
       }
@@ -4934,7 +4965,7 @@ if __name__ == "__main__":
   app.post('/api/github/test-pat', async (req, res) => {
     try {
       const { personalAccessToken } = req.body;
-      
+
       if (!personalAccessToken) {
         return res.status(400).json({ error: 'Personal Access Token is required' });
       }
@@ -4963,7 +4994,7 @@ if __name__ == "__main__":
           avatar_url: user.avatar_url
         }
       });
-      
+
     } catch (error) {
       logger.error(`Failed to test GitHub PAT: ${error instanceof Error ? error.message : String(error)}`);
       res.status(500).json({ 
@@ -4983,7 +5014,7 @@ if __name__ == "__main__":
         .replace(/'''/g, "\\'\\'\\'") // Escape triple quotes
         .replace(/\\/g, '\\\\') // Escape backslashes
         .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Remove control characters
-      
+
       return `    {
         'path': '${safePath}',
         'content': '''${cleanContent}''',
@@ -5015,21 +5046,21 @@ def upload_file(file_info):
     file_path = file_info['path']
     content = file_info['content']
     encoding = file_info['encoding']
-    
+
     # Build the full path
     if TARGET_PATH:
         full_path = f"{TARGET_PATH}/{file_path}".replace('//', '/')
     else:
         full_path = file_path
-    
+
     url = f"{GITHUB_API}/repos/{REPO_NAME}/contents/{quote(full_path)}"
-    
+
     headers = {
         'Authorization': f'Bearer {ACCESS_TOKEN}',
         'Accept': 'application/vnd.github.v3+json',
         'User-Agent': 'TelegramManager-PythonSync'
     }
-    
+
     # Check if file exists
     try:
         response = requests.get(url, headers=headers)
@@ -5037,22 +5068,22 @@ def upload_file(file_info):
     except Exception as e:
         print(f"Warning: Could not check existing file {full_path}: {e}")
         sha = None
-    
+
     # Prepare content - already base64 encoded for binary files
     if encoding == 'base64':
         file_content = content
     else:
         file_content = base64.b64encode(content.encode('utf-8')).decode()
-    
+
     data = {
         'message': f'Upload {file_path} via Python sync',
         'content': file_content,
         'branch': 'main'
     }
-    
+
     if sha:
         data['sha'] = sha
-    
+
     try:
         response = requests.put(url, json=data, headers=headers)
         if response.status_code in [200, 201]:
@@ -5069,18 +5100,18 @@ def upload_file(file_info):
 def main():
     """Main upload function"""
     print(f"Starting Python sync of {len(files)} files to {REPO_NAME}")
-    
+
     success_count = 0
     error_count = 0
-    
+
     for file_info in files:
         if upload_file(file_info):
             success_count += 1
         else:
             error_count += 1
-    
+
     print(f"\\nUpload completed: {success_count} uploaded, {error_count} failed")
-    
+
     if error_count > 0:
         sys.exit(1)
     else:
@@ -5099,33 +5130,33 @@ if __name__ == '__main__':
 export async function startLiveCloningService(): Promise<void> {
   try {
     console.log('🚀 Starting Live Cloning service for 24/7 always-running architecture...');
-    
+
     // Check if we have a valid session and persistent settings
     const persistentConfigPath = path.join(process.cwd(), 'config', 'live_cloning_persistent_settings.json');
     if (!fs.existsSync(persistentConfigPath)) {
       console.log('⚠️ No persistent Live Cloning settings found, skipping auto-start');
       return;
     }
-    
+
     // Load persistent settings
     const persistentSettings = JSON.parse(fs.readFileSync(persistentConfigPath, 'utf8'));
     console.log('📋 Loaded persistent settings for auto-start:', persistentSettings);
-    
+
     // Check if we have a valid session string from environment or config
     // Priority: Railway-specific session > Environment > Config file > Hardcoded fallback
     let sessionString = process.env.RAILWAY_SESSION_STRING || process.env.LIVE_CLONING_SESSION || persistentSettings.sessionString;
-    
+
     // Fallback to hardcoded session (same as used by entity creation endpoint)
     if (!sessionString) {
       sessionString = "1BVtsOMQBu1MCySasHg5HgnkWT88tu1InjQlIpLdYBk6sQ8AbeLDQnDA3ozJtwCM-tFczcZGyCrvXYBOZZ8p0xEfPVelOUGRx2I3fF7Bp3WxrliIG1EO9S0p5578d3j810CHKkdkgUtqf79d7N-NDAAZ8SPP71bFjqTdZbj4GjzcPIBGM5o5oxNjKP86u8q1MlDwXHbcjv3VHEkIBN3704qI9-xDIr0pqEauUjUnpEDC72eX4y4iWqVWS2mWNKnwBSt3zU9qiFQ_l7xVFsfgG0quxQs3x-BE9m7_5eZ7XRZz2_UPole8otKxkOB3J7LYZSvhNsUv-WuMVXA4SZuZ_XTn9OubHJLE=";
       console.log('Using hardcoded session string for auto-start');
-      
+
       // Save the session to persistent settings for future use
       persistentSettings.sessionString = sessionString;
       fs.writeFileSync(persistentConfigPath, JSON.stringify(persistentSettings, null, 2));
       console.log('💾 Saved session string to persistent settings');
     }
-    
+
     // Log which session source is being used
     if (process.env.RAILWAY_SESSION_STRING) {
       console.log('🚂 Using Railway-specific session string (avoiding IP conflict)');
@@ -5134,22 +5165,22 @@ export async function startLiveCloningService(): Promise<void> {
     } else if (persistentSettings.sessionString) {
       console.log('📝 Using persistent config session string');  
     }
-    
+
     // Stop existing process if running
     if (liveCloningProcess) {
       console.log('🔄 Stopping existing Live Cloning process for restart...');
       liveCloningProcess.kill('SIGTERM');
       liveCloningProcess = null;
     }
-    
+
     try {
       // CRITICAL: Load existing entity links from Python config files FIRST (like original implementation)
       const originalConfigPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'config.json');
       const entitiesJsonPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'plugins', 'jsons', 'entities.json');
-      
+
       let entityLinks: any[] = [];
       let wordFilters: any[] = [];
-      
+
       // Load from Python config.json if it exists
       if (fs.existsSync(originalConfigPath)) {
         try {
@@ -5165,7 +5196,7 @@ export async function startLiveCloningService(): Promise<void> {
           console.error('⚠️ Error reading Python config.json:', error);
         }
       }
-      
+
       // Also try to load from entities.json if config.json didn't have entities
       if (entityLinks.length === 0 && fs.existsSync(entitiesJsonPath)) {
         try {
@@ -5183,23 +5214,23 @@ export async function startLiveCloningService(): Promise<void> {
           console.error('⚠️ Error reading entities.json:', error);
         }
       }
-      
+
       console.log(`📎 Total loaded for auto-start: ${entityLinks.length} entity links and ${wordFilters.length} word filters`);
-      
+
       // Auto-start the Live Cloning bot with existing configuration
       const telegramConfig = configReader.getTelegramConfig();
       const liveClonerPath = path.join(process.cwd(), 'bot_source', 'live-cloning', 'live_cloner.py');
       const configDir = path.join(process.cwd(), 'tmp', 'config');
       const configPath = path.join(configDir, 'live_cloning_config.json');
-      
+
       // Ensure config directory exists
       if (!fs.existsSync(configDir)) {
         fs.mkdirSync(configDir, { recursive: true });
       }
-      
+
       // Generate unique instance ID for this auto-start session
       const instanceId = `live_cloning_auto_${Date.now()}`;
-      
+
       // Prepare configuration with database entity links
       const config = {
         api_id: parseInt(telegramConfig.api_id),
@@ -5213,10 +5244,10 @@ export async function startLiveCloningService(): Promise<void> {
         auto_started: true,
         instance_id: instanceId
       };
-      
+
       // Write config file
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-      
+
       // Save this instance to database for tracking
       await storage.saveLiveCloningInstance({
         instanceId: instanceId,
@@ -5224,9 +5255,9 @@ export async function startLiveCloningService(): Promise<void> {
         config: config,
         status: 'active'
       });
-      
+
       console.log('🔄 Starting Live Cloning Python process for 24/7 operation...');
-      
+
       // Start live cloning process
       liveCloningProcess = spawn('python3', [liveClonerPath, '--session', sessionString, '--config', configPath], {
         env: {
@@ -5237,7 +5268,7 @@ export async function startLiveCloningService(): Promise<void> {
         },
         cwd: path.dirname(liveClonerPath)
       });
-      
+
       // Update status
       liveCloningStatus = {
         ...liveCloningStatus,
@@ -5253,52 +5284,52 @@ export async function startLiveCloningService(): Promise<void> {
         signature: persistentSettings.signature,
         logs: [`✅ Auto-started at ${new Date().toISOString()} with ${entityLinks.length} entity links`]
       };
-      
+
       // Handle process output for logging and status updates
       liveCloningProcess.stdout?.on('data', (data) => {
         const log = data.toString();
         const timestampedLog = `[AUTO-STDOUT] ${new Date().toISOString()}: ${log}`;
-        
+
         liveCloningStatus.logs.push(timestampedLog);
         if (liveCloningStatus.logs.length > 100) {
           liveCloningStatus.logs = liveCloningStatus.logs.slice(-50);
         }
-        
+
         console.log('🔄 Live Cloning (24/7):', log);
-        
+
         // Parse logs for progress info
         if (log.includes('message forwarded') || log.includes('Message sent') || log.includes('Forwarded message')) {
           liveCloningStatus.processedMessages++;
         }
-        
+
         // Handle sync commands that update database
         if (log.includes('SYNC_ENTITY_LINK_ADD:')) {
           handleEntityLinkSync(log);
         } else if (log.includes('SYNC_ENTITY_LINK_REMOVE:')) {
           handleEntityLinkRemove(log);
         }
-        
+
         liveCloningStatus.lastActivity = new Date().toISOString();
       });
-      
+
       liveCloningProcess.stderr?.on('data', (data) => {
         const log = data.toString();
         const timestampedLog = `[AUTO-STDERR] ${new Date().toISOString()}: ${log}`;
-        
+
         liveCloningStatus.logs.push(timestampedLog);
         if (liveCloningStatus.logs.length > 100) {
           liveCloningStatus.logs = liveCloningStatus.logs.slice(-50);
         }
-        
+
         console.error('🔄 Live Cloning Error (24/7):', log);
         liveCloningStatus.lastActivity = new Date().toISOString();
       });
-      
+
       liveCloningProcess.on('close', (code) => {
         console.log(`🔄 Live Cloning 24/7 process exited with code ${code}`);
         liveCloningStatus.running = false;
         liveCloningStatus.lastActivity = new Date().toISOString();
-        
+
         // Auto-restart after 30 seconds if it crashes
         if (code !== 0) {
           console.log('🔄 Auto-restarting Live Cloning in 30 seconds...');
@@ -5306,10 +5337,10 @@ export async function startLiveCloningService(): Promise<void> {
             await startLiveCloningService();
           }, 30000);
         }
-        
+
         liveCloningProcess = null;
       });
-      
+
       liveCloningProcess.on('error', (error) => {
         console.error('🔄 Live Cloning 24/7 process error:', error);
         // Auto-restart on error after 30 seconds
@@ -5317,11 +5348,11 @@ export async function startLiveCloningService(): Promise<void> {
           await startLiveCloningService();
         }, 30000);
       });
-      
+
       console.log('✅ Live Cloning 24/7 service started successfully!');
       console.log(`📊 Running with ${entityLinks.length} entity links and bot enabled: ${persistentSettings.botEnabled}`);
       console.log('🌟 Service will run continuously until server shutdown');
-      
+
     } catch (error) {
       console.error('❌ Error auto-starting Live Cloning bot:', error);
       // Retry after 60 seconds
@@ -5329,7 +5360,7 @@ export async function startLiveCloningService(): Promise<void> {
         await startLiveCloningService();
       }, 60000);
     }
-    
+
   } catch (error) {
     console.error('❌ Error starting Live Cloning service:', error);
   }
@@ -5342,7 +5373,7 @@ async function handleEntityLinkSync(logLine: string) {
     const match = logLine.match(/SYNC_ENTITY_LINK_ADD:(.+)\|(.+)\|(.+)/);
     if (match) {
       const [, fromEntity, toEntity, instanceId] = match;
-      
+
       // Add to database
       await storage.saveEntityLink({
         instanceId,
@@ -5350,7 +5381,7 @@ async function handleEntityLinkSync(logLine: string) {
         toEntity,
         isActive: true
       });
-      
+
       console.log(`✅ Synced entity link from bot: ${fromEntity} → ${toEntity}`);
     }
   } catch (error) {
@@ -5365,7 +5396,7 @@ async function handleEntityLinkRemove(logLine: string) {
     const match = logLine.match(/SYNC_ENTITY_LINK_REMOVE:(.+)\|(.+)/);
     if (match) {
       const [, fromEntity, instanceId] = match;
-      
+
       // Find and remove from database
       const links = await storage.getEntityLinks(instanceId);
       for (const link of links) {
@@ -5407,25 +5438,25 @@ async function syncEntityLinksWithBot(): Promise<void> {
     // Update the config file that the Python bot is reading
     const configDir = path.join(process.cwd(), 'tmp', 'config');
     const configPath = path.join(configDir, 'live_cloning_config.json');
-    
+
     if (fs.existsSync(configPath)) {
       // Read current config
       const configData = fs.readFileSync(configPath, 'utf8');
       const config = JSON.parse(configData);
-      
+
       // Update with latest entity links and filters
       config.entities = entityLinks;
       config.filters = wordFilters;
       config.last_sync = new Date().toISOString();
-      
+
       // Write updated config
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-      
+
       // Update status
       liveCloningStatus.totalLinks = entityLinks.length;
-      
+
       console.log(`🔄 Synced ${entityLinks.length} entity links and ${wordFilters.length} word filters with running bot`);
-      
+
       // Send signal to bot process to reload config (if supported)
       if (liveCloningProcess && !liveCloningProcess.killed) {
         try {
