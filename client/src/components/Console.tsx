@@ -434,10 +434,16 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       // Handle different possible log data structures
       let logsToExport: ConsoleLog[] = [];
       
-      if (collection.logs && Array.isArray(collection.logs)) {
+      // First, try the current logs in memory (if this is a loaded collection)
+      if (logs && logs.length > 0 && collection.id) {
+        logsToExport = logs;
+      }
+      // Then try the collection's logs property
+      else if (collection.logs && Array.isArray(collection.logs)) {
         logsToExport = collection.logs;
-      } else if ((collection as any).logsData) {
-        // Handle case where logs are stored as JSON string in logsData
+      } 
+      // Handle case where logs are stored as JSON string in logsData
+      else if ((collection as any).logsData) {
         try {
           const parsedLogs = typeof (collection as any).logsData === 'string' 
             ? JSON.parse((collection as any).logsData) 
