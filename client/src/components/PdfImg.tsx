@@ -190,7 +190,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
               onClick={() => {
                 const iframe = document.querySelector('#pdfimg-iframe') as HTMLIFrameElement;
                 if (iframe) {
-                  iframe.src = '/FinalCropper/build/index.html';
+                  iframe.src = '/FinalCropper/molview/index.html';
                 }
               }}
               className="h-6 px-2 text-xs"
@@ -224,7 +224,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
       <CardContent className="p-0 flex-1 overflow-hidden relative">
         <iframe
           id="pdfimg-iframe"
-          src="/FinalCropper/build/index.html"
+          src="/FinalCropper/index.html"
           className="w-full h-full border-0"
           title="Advanced Image Cropper"
           allow="fullscreen; camera; microphone; clipboard-read; clipboard-write"
