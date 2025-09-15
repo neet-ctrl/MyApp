@@ -81,9 +81,6 @@ app.use((req, res, next) => {
     });
   });
   
-  // Auto-start Live Cloning service for always-running architecture
-  await startLiveCloningService();
-
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
@@ -110,7 +107,14 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
     reusePort: true,
-  }, () => {
+  }, async () => {
     log(`serving on port ${port}`);
+    
+    // Auto-start Live Cloning service AFTER server is running
+    try {
+      await startLiveCloningService();
+    } catch (error) {
+      console.error('Failed to start Live Cloning service:', error);
+    }
   });
 })();

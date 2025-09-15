@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Maximize2, Minimize2, Copy, RotateCcw, GripVertical, Archive, Clock, Download, Trash2 } from 'lucide-react';
+import { Maximize2, Minimize2, Copy, RotateCcw, GripVertical, Archive, Clock, Download, Trash2, Pause, Play } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ConsoleLog {
@@ -52,6 +52,9 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   const [rangeStart, setRangeStart] = useState<number | null>(null);
   const [rangeEnd, setRangeEnd] = useState<number | null>(null);
   const [showRangeDialog, setShowRangeDialog] = useState(false);
+  
+  // Pause/Resume functionality
+  const [isPaused, setIsPaused] = useState(false);
   
   const { toast } = useToast();
   
@@ -107,10 +110,10 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
           setLogs(prev => {
             const combined = offset === 0 ? data : [...prev, ...data];
             // Remove duplicates by ID
-            const unique = combined.filter((log, index, self) => 
-              index === self.findIndex(l => l.id === log.id)
+            const unique = combined.filter((log: ConsoleLog, index: number, self: ConsoleLog[]) => 
+              index === self.findIndex((l: ConsoleLog) => l.id === log.id)
             );
-            return unique.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            return unique.sort((a: ConsoleLog, b: ConsoleLog) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
           });
           
           // If we got 1000 logs, there might be more - fetch next batch
@@ -127,6 +130,8 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
 
   // Setup WebSocket connection for real-time logs
   const setupWebSocket = () => {
+    if (isPaused) return; // Don't setup WebSocket if paused
+    
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/console`;
     
@@ -139,6 +144,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       };
       
       ws.onmessage = (event) => {
+        if (isPaused) return; // Don't process messages if paused
         try {
           const logEntry = JSON.parse(event.data);
           setLogs(prev => [logEntry, ...prev].slice(0, 1000)); // Keep last 1000 logs
@@ -151,8 +157,10 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       ws.onclose = () => {
         setIsConnected(false);
         console.log('Console WebSocket disconnected');
-        // Attempt to reconnect after 3 seconds
-        setTimeout(setupWebSocket, 3000);
+        // Attempt to reconnect after 3 seconds only if not paused
+        if (!isPaused) {
+          setTimeout(setupWebSocket, 3000);
+        }
       };
       
       ws.onerror = (error) => {
@@ -169,8 +177,12 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
 
   // Setup auto-refresh every 15 seconds
   const setupAutoRefresh = () => {
+    if (isPaused) return; // Don't setup auto-refresh if paused
+    
     refreshIntervalRef.current = setInterval(() => {
-      fetchLogs();
+      if (!isPaused) { // Only fetch logs if not paused
+        fetchLogs();
+      }
     }, 15000);
   };
 
@@ -351,6 +363,17 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
 
   // Load saved log collection from database or localStorage
   const loadSavedLogs = async (collection: SavedLogCollection) => {
+    // Auto-pause when loading a collection to prevent immediate overwrite
+    setIsPaused(true);
+    
+    // Stop WebSocket and auto-refresh
+    if (wsRef.current) {
+      wsRef.current.close();
+    }
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
+    }
+    
     try {
       // Try to load from database first
       const response = await fetch(`/api/console-logs/collections/${collection.id}`);
@@ -359,8 +382,8 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         if (data.collection && data.collection.logs) {
           setLogs(data.collection.logs);
           toast({
-            title: 'Logs Loaded from Database',
-            description: `Loaded "${collection.name}" with ${data.collection.logs.length} entries`,
+            title: 'Logs Loaded (Paused)',
+            description: `Loaded "${collection.name}" with ${data.collection.logs.length} entries. Click Resume to continue live logs.`,
           });
           setShowSavedLogsDialog(false);
           return;
@@ -373,8 +396,8 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     // Fallback to localStorage copy
     setLogs(collection.logs || []);
     toast({
-      title: 'Logs Loaded (Local)',
-      description: `Loaded "${collection.name}" with ${collection.totalEntries} entries`,
+      title: 'Logs Loaded (Paused)',
+      description: `Loaded "${collection.name}" with ${collection.totalEntries} entries. Click Resume to continue live logs.`,
     });
     setShowSavedLogsDialog(false);
   };
@@ -388,21 +411,125 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     });
   };
 
-  // Export saved logs as JSON
+  // Export saved logs as formatted HTML (console-like appearance)
   const exportSavedLogs = (collection: SavedLogCollection) => {
     try {
-      const dataStr = JSON.stringify(collection, null, 2);
-      const dataBlob = new Blob([dataStr], {type: 'application/json'});
+      const formatLogLevel = (level: string) => {
+        const levelColor = getLogLevelColor(level);
+        const badgeColor = getLogLevelBadgeColor(level);
+        return `<span class="log-level ${levelColor}" style="padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">${level.toUpperCase()}</span>`;
+      };
+      
+      const formatLogEntry = (log: ConsoleLog, index: number) => {
+        const timestamp = formatTimestamp(log.timestamp);
+        const levelStyle = getLogLevelColor(log.level);
+        return `
+          <div class="log-entry" style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 14px; display: flex; align-items: flex-start; gap: 8px;">
+            <span class="log-timestamp" style="color: #6b7280; font-size: 12px; white-space: nowrap; margin-top: 2px;">${timestamp}</span>
+            <span class="log-level-badge ${levelStyle}" style="padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; min-width: 50px; text-align: center;">${log.level}</span>
+            <div class="log-content" style="flex: 1;">
+              <div class="log-message" style="white-space: pre-wrap; word-break: break-word;">${log.message}</div>
+              ${log.source ? `<div class="log-source" style="color: #9ca3af; font-size: 11px; margin-top: 2px;">Source: ${log.source}</div>` : ''}
+              ${log.metadata ? `<details class="log-metadata" style="margin-top: 4px; font-size: 12px;"><summary style="color: #6b7280; cursor: pointer;">Metadata</summary><pre style="background: #f9fafb; padding: 8px; border-radius: 4px; margin-top: 4px; overflow-x: auto; font-size: 11px;">${JSON.stringify(log.metadata, null, 2)}</pre></details>` : ''}
+            </div>
+          </div>`;
+      };
+      
+      const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Console Logs - ${collection.name}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #ffffff;
+            line-height: 1.5;
+        }
+        .header {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0 0 8px 0;
+            color: #1e293b;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header-info {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .logs-container {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .log-entry:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        .log-entry:hover {
+            background-color: #f1f5f9;
+        }
+        /* Log level colors */
+        .text-red-500 { color: #ef4444; background-color: #fef2f2; }
+        .text-yellow-600 { color: #d97706; background-color: #fffbeb; }
+        .text-blue-600 { color: #2563eb; background-color: #eff6ff; }
+        .text-gray-600 { color: #4b5563; background-color: #f9fafb; }
+        .text-gray-700 { color: #374151; background-color: #f9fafb; }
+        
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .log-entry { font-size: 12px; padding: 6px 8px; }
+            .log-timestamp { display: none; }
+        }
+        
+        @media print {
+            body { background: white; }
+            .header { background: white; border: 1px solid #ccc; }
+            .logs-container { border: 1px solid #ccc; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Console Logs Export</h1>
+        <div class="header-info">
+            <strong>Collection:</strong> ${collection.name}<br>
+            <strong>Total Entries:</strong> ${collection.totalEntries}<br>
+            <strong>Saved:</strong> ${formatTimestamp(collection.savedAt)}<br>
+            <strong>Exported:</strong> ${new Date().toLocaleString()}
+        </div>
+    </div>
+    
+    <div class="logs-container">
+        ${collection.logs.map((log, index) => formatLogEntry(log, index)).join('')}
+    </div>
+    
+    <div style="margin-top: 20px; padding: 16px; background: #f8fafc; border-radius: 8px; text-align: center; color: #64748b; font-size: 12px;">
+        Generated by Enhanced Console • ${collection.logs.length} log entries
+    </div>
+</body>
+</html>`;
+      
+      const dataBlob = new Blob([htmlContent], {type: 'text/html'});
       const url = URL.createObjectURL(dataBlob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `console-logs-${collection.name}-${new Date().toISOString().split('T')[0]}.json`;
+      link.download = `console-logs-${collection.name}-${new Date().toISOString().split('T')[0]}.html`;
       link.click();
       URL.revokeObjectURL(url);
       
       toast({
         title: 'Export Complete',
-        description: `Log collection exported as JSON file`,
+        description: `Log collection exported as formatted HTML file with ${collection.logs.length} entries`,
       });
     } catch (error) {
       toast({
@@ -413,13 +540,50 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     }
   };
 
+  // Handle pause/resume functionality
+  const handlePauseResume = () => {
+    if (isPaused) {
+      // Resume: restart WebSocket and auto-refresh
+      setIsPaused(false);
+      setupWebSocket();
+      setupAutoRefresh();
+      fetchLogs(); // Get latest logs
+      toast({
+        title: 'Console Resumed',
+        description: 'Live log streaming resumed',
+      });
+    } else {
+      // Pause: stop WebSocket and auto-refresh
+      setIsPaused(true);
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+      }
+      setIsConnected(false);
+      toast({
+        title: 'Console Paused',
+        description: 'Live log streaming paused',
+      });
+    }
+  };
+
   // Handle last log button (manual refresh)
   const handleLastLog = () => {
-    fetchLogs();
-    toast({
-      title: 'Logs Refreshed',
-      description: 'Console logs have been refreshed',
-    });
+    if (!isPaused) {
+      fetchLogs();
+      toast({
+        title: 'Logs Refreshed',
+        description: 'Console logs have been refreshed',
+      });
+    } else {
+      toast({
+        title: 'Console Paused',
+        description: 'Resume console to refresh logs',
+        variant: 'destructive',
+      });
+    }
   };
 
   // Handle maximize/minimize
@@ -458,6 +622,34 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     });
   };
 
+  // Touch event handlers for dragging
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isMaximized) return;
+    
+    const touch = e.touches[0];
+    setIsDragging(true);
+    setDragStart({
+      x: touch.clientX - position.x,
+      y: touch.clientY - position.y,
+    });
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (isDragging && !isMaximized) {
+      e.preventDefault(); // Prevent scrolling
+      const touch = e.touches[0];
+      setPosition({
+        x: touch.clientX - dragStart.x,
+        y: touch.clientY - dragStart.y,
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    setIsResizing(false);
+  };
+
   const handleMouseMove = (e: MouseEvent) => {
     if (isDragging && !isMaximized) {
       setPosition({
@@ -484,6 +676,38 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     });
   };
 
+  // Touch event handlers for resizing
+  const handleResizeTouchStart = (e: React.TouchEvent) => {
+    if (isMaximized) return;
+    e.stopPropagation();
+    
+    const touch = e.touches[0];
+    setIsResizing(true);
+    setDragStart({
+      x: touch.clientX,
+      y: touch.clientY,
+    });
+  };
+
+  const handleResizeTouchMove = (e: TouchEvent) => {
+    if (isResizing && !isMaximized) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - dragStart.x;
+      const deltaY = touch.clientY - dragStart.y;
+      
+      setSize(prev => ({
+        width: Math.max(400, prev.width + deltaX),
+        height: Math.max(300, prev.height + deltaY),
+      }));
+      
+      setDragStart({
+        x: touch.clientX,
+        y: touch.clientY,
+      });
+    }
+  };
+
   const handleResizeMouseMove = (e: MouseEvent) => {
     if (isResizing && !isMaximized) {
       const deltaX = e.clientX - dragStart.x;
@@ -503,7 +727,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
 
   // Effect to setup WebSocket and intervals
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !isPaused) {
       fetchLogs();
       setupWebSocket();
       setupAutoRefresh();
@@ -517,17 +741,24 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         clearInterval(refreshIntervalRef.current);
       }
     };
-  }, [isOpen]);
+  }, [isOpen, isPaused]);
 
-  // Effect to handle mouse events
+  // Effect to handle mouse and touch events
   useEffect(() => {
     if (isDragging || isResizing) {
+      // Mouse events
       document.addEventListener('mousemove', isDragging ? handleMouseMove : handleResizeMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+      
+      // Touch events
+      document.addEventListener('touchmove', isDragging ? handleTouchMove : handleResizeTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
       
       return () => {
         document.removeEventListener('mousemove', isDragging ? handleMouseMove : handleResizeMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', isDragging ? handleTouchMove : handleResizeTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
       };
     }
   }, [isDragging, isResizing, dragStart]);
@@ -590,6 +821,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         <CardHeader 
           className="py-2 px-4 bg-muted cursor-move select-none flex flex-row items-center justify-between space-y-0 flex-shrink-0"
           onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
           data-testid="console-header"
         >
           <div className="flex items-center space-x-2">
@@ -598,7 +830,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
               <span className="text-sm font-medium">Enhanced Console</span>
             </div>
             <span className="text-xs text-muted-foreground">
-              {logs.length} logs • {isConnected ? 'Live' : 'Disconnected'}
+              {logs.length} logs • {isPaused ? 'Paused' : (isConnected ? 'Live' : 'Disconnected')}
             </span>
             {isSelectionMode && (
               <Badge variant="secondary" className="text-xs">
@@ -608,6 +840,17 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
           </div>
           
           <div className="flex items-center space-x-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handlePauseResume}
+              className="h-6 w-6 p-0"
+              data-testid="button-pause-resume"
+              title={isPaused ? 'Resume live logs' : 'Pause live logs'}
+            >
+              {isPaused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+            </Button>
+            
             <Button
               size="sm"
               variant="ghost"
@@ -883,6 +1126,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
           <div
             className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-muted hover:bg-muted-foreground/20 transition-colors"
             onMouseDown={handleResizeMouseDown}
+            onTouchStart={handleResizeTouchStart}
             data-testid="resize-handle"
           >
             <GripVertical className="h-3 w-3 rotate-90" />
@@ -892,7 +1136,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
 
       {/* Save Logs Dialog */}
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-        <DialogContent>
+        <DialogContent className="z-[1001]">
           <DialogHeader>
             <DialogTitle>Save Current Logs</DialogTitle>
           </DialogHeader>
@@ -971,7 +1215,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
 
       {/* Saved Logs Dialog */}
       <Dialog open={showSavedLogsDialog} onOpenChange={setShowSavedLogsDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogContent className="max-w-4xl max-h-[80vh] z-[1001]">
           <DialogHeader>
             <DialogTitle>Saved Log Collections</DialogTitle>
           </DialogHeader>

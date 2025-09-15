@@ -32,7 +32,10 @@ export default defineConfig({
     include: ['buffer', 'telegram', 'telegram/sessions', 'telegram/tl', 'big-integer']
   },
   server: {
-    port: 5173,
-    host: '0.0.0.0'
+    port: parseInt(process.env.PORT || '5000', 10),
+    host: '0.0.0.0',
+    hmr: {
+      port: parseInt(process.env.PORT || '5000', 10)
+    }
   }
 })

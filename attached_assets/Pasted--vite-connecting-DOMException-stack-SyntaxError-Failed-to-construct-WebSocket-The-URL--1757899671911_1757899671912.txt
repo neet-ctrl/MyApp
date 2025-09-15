@@ -1,0 +1,104 @@
+[vite] connecting...
+DOMException {}
+stack: "SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=v6xDtSpy5og2' is invalid.↵ at new t (https://29ced0e9-0cd6-41f3-9168-34788f3040cb-00-15g1itxy5sde0.pike.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:218737)↵ at setupWebSocket (https://29ced0e9-0cd6-41f3-9168-34788f3040cb-00-15g1itxy5sde0.pike.replit.dev/@vite/client:536:19)↵ at fallback (https://29ced0e9-0cd6-41f3-9168-34788f3040cb-00-15g1itxy5sde0.pike.replit.dev/@vite/client:509:16)↵ at WebSocket.<anonymous> (https://29ced0e9-0cd6-41f3-9168-34788f3040cb-00-15g1itxy5sde0.pike.replit.dev/@vite/client:555:7)"
+get stack: ƒ ()
+length: 0
+name: ""
+[[Prototype]]: ƒ ()
+apply: ƒ apply()
+arguments: "'caller', 'callee', and 'arguments' properties may not be accessed on strict mode functions or the arguments objects for calls to them"
+get arguments: ƒ get arguments()
+set arguments: ƒ set arguments()
+bind: ƒ bind()
+call: ƒ call()
+caller: "'caller', 'callee', and 'arguments' properties may not be accessed on strict mode functions or the arguments objects for calls to them"
+get caller: ƒ get caller()
+set caller: ƒ set caller()
+constructor: ƒ Function()
+length: 0
+name: ""
+toString: ƒ toString()
+Symbol(Symbol.hasInstance): undefined
+[[Prototype]]: Object
+set stack: ƒ ()
+[[Prototype]]: DOMException
+
+[2025-09-15T06:55:52.245] [INFO] - [Running gramJS version 2.26.21]
+Connecting to Telegram...
+[2025-09-15T06:55:52.251] [INFO] - [Connecting to flora.web.telegram.org:443/TCPObfuscated...]
+[2025-09-15T06:55:52.781] [INFO] - [Connection to flora.web.telegram.org:443/TCPObfuscated complete!]
+[2025-09-15T06:55:52.783] [INFO] - [Using LAYER 198 for initial connect]
+Checking authorization...
+Session loaded successfully!
+✅ Auto-loaded chats: 57 chats
+Telegram Manager
+Media & Messages
+
+DU
+Default User
+
++917352013479
+
+
+🐍 Python Script Mode
+
+🐍 Python Copier
+
+⚡ JS Copier
+
+⚡ Live Cloning
+
+Dashboard
+
+Chat Selection
+
+Message Search
+
+Date Range
+
+Similarity Search
+
+Download
+
+📁 File Manager
+
+🐙 GitHub Sync
+
+⚡ Git Control
+
+📝 Text Memo
+
+Settings
+
+Select Folder
+Default
+
+Console
+
+Logout
+🐍 Python Script Mode
+Exact same workflow as your Telethon script - select chat, choose operation, execute
+
+1
+Select Chat
+2
+Choose Mode
+3
+Execute
+📋 Select Chat (Just like Python script)
+Choose from your channels/groups/bots with IDs
+
+TrueCaller (ID: 1235192366)
+
+5,733,585 members
+
+channel
+TrueCaller Bot (ID: 1322268110)
+
+Private chat • @TrueCaller1Bot
+
+private
+PW LAKSHYA NEET 2026 BATCH (ID: 1662771631)
+
+16,765 members
+
