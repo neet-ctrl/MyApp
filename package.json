@@ -45,6 +45,8 @@
     "@radix-ui/react-tooltip": "^1.2.0",
     "@railway/cli": "^4.8.0",
     "@tanstack/react-query": "^5.60.5",
+    "@types/archiver": "^6.0.3",
+    "@types/multer": "^2.0.0",
     "@types/node-telegram-bot-api": "^0.64.10",
     "adm-zip": "^0.5.16",
     "archiver": "^7.0.1",

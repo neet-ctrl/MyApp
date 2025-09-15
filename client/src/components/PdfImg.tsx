@@ -224,7 +224,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
       <CardContent className="p-0 flex-1 overflow-hidden relative">
         <iframe
           id="pdfimg-iframe"
-          src="/FinalCropper/public/index.html"
+          src="/FinalCropper/build/index.html"
           className="w-full h-full border-0"
           title="Advanced Image Cropper"
           allow="fullscreen; camera; microphone; clipboard-read; clipboard-write"

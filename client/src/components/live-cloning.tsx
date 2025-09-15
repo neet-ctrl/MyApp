@@ -1816,6 +1816,10 @@ export function LiveCloning() {
                             const numberEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
                             const numberEmoji = numberEmojis[index] || `${index + 1}️⃣`;
 
+                            // Define the missing variables
+                            const fromEntityName = getChatName(link.fromEntity);
+                            const toEntityName = getChatName(link.toEntity);
+
                             // Extract just the title/name without extra formatting
                             const fromChat = chats.find(c => c.id === link.fromEntity);
                             const toChat = chats.find(c => c.id === link.toEntity);
