@@ -23,7 +23,7 @@ import {
 } from "@shared/schema";
 
 import { desc, eq, lt } from "drizzle-orm";
-import { consoleLogs, logCollections } from "@shared/db/schema";
+import { consoleLogs, logCollections } from "@shared/schema";
 
 export interface IStorage {
   // This storage is primarily for backend session management if needed
@@ -463,8 +463,9 @@ export class MemStorage implements IStorage {
   async clearOldConsoleLogs(olderThanDays: number): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
-
-    const result = await this.db.delete(consoleLogs)
+    
+    const { db } = await import('./db');
+    const result = await db.delete(consoleLogs)
       .where(lt(consoleLogs.timestamp, cutoffDate.toISOString()));
 
     return result.rowCount || 0;
@@ -477,7 +478,8 @@ export class MemStorage implements IStorage {
     savedAt: string;
     logsData: string;
   }) {
-    const [collection] = await this.db.insert(logCollections)
+    const { db } = await import('./db');
+    const [collection] = await db.insert(logCollections)
       .values({
         name: data.name,
         totalEntries: data.totalEntries,
@@ -489,7 +491,8 @@ export class MemStorage implements IStorage {
   }
 
   async getLogCollections() {
-    return await this.db.select({
+    const { db } = await import('./db');
+    return await db.select({
       id: logCollections.id,
       name: logCollections.name,
       totalEntries: logCollections.totalEntries,
@@ -499,14 +502,16 @@ export class MemStorage implements IStorage {
   }
 
   async getLogCollection(id: number) {
-    const [collection] = await this.db.select()
+    const { db } = await import('./db');
+    const [collection] = await db.select()
       .from(logCollections)
       .where(eq(logCollections.id, id));
     return collection;
   }
 
   async deleteLogCollection(id: number): Promise<boolean> {
-    const result = await this.db.delete(logCollections)
+    const { db } = await import('./db');
+    const result = await db.delete(logCollections)
       .where(eq(logCollections.id, id));
     return (result.rowCount || 0) > 0;
   }
