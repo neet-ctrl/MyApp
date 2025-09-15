@@ -53,19 +53,6 @@ mode = "sequential"
 task = "shell.exec"
 args = "cd client && npm run dev"
 
-[[workflows.workflow]]
-name = "Build FinalCropper"
-author = 47628150
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd FinalCropper && npm install && npm run build"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cp -r build/* ../public/FinalCropper/"
-
 [[ports]]
 localPort = 5000
 externalPort = 80

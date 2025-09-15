@@ -27,7 +27,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
   // Handle mouse down for dragging
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isMaximized || (e.target as HTMLElement).closest('.no-drag')) return;
-
+    
     setIsDragging(true);
     setDragStart({
       x: e.clientX - position.x,
@@ -38,7 +38,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
   // Handle touch start for dragging (mobile support)
   const handleTouchStart = (e: React.TouchEvent) => {
     if (isMaximized || (e.target as HTMLElement).closest('.no-drag')) return;
-
+    
     const touch = e.touches[0];
     setIsDragging(true);
     setDragStart({
@@ -50,7 +50,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
   // Handle mouse down for resizing
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     if (isMaximized) return;
-
+    
     e.preventDefault();
     e.stopPropagation();
     setIsResizing(true);
@@ -65,7 +65,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
   // Handle touch start for resizing (mobile support)
   const handleResizeTouchStart = (e: React.TouchEvent) => {
     if (isMaximized) return;
-
+    
     e.preventDefault();
     e.stopPropagation();
     const touch = e.touches[0];
@@ -182,7 +182,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
             <GripVertical className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">🎨 Advanced Image Cropper</span>
           </div>
-
+          
           <div className="flex items-center space-x-1 no-drag">
             <Button
               size="sm"
@@ -190,7 +190,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
               onClick={() => {
                 const iframe = document.querySelector('#pdfimg-iframe') as HTMLIFrameElement;
                 if (iframe) {
-                  iframe.src = '/FinalCropper/molview/index.html';
+                  iframe.src = '/FinalCropper/public/molview/index.html';
                 }
               }}
               className="h-6 px-2 text-xs"
@@ -224,7 +224,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
       <CardContent className="p-0 flex-1 overflow-hidden relative">
         <iframe
           id="pdfimg-iframe"
-          src="/FinalCropper/index.html"
+          src="/FinalCropper/public/index.html"
           className="w-full h-full border-0"
           title="Advanced Image Cropper"
           allow="fullscreen; camera; microphone; clipboard-read; clipboard-write"
@@ -241,23 +241,9 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
           data-testid="pdfimg-iframe"
           onLoad={(e) => {
             console.log('PdfImg iframe loaded successfully');
-            // Try to inject styles to ensure proper loading
-            try {
-              const iframe = e.target as HTMLIFrameElement;
-              if (iframe.contentWindow) {
-                iframe.contentWindow.postMessage({ type: 'IFRAME_LOADED' }, '*');
-              }
-            } catch (error) {
-              console.log('Cannot access iframe content due to CORS');
-            }
           }}
           onError={(e) => {
-            console.error('PdfImg iframe failed to load - trying fallback');
-            // Fallback to the original URL if the local build fails
-            const iframe = e.target as HTMLIFrameElement;
-            if (iframe) {
-              iframe.src = 'https://shaktiprojects.github.io/batch-images-cropper/';
-            }
+            console.error('PdfImg iframe failed to load');
           }}
         />
       </CardContent>
