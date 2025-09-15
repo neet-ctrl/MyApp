@@ -461,14 +461,34 @@ export class MemStorage implements IStorage {
   }
 
   async clearOldConsoleLogs(olderThanDays: number): Promise<number> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
-    
-    const { db } = await import('./db');
-    const result = await db.delete(consoleLogs)
-      .where(lt(consoleLogs.timestamp, cutoffDate.toISOString()));
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
+      
+      const { db } = await import('./db');
+      const { consoleLogs } = await import('@shared/schema');
+      const { lt } = await import('drizzle-orm');
+      
+      const result = await db.delete(consoleLogs)
+        .where(lt(consoleLogs.timestamp, cutoffDate.toISOString()));
 
-    return result.rowCount || 0;
+      return result.rowCount || 0;
+    } catch (error) {
+      console.log('Database not available, clearing old logs from memory storage');
+      // Fallback to memory storage
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
+      
+      let deletedCount = 0;
+      for (const [id, log] of Array.from(this.consoleLogs.entries())) {
+        const logDate = new Date(log.timestamp || 0);
+        if (logDate < cutoffDate) {
+          this.consoleLogs.delete(id);
+          deletedCount++;
+        }
+      }
+      return deletedCount;
+    }
   }
 
   // Log Collections storage maps
@@ -484,6 +504,8 @@ export class MemStorage implements IStorage {
   }) {
     try {
       const { db } = await import('./db');
+      const { logCollections } = await import('@shared/schema');
+      
       const [collection] = await db.insert(logCollections)
         .values({
           name: data.name,
@@ -494,6 +516,7 @@ export class MemStorage implements IStorage {
         .returning();
       return collection;
     } catch (error) {
+      console.log('Database not available, using memory storage for log collection');
       // Fallback to memory storage
       const collection = {
         id: this.logCollectionIdCounter++,
@@ -510,6 +533,9 @@ export class MemStorage implements IStorage {
   async getLogCollections() {
     try {
       const { db } = await import('./db');
+      const { logCollections } = await import('@shared/schema');
+      const { desc } = await import('drizzle-orm');
+      
       return await db.select({
         id: logCollections.id,
         name: logCollections.name,
@@ -518,6 +544,7 @@ export class MemStorage implements IStorage {
       }).from(logCollections)
         .orderBy(desc(logCollections.savedAt));
     } catch (error) {
+      console.log('Database not available, using memory storage for log collections');
       // Fallback to memory storage
       return Array.from(this.logCollections.values())
         .map(collection => ({
@@ -533,11 +560,15 @@ export class MemStorage implements IStorage {
   async getLogCollection(id: number) {
     try {
       const { db } = await import('./db');
+      const { logCollections } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
       const [collection] = await db.select()
         .from(logCollections)
         .where(eq(logCollections.id, id));
       return collection;
     } catch (error) {
+      console.log('Database not available, using memory storage for log collection');
       // Fallback to memory storage
       return this.logCollections.get(id);
     }
@@ -546,10 +577,14 @@ export class MemStorage implements IStorage {
   async deleteLogCollection(id: number): Promise<boolean> {
     try {
       const { db } = await import('./db');
+      const { logCollections } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
       const result = await db.delete(logCollections)
         .where(eq(logCollections.id, id));
       return (result.rowCount || 0) > 0;
     } catch (error) {
+      console.log('Database not available, using memory storage for log collection');
       // Fallback to memory storage
       return this.logCollections.delete(id);
     }
