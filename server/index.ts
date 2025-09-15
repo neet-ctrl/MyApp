@@ -66,6 +66,9 @@ app.use((req, res, next) => {
   // Run automatic setup first
   await autoSetup();
   
+  // Serve FinalCropper build folder before Vite catch-all
+  app.use('/FinalCropper/build', express.static(path.resolve('FinalCropper/build')));
+  
   await registerRoutes(app);
   const server = createServer(app);
   
