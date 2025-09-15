@@ -228,7 +228,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
           className="w-full h-full border-0"
           title="Advanced Image Cropper"
           allow="fullscreen; camera; microphone; clipboard-read; clipboard-write"
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads"
           style={{
             // Force desktop mode and ensure proper scaling
             width: '100%',
