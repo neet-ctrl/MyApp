@@ -10,8 +10,8 @@ interface PdfImgProps {
 
 export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
   const [isMaximized, setIsMaximized] = useState(false);
-  const [position, setPosition] = useState({ x: 100, y: 100 });
-  const [size, setSize] = useState({ width: 1200, height: 800 });
+  const [position, setPosition] = useState({ x: 50, y: 50 });
+  const [size, setSize] = useState({ width: Math.min(1400, window.innerWidth - 100), height: Math.min(900, window.innerHeight - 100) });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -78,6 +78,25 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
     });
   };
 
+  // Handle window resize to maintain proper sizing
+  useEffect(() => {
+    const handleResize = () => {
+      if (!isMaximized) {
+        setSize(prevSize => ({
+          width: Math.min(prevSize.width, window.innerWidth - 100),
+          height: Math.min(prevSize.height, window.innerHeight - 100)
+        }));
+        setPosition(prevPos => ({
+          x: Math.min(prevPos.x, window.innerWidth - size.width),
+          y: Math.min(prevPos.y, window.innerHeight - size.height)
+        }));
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMaximized, size.width, size.height]);
+
   // Handle mouse/touch move for dragging and resizing
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -86,8 +105,8 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
         const newY = Math.max(0, Math.min(window.innerHeight - size.height, e.clientY - dragStart.y));
         setPosition({ x: newX, y: newY });
       } else if (isResizing && !isMaximized) {
-        const newWidth = Math.max(400, resizeStart.width + (e.clientX - resizeStart.x));
-        const newHeight = Math.max(300, resizeStart.height + (e.clientY - resizeStart.y));
+        const newWidth = Math.max(600, Math.min(window.innerWidth - position.x, resizeStart.width + (e.clientX - resizeStart.x)));
+        const newHeight = Math.max(400, Math.min(window.innerHeight - position.y, resizeStart.height + (e.clientY - resizeStart.y)));
         setSize({ width: newWidth, height: newHeight });
       }
     };
@@ -100,8 +119,8 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
         setPosition({ x: newX, y: newY });
       } else if (isResizing && !isMaximized) {
         const touch = e.touches[0];
-        const newWidth = Math.max(400, resizeStart.width + (touch.clientX - resizeStart.x));
-        const newHeight = Math.max(300, resizeStart.height + (touch.clientY - resizeStart.y));
+        const newWidth = Math.max(600, Math.min(window.innerWidth - position.x, resizeStart.width + (touch.clientX - resizeStart.x)));
+        const newHeight = Math.max(400, Math.min(window.innerHeight - position.y, resizeStart.height + (touch.clientY - resizeStart.y)));
         setSize({ width: newWidth, height: newHeight });
       }
     };
@@ -198,8 +217,8 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
             // Force desktop mode and ensure proper scaling
             width: '100%',
             height: '100%',
-            minWidth: '1200px',
-            minHeight: '800px',
+            minWidth: '100%',
+            minHeight: '100%',
             overflow: 'auto'
           }}
           data-testid="pdfimg-iframe"
