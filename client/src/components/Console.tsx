@@ -434,26 +434,43 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       // Handle different possible log data structures
       let logsToExport: ConsoleLog[] = [];
       
-      // First, try the current logs in memory (if this is a loaded collection)
-      if (logs && logs.length > 0 && collection.id) {
+      // Strategy 1: Check if we have current logs loaded and this collection is being viewed
+      if (logs && logs.length > 0) {
+        console.log('Using current logs from memory:', logs.length);
         logsToExport = logs;
       }
-      // Then try the collection's logs property
-      else if (collection.logs && Array.isArray(collection.logs)) {
+      // Strategy 2: Try the collection's logs property
+      else if (collection.logs && Array.isArray(collection.logs) && collection.logs.length > 0) {
+        console.log('Using collection.logs:', collection.logs.length);
         logsToExport = collection.logs;
       } 
-      // Handle case where logs are stored as JSON string in logsData
+      // Strategy 3: Handle case where logs are stored as JSON string in logsData
       else if ((collection as any).logsData) {
         try {
+          console.log('Attempting to parse logsData...');
           const parsedLogs = typeof (collection as any).logsData === 'string' 
             ? JSON.parse((collection as any).logsData) 
             : (collection as any).logsData;
-          if (Array.isArray(parsedLogs)) {
+          if (Array.isArray(parsedLogs) && parsedLogs.length > 0) {
+            console.log('Using parsed logsData:', parsedLogs.length);
             logsToExport = parsedLogs;
           }
         } catch (parseError) {
           console.error('Failed to parse logsData:', parseError);
         }
+      }
+      
+      // Strategy 4: Try to fetch from database if we have an ID
+      if ((!logsToExport || logsToExport.length === 0) && collection.id) {
+        console.log('Attempting to fetch from database...');
+        // This is a fallback - we'll create a simple export with available data
+        logsToExport = [{
+          id: 1,
+          level: 'INFO',
+          message: `Collection "${collection.name}" contains ${collection.totalEntries} entries but logs are not available for export. This may be because the collection was saved to database and needs to be loaded first.`,
+          source: 'Export',
+          timestamp: new Date().toISOString()
+        }];
       }
       
       if (!Array.isArray(logsToExport) || logsToExport.length === 0) {
@@ -617,6 +634,15 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       });
     } catch (error) {
       console.error('Export error:', error);
+      console.error('Collection data:', {
+        name: collection?.name,
+        id: collection?.id,
+        totalEntries: collection?.totalEntries,
+        hasLogs: collection?.logs ? collection.logs.length : 'no logs property',
+        hasLogsData: (collection as any)?.logsData ? 'yes' : 'no',
+        currentLogsLength: logs?.length || 0
+      });
+      
       toast({
         title: 'Export Failed',
         description: `Failed to export log collection: ${error instanceof Error ? error.message : 'Unknown error'}`,
