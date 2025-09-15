@@ -254,6 +254,75 @@ export async function registerRoutes(app: Express): Promise<Express> {
     }
   });
 
+  // Save log collection permanently
+  app.post('/api/console-logs/save-collection', async (req, res) => {
+    try {
+      const { name, logs, totalEntries } = req.body;
+      
+      if (!name || !logs || !Array.isArray(logs)) {
+        return res.status(400).json({ error: 'Name and logs array are required' });
+      }
+
+      // Save collection metadata to database
+      const collection = await storage.saveLogCollection({
+        name: name.trim(),
+        totalEntries: totalEntries || logs.length,
+        savedAt: new Date().toISOString(),
+        logsData: JSON.stringify(logs) // Store all log data as JSON
+      });
+
+      logger.info(`Saved log collection "${name}" with ${logs.length} entries to database`);
+      res.json({ 
+        success: true, 
+        id: collection.id,
+        message: `Log collection saved permanently with ${logs.length} entries`
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to save log collection: ${errorMessage}`);
+      res.status(500).json({ error: 'Failed to save log collection permanently' });
+    }
+  });
+
+  // Get saved log collections
+  app.get('/api/console-logs/collections', async (req, res) => {
+    try {
+      const collections = await storage.getLogCollections();
+      res.json({ collections });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to get log collections: ${errorMessage}`);
+      res.status(500).json({ error: 'Failed to get log collections' });
+    }
+  });
+
+  // Load specific log collection
+  app.get('/api/console-logs/collections/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const collection = await storage.getLogCollection(parseInt(id));
+      
+      if (!collection) {
+        return res.status(404).json({ error: 'Log collection not found' });
+      }
+
+      // Parse logs data
+      const logs = collection.logsData ? JSON.parse(collection.logsData) : [];
+      
+      res.json({ 
+        collection: {
+          ...collection,
+          logs,
+          logsData: undefined // Don't send raw JSON data
+        }
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to get log collection: ${errorMessage}`);
+      res.status(500).json({ error: 'Failed to get log collection' });
+    }
+  });
+
   // =====================================================
   // Telegram Bot Management API
   // Add API endpoints for download management

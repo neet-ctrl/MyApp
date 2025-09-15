@@ -135,6 +135,15 @@ export const consoleLogs = pgTable("console_logs", {
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
+export const logCollections = pgTable('log_collections', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  totalEntries: integer('total_entries').notNull(),
+  savedAt: varchar('saved_at', { length: 50 }).notNull(),
+  logsData: text('logs_data'), // JSON string of all logs
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // Zod schemas for validation
 export const telegramSessionSchema = z.object({
   sessionString: z.string(),

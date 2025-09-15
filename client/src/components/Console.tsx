@@ -60,16 +60,35 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   const wsRef = useRef<WebSocket | null>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load saved log collections from localStorage on mount
+  // Load saved log collections from database and localStorage on mount
   useEffect(() => {
-    const savedCollections = localStorage.getItem('console-saved-logs');
-    if (savedCollections) {
+    const loadSavedCollections = async () => {
       try {
-        setSavedLogCollections(JSON.parse(savedCollections));
+        // Try to load from database first
+        const response = await fetch('/api/console-logs/collections');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.collections && data.collections.length > 0) {
+            setSavedLogCollections(data.collections);
+            return;
+          }
+        }
       } catch (error) {
-        console.error('Failed to load saved log collections:', error);
+        console.error('Failed to load collections from database:', error);
       }
-    }
+
+      // Fallback to localStorage
+      const savedCollections = localStorage.getItem('console-saved-logs');
+      if (savedCollections) {
+        try {
+          setSavedLogCollections(JSON.parse(savedCollections));
+        } catch (error) {
+          console.error('Failed to load saved log collections from localStorage:', error);
+        }
+      }
+    };
+
+    loadSavedCollections();
   }, []);
 
   // Save log collections to localStorage whenever they change
@@ -77,14 +96,29 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     localStorage.setItem('console-saved-logs', JSON.stringify(savedLogCollections));
   }, [savedLogCollections]);
 
-  // Fetch initial logs from API
-  const fetchLogs = async () => {
+  // Fetch ALL logs from API (no limit, from deployment start)
+  const fetchLogs = async (offset = 0) => {
     try {
-      const response = await fetch('/api/console-logs');
+      // Fetch in batches of 1000 to get ALL logs
+      const response = await fetch(`/api/console-logs?limit=1000&offset=${offset}`);
       if (response.ok) {
         const data = await response.json();
-        setLogs(data);
-        scrollToBottom();
+        if (data.length > 0) {
+          setLogs(prev => {
+            const combined = offset === 0 ? data : [...prev, ...data];
+            // Remove duplicates by ID
+            const unique = combined.filter((log, index, self) => 
+              index === self.findIndex(l => l.id === log.id)
+            );
+            return unique.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+          });
+          
+          // If we got 1000 logs, there might be more - fetch next batch
+          if (data.length === 1000) {
+            setTimeout(() => fetchLogs(offset + 1000), 100);
+          }
+        }
+        if (offset === 0) scrollToBottom();
       }
     } catch (error) {
       console.error('Failed to fetch logs:', error);
@@ -247,8 +281,8 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     }
   };
 
-  // Save current logs persistently
-  const saveCurrentLogs = () => {
+  // Save current logs persistently to database
+  const saveCurrentLogs = async () => {
     if (!saveLogName.trim()) {
       toast({
         title: 'Name Required',
@@ -258,29 +292,88 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       return;
     }
 
-    const newCollection: SavedLogCollection = {
-      id: Date.now().toString(),
-      name: saveLogName.trim(),
-      logs: [...logs],
-      savedAt: new Date().toISOString(),
-      totalEntries: logs.length
-    };
+    try {
+      // Save to database via API for true persistence
+      const response = await fetch('/api/console-logs/save-collection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: saveLogName.trim(),
+          logs: logs,
+          totalEntries: logs.length
+        })
+      });
 
-    setSavedLogCollections(prev => [newCollection, ...prev].slice(0, 50)); // Keep max 50 collections
-    setSaveLogName('');
-    setShowSaveDialog(false);
-    
-    toast({
-      title: 'Logs Saved',
-      description: `Log collection "${newCollection.name}" saved with ${logs.length} entries`,
-    });
+      if (response.ok) {
+        const savedCollection = await response.json();
+        
+        // Also save to localStorage as backup
+        const newCollection: SavedLogCollection = {
+          id: savedCollection.id || Date.now().toString(),
+          name: saveLogName.trim(),
+          logs: [...logs],
+          savedAt: new Date().toISOString(),
+          totalEntries: logs.length
+        };
+
+        setSavedLogCollections(prev => [newCollection, ...prev].slice(0, 50));
+        setSaveLogName('');
+        setShowSaveDialog(false);
+        
+        toast({
+          title: 'Logs Saved Permanently',
+          description: `Log collection "${newCollection.name}" saved to database with ${logs.length} entries`,
+        });
+      } else {
+        throw new Error('Failed to save to database');
+      }
+    } catch (error) {
+      // Fallback to localStorage only
+      const newCollection: SavedLogCollection = {
+        id: Date.now().toString(),
+        name: saveLogName.trim(),
+        logs: [...logs],
+        savedAt: new Date().toISOString(),
+        totalEntries: logs.length
+      };
+
+      setSavedLogCollections(prev => [newCollection, ...prev].slice(0, 50));
+      setSaveLogName('');
+      setShowSaveDialog(false);
+      
+      toast({
+        title: 'Logs Saved (Local)',
+        description: `Log collection "${newCollection.name}" saved locally with ${logs.length} entries`,
+        variant: 'destructive',
+      });
+    }
   };
 
-  // Load saved log collection
-  const loadSavedLogs = (collection: SavedLogCollection) => {
-    setLogs(collection.logs);
+  // Load saved log collection from database or localStorage
+  const loadSavedLogs = async (collection: SavedLogCollection) => {
+    try {
+      // Try to load from database first
+      const response = await fetch(`/api/console-logs/collections/${collection.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.collection && data.collection.logs) {
+          setLogs(data.collection.logs);
+          toast({
+            title: 'Logs Loaded from Database',
+            description: `Loaded "${collection.name}" with ${data.collection.logs.length} entries`,
+          });
+          setShowSavedLogsDialog(false);
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load from database, using local copy:', error);
+    }
+
+    // Fallback to localStorage copy
+    setLogs(collection.logs || []);
     toast({
-      title: 'Logs Loaded',
+      title: 'Logs Loaded (Local)',
       description: `Loaded "${collection.name}" with ${collection.totalEntries} entries`,
     });
     setShowSavedLogsDialog(false);
@@ -654,11 +747,45 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
           </div>
         )}
 
-        {/* Enhanced Logs Content */}
-        <CardContent className="p-0 flex-1 overflow-hidden">
+        {/* Enhanced Logs Content with Mobile Controls */}
+        <CardContent className="p-0 flex-1 overflow-hidden relative">
+          {/* Mobile-Friendly Scroll Controls */}
+          <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 w-8 p-0 bg-background/80 backdrop-blur-sm"
+              onClick={() => {
+                if (logsContainerRef.current) {
+                  logsContainerRef.current.scrollTop = 0;
+                }
+              }}
+              title="Scroll to top (newest)"
+            >
+              ↑
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 w-8 p-0 bg-background/80 backdrop-blur-sm"
+              onClick={() => {
+                if (logsContainerRef.current) {
+                  logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight;
+                }
+              }}
+              title="Scroll to bottom (oldest)"
+            >
+              ↓
+            </Button>
+          </div>
+          
           <div 
             ref={logsContainerRef}
-            className="h-full overflow-y-auto"
+            className="h-full overflow-y-auto overscroll-contain"
+            style={{ 
+              scrollBehavior: 'smooth',
+              WebkitOverflowScrolling: 'touch'
+            }}
             data-testid="logs-container"
           >
             {logs.length === 0 ? (
@@ -667,40 +794,59 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
                 <div className="text-sm">Waiting for real-time logs...</div>
               </div>
             ) : (
-              <div className="space-y-1 p-2">
-                {logs.slice().reverse().map((log, index) => (
+              <div className="space-y-1 p-2 pb-16">
+                {/* Log Count Header */}
+                <div className="sticky top-0 bg-background/90 backdrop-blur-sm border-b p-2 mb-2 z-5">
+                  <span className="text-sm font-medium">
+                    Total Logs: {logs.length} entries (from deployment start)
+                  </span>
+                </div>
+                
+                {logs.slice().reverse().map((log, index) => {
+                  const entryNumber = logs.length - index;
+                  return (
                   <div 
-                    key={log.id || index} 
-                    className={`
-                      border rounded-lg p-3 transition-all duration-200 hover:shadow-sm cursor-pointer
-                      ${selectedLogIds.has(log.id) ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950' : 'bg-white dark:bg-gray-900'}
-                      ${getLogLevelColor(log.level)}
-                    `}
-                    onClick={() => isSelectionMode ? toggleLogSelection(log.id) : copySpecificLog(log)}
-                    data-testid={`log-entry-${index}`}
-                    title={isSelectionMode ? "Click to select/deselect" : "Click to copy this log entry"}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        {/* Log Header */}
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge className={`text-xs ${getLogLevelBadgeColor(log.level)}`}>
-                            {log.level.toUpperCase()}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {log.source}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {formatTimestamp(log.timestamp)}
-                          </span>
-                          {isSelectionMode && (
-                            <div className={`w-4 h-4 rounded border-2 ${selectedLogIds.has(log.id) ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
-                              {selectedLogIds.has(log.id) && (
-                                <div className="text-white text-xs">✓</div>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                      key={log.id || index} 
+                      className={`
+                        border rounded-lg p-3 transition-all duration-200 hover:shadow-sm cursor-pointer touch-manipulation
+                        ${selectedLogIds.has(log.id) ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950' : 'bg-white dark:bg-gray-900'}
+                        ${getLogLevelColor(log.level)}
+                      `}
+                      onClick={() => isSelectionMode ? toggleLogSelection(log.id) : copySpecificLog(log)}
+                      onTouchStart={(e) => {
+                        // Add touch feedback
+                        e.currentTarget.style.transform = 'scale(0.98)';
+                      }}
+                      onTouchEnd={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                      data-testid={`log-entry-${index}`}
+                      title={isSelectionMode ? "Tap to select/deselect" : "Tap to copy this log entry"}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          {/* Log Header with Entry Number */}
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <Badge variant="secondary" className="text-xs font-mono">
+                              #{entryNumber}
+                            </Badge>
+                            <Badge className={`text-xs ${getLogLevelBadgeColor(log.level)}`}>
+                              {log.level.toUpperCase()}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {log.source}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {formatTimestamp(log.timestamp)}
+                            </span>
+                            {isSelectionMode && (
+                              <div className={`w-6 h-6 rounded border-2 flex items-center justify-center touch-manipulation ${selectedLogIds.has(log.id) ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
+                                {selectedLogIds.has(log.id) && (
+                                  <div className="text-white text-xs">✓</div>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         
                         {/* Log Message */}
                         <div className="text-sm break-words font-mono leading-relaxed">
@@ -715,24 +861,25 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
                         )}
                       </div>
                       
-                      {/* Quick Copy Button */}
-                      {!isSelectionMode && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            copySpecificLog(log);
-                          }}
-                          title="Copy this log entry"
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      )}
+                      {/* Quick Copy Button - Always visible on mobile */}
+                        {!isSelectionMode && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity h-8 w-8 p-0 touch-manipulation"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copySpecificLog(log);
+                            }}
+                            title="Copy this log entry"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

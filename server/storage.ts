@@ -22,65 +22,79 @@ import {
   InsertConsoleLog
 } from "@shared/schema";
 
+import { desc, eq, lt } from "drizzle-orm";
+import { consoleLogs, logCollections } from "@shared/db/schema";
+
 export interface IStorage {
   // This storage is primarily for backend session management if needed
   // Most storage operations happen in the frontend with IndexedDB
-  
+
   // GitHub PAT settings (existing)
   getGitHubSettings(userId: string): Promise<GitHubSettings | null>;
   saveGitHubSettings(userId: string, settings: InsertGitHubSettings): Promise<GitHubSettings>;
   getDefaultGitHubPAT(): Promise<string | null>;
-  
+
   // Git Control - Token Management
   getGitTokenConfigs(): Promise<GitTokenConfig[]>;
   saveGitTokenConfig(config: InsertGitTokenConfig): Promise<GitTokenConfig>;
   deleteGitTokenConfig(id: number): Promise<boolean>;
   updateTokenLastUsed(id: number): Promise<void>;
-  
+
   // Git Control - Repository Cache
   getCachedRepositories(): Promise<GitRepository[]>;
   saveCachedRepository(repo: InsertGitRepository): Promise<GitRepository>;
   deleteCachedRepository(fullName: string): Promise<boolean>;
   clearRepositoryCache(): Promise<void>;
-  
+
   // TextMemo Management
   getAllTextMemos(): Promise<TextMemo[]>;
   getTextMemo(id: number): Promise<TextMemo | null>;
   saveTextMemo(memo: InsertTextMemo): Promise<TextMemo>;
   updateTextMemo(id: number, updates: Partial<TextMemo>): Promise<TextMemo | null>;
   deleteTextMemo(id: number): Promise<boolean>;
-  
+
   // Live Cloning Management
   getLiveCloningInstance(instanceId: string): Promise<LiveCloningInstance | null>;
   saveLiveCloningInstance(instance: InsertLiveCloningInstance): Promise<LiveCloningInstance>;
   updateLiveCloningInstance(instanceId: string, updates: Partial<LiveCloningInstance>): Promise<LiveCloningInstance | null>;
   deleteLiveCloningInstance(instanceId: string): Promise<boolean>;
   getAllLiveCloningInstances(): Promise<LiveCloningInstance[]>;
-  
+
   // Entity Links Management
   getEntityLinks(instanceId: string): Promise<EntityLink[]>;
   saveEntityLink(link: InsertEntityLink): Promise<EntityLink>;
   updateEntityLink(id: number, updates: Partial<Omit<EntityLink, 'id' | 'instanceId'>>): Promise<EntityLink | null>;
   deleteEntityLink(id: number): Promise<boolean>;
   deleteEntityLinksByInstance(instanceId: string): Promise<number>;
-  
+
   // Word Filters Management
   getWordFilters(instanceId: string): Promise<WordFilter[]>;
   saveWordFilter(filter: InsertWordFilter): Promise<WordFilter>;
   updateWordFilter(id: number, updates: Partial<Omit<WordFilter, 'id' | 'instanceId'>>): Promise<WordFilter | null>;
   deleteWordFilter(id: number): Promise<boolean>;
   deleteWordFiltersByInstance(instanceId: string): Promise<number>;
-  
+
   // Message Mappings Management
   saveLiveCloningMessage(message: InsertLiveCloningMessage): Promise<LiveCloningMessage>;
   getLiveCloningMessages(instanceId: string): Promise<LiveCloningMessage[]>;
   deleteLiveCloningMessagesByInstance(instanceId: string): Promise<number>;
-  
+
   // Console Logs Management
   saveConsoleLog(log: InsertConsoleLog): Promise<ConsoleLog>;
   getConsoleLogs(limit?: number, offset?: number): Promise<ConsoleLog[]>;
   getConsoleLogsByLevel(level: string, limit?: number): Promise<ConsoleLog[]>;
   clearOldConsoleLogs(olderThanDays: number): Promise<number>;
+
+  // Log Collection Management
+  saveLogCollection(data: {
+    name: string;
+    totalEntries: number;
+    savedAt: string;
+    logsData: string;
+  }): Promise<any>;
+  getLogCollections(): Promise<any[]>;
+  getLogCollection(id: number): Promise<any | undefined>;
+  deleteLogCollection(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -89,11 +103,11 @@ export class MemStorage implements IStorage {
   private cachedRepositories: Map<string, GitRepository> = new Map();
   private tokenIdCounter: number = 1;
   private defaultPAT: string = process.env.GITHUB_PERSONAL_ACCESS_TOKEN || process.env.GITHUB_PAT || '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';
-  
+
   // TextMemo storage maps
   private textMemos: Map<number, TextMemo> = new Map();
   private textMemoIdCounter: number = 1;
-  
+
   // Live Cloning storage maps
   private liveCloningInstances: Map<string, LiveCloningInstance> = new Map();
   private entityLinks: Map<number, EntityLink> = new Map();
@@ -102,7 +116,7 @@ export class MemStorage implements IStorage {
   private entityLinkIdCounter: number = 1;
   private wordFilterIdCounter: number = 1;
   private liveCloningMessageIdCounter: number = 1;
-  
+
   // Console Logs storage maps
   private consoleLogs: Map<number, ConsoleLog> = new Map();
   private consoleLogIdCounter: number = 1;
@@ -265,7 +279,7 @@ export class MemStorage implements IStorage {
   async updateLiveCloningInstance(instanceId: string, updates: Partial<LiveCloningInstance>): Promise<LiveCloningInstance | null> {
     const instance = this.liveCloningInstances.get(instanceId);
     if (!instance) return null;
-    
+
     const updatedInstance = { ...instance, ...updates, updatedAt: new Date() };
     this.liveCloningInstances.set(instanceId, updatedInstance);
     return updatedInstance;
@@ -304,14 +318,14 @@ export class MemStorage implements IStorage {
   async updateEntityLink(id: number, updates: Partial<Omit<EntityLink, 'id' | 'instanceId'>>): Promise<EntityLink | null> {
     const existingLink = this.entityLinks.get(id);
     if (!existingLink) return null;
-    
+
     const updatedLink: EntityLink = {
       ...existingLink,
       ...updates,
       id: existingLink.id, // Preserve original ID
       instanceId: existingLink.instanceId, // Preserve original instanceId
     };
-    
+
     this.entityLinks.set(id, updatedLink);
     return updatedLink;
   }
@@ -352,14 +366,14 @@ export class MemStorage implements IStorage {
   async updateWordFilter(id: number, updates: Partial<Omit<WordFilter, 'id' | 'instanceId'>>): Promise<WordFilter | null> {
     const existingFilter = this.wordFilters.get(id);
     if (!existingFilter) return null;
-    
+
     const updatedFilter: WordFilter = {
       ...existingFilter,
       ...updates,
       id: existingFilter.id, // Preserve original ID
       instanceId: existingFilter.instanceId, // Preserve original instanceId
     };
-    
+
     this.wordFilters.set(id, updatedFilter);
     return updatedFilter;
   }
@@ -449,16 +463,52 @@ export class MemStorage implements IStorage {
   async clearOldConsoleLogs(olderThanDays: number): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
-    
-    let deletedCount = 0;
-    for (const [id, log] of Array.from(this.consoleLogs.entries())) {
-      const logDate = log.timestamp ? new Date(log.timestamp) : new Date(0);
-      if (logDate < cutoffDate) {
-        this.consoleLogs.delete(id);
-        deletedCount++;
-      }
-    }
-    return deletedCount;
+
+    const result = await this.db.delete(consoleLogs)
+      .where(lt(consoleLogs.timestamp, cutoffDate.toISOString()));
+
+    return result.rowCount || 0;
+  }
+
+  // Log Collections for persistent storage
+  async saveLogCollection(data: {
+    name: string;
+    totalEntries: number;
+    savedAt: string;
+    logsData: string;
+  }) {
+    const [collection] = await this.db.insert(logCollections)
+      .values({
+        name: data.name,
+        totalEntries: data.totalEntries,
+        savedAt: data.savedAt,
+        logsData: data.logsData,
+      })
+      .returning();
+    return collection;
+  }
+
+  async getLogCollections() {
+    return await this.db.select({
+      id: logCollections.id,
+      name: logCollections.name,
+      totalEntries: logCollections.totalEntries,
+      savedAt: logCollections.savedAt,
+    }).from(logCollections)
+      .orderBy(desc(logCollections.savedAt));
+  }
+
+  async getLogCollection(id: number) {
+    const [collection] = await this.db.select()
+      .from(logCollections)
+      .where(eq(logCollections.id, id));
+    return collection;
+  }
+
+  async deleteLogCollection(id: number): Promise<boolean> {
+    const result = await this.db.delete(logCollections)
+      .where(eq(logCollections.id, id));
+    return (result.rowCount || 0) > 0;
   }
 }
 
