@@ -209,19 +209,27 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
       {/* Content area with iframe */}
       <CardContent className="p-0 flex-1 overflow-hidden relative">
         <iframe
-          src="/FinalCropper/public/index.html"
+          src="/public/FinalCropper/public/index.html"
           className="w-full h-full border-0"
           title="Advanced Image Cropper"
           allow="fullscreen; camera; microphone; clipboard-read; clipboard-write"
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
           style={{
             // Force desktop mode and ensure proper scaling
             width: '100%',
             height: '100%',
             minWidth: '100%',
             minHeight: '100%',
-            overflow: 'auto'
+            overflow: 'auto',
+            backgroundColor: '#ffffff'
           }}
           data-testid="pdfimg-iframe"
+          onLoad={(e) => {
+            console.log('PdfImg iframe loaded successfully');
+          }}
+          onError={(e) => {
+            console.error('PdfImg iframe failed to load');
+          }}
         />
       </CardContent>
 
