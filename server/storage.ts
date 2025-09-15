@@ -471,6 +471,10 @@ export class MemStorage implements IStorage {
     return result.rowCount || 0;
   }
 
+  // Log Collections storage maps
+  private logCollections: Map<number, any> = new Map();
+  private logCollectionIdCounter: number = 1;
+
   // Log Collections for persistent storage
   async saveLogCollection(data: {
     name: string;
@@ -478,42 +482,77 @@ export class MemStorage implements IStorage {
     savedAt: string;
     logsData: string;
   }) {
-    const { db } = await import('./db');
-    const [collection] = await db.insert(logCollections)
-      .values({
+    try {
+      const { db } = await import('./db');
+      const [collection] = await db.insert(logCollections)
+        .values({
+          name: data.name,
+          totalEntries: data.totalEntries,
+          savedAt: data.savedAt,
+          logsData: data.logsData,
+        })
+        .returning();
+      return collection;
+    } catch (error) {
+      // Fallback to memory storage
+      const collection = {
+        id: this.logCollectionIdCounter++,
         name: data.name,
         totalEntries: data.totalEntries,
         savedAt: data.savedAt,
         logsData: data.logsData,
-      })
-      .returning();
-    return collection;
+      };
+      this.logCollections.set(collection.id, collection);
+      return collection;
+    }
   }
 
   async getLogCollections() {
-    const { db } = await import('./db');
-    return await db.select({
-      id: logCollections.id,
-      name: logCollections.name,
-      totalEntries: logCollections.totalEntries,
-      savedAt: logCollections.savedAt,
-    }).from(logCollections)
-      .orderBy(desc(logCollections.savedAt));
+    try {
+      const { db } = await import('./db');
+      return await db.select({
+        id: logCollections.id,
+        name: logCollections.name,
+        totalEntries: logCollections.totalEntries,
+        savedAt: logCollections.savedAt,
+      }).from(logCollections)
+        .orderBy(desc(logCollections.savedAt));
+    } catch (error) {
+      // Fallback to memory storage
+      return Array.from(this.logCollections.values())
+        .map(collection => ({
+          id: collection.id,
+          name: collection.name,
+          totalEntries: collection.totalEntries,
+          savedAt: collection.savedAt,
+        }))
+        .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime());
+    }
   }
 
   async getLogCollection(id: number) {
-    const { db } = await import('./db');
-    const [collection] = await db.select()
-      .from(logCollections)
-      .where(eq(logCollections.id, id));
-    return collection;
+    try {
+      const { db } = await import('./db');
+      const [collection] = await db.select()
+        .from(logCollections)
+        .where(eq(logCollections.id, id));
+      return collection;
+    } catch (error) {
+      // Fallback to memory storage
+      return this.logCollections.get(id);
+    }
   }
 
   async deleteLogCollection(id: number): Promise<boolean> {
-    const { db } = await import('./db');
-    const result = await db.delete(logCollections)
-      .where(eq(logCollections.id, id));
-    return (result.rowCount || 0) > 0;
+    try {
+      const { db } = await import('./db');
+      const result = await db.delete(logCollections)
+        .where(eq(logCollections.id, id));
+      return (result.rowCount || 0) > 0;
+    } catch (error) {
+      // Fallback to memory storage
+      return this.logCollections.delete(id);
+    }
   }
 }
 

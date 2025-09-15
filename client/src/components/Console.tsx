@@ -795,13 +795,6 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
               </div>
             ) : (
               <div className="space-y-1 p-2 pb-16">
-                {/* Log Count Header */}
-                <div className="sticky top-0 bg-background/90 backdrop-blur-sm border-b p-2 mb-2 z-5">
-                  <span className="text-sm font-medium">
-                    Total Logs: {logs.length} entries (from deployment start)
-                  </span>
-                </div>
-                
                 {logs.slice().reverse().map((log, index) => {
                   const entryNumber = logs.length - index;
                   return (
