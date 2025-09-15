@@ -1,3 +1,4 @@
+
 import { db } from './db';
 import { 
   entityLinks, 
@@ -365,50 +366,6 @@ export class DatabaseLiveCloningStorage implements IStorage {
     
     return result.rowCount ?? 0;
   }
-
-  // Console Logs Database Storage (Persistent)
-  async saveConsoleLog(log: InsertConsoleLog): Promise<ConsoleLog> {
-    const [saved] = await db
-      .insert(consoleLogs)
-      .values({
-        ...log,
-        timestamp: new Date(),
-      })
-      .returning();
-    
-    return saved;
-  }
-
-  async getConsoleLogs(limit: number = 100, offset: number = 0): Promise<ConsoleLog[]> {
-    return db
-      .select()
-      .from(consoleLogs)
-      .orderBy(desc(consoleLogs.timestamp))
-      .limit(limit)
-      .offset(offset);
-  }
-
-  async getConsoleLogsByLevel(level: string, limit: number = 100): Promise<ConsoleLog[]> {
-    return db
-      .select()
-      .from(consoleLogs)
-      .where(eq(consoleLogs.level, level))
-      .orderBy(desc(consoleLogs.timestamp))
-      .limit(limit);
-  }
-
-  async clearOldConsoleLogs(olderThanDays: number): Promise<number> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
-    
-    const result = await db
-      .delete(consoleLogs)
-      .where(lt(consoleLogs.timestamp, cutoffDate));
-    
-    return result.rowCount ?? 0;
-  }
-}
-
 
   // Console Logs Management
   async saveConsoleLog(log: InsertConsoleLog): Promise<ConsoleLog> {
