@@ -132,6 +132,11 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   const setupWebSocket = () => {
     if (isPaused) return; // Don't setup WebSocket if paused
     
+    // Close existing WebSocket first to avoid multiple connections
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.close();
+    }
+    
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/console`;
     
@@ -157,9 +162,13 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       ws.onclose = () => {
         setIsConnected(false);
         console.log('Console WebSocket disconnected');
-        // Attempt to reconnect after 3 seconds only if not paused
-        if (!isPaused) {
-          setTimeout(setupWebSocket, 3000);
+        // Only reconnect if not paused and component is still mounted
+        if (!isPaused && wsRef.current === ws) {
+          setTimeout(() => {
+            if (!isPaused && wsRef.current === ws) {
+              setupWebSocket();
+            }
+          }, 3000);
         }
       };
       
@@ -366,13 +375,16 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     // Auto-pause when loading a collection to prevent immediate overwrite
     setIsPaused(true);
     
-    // Stop WebSocket and auto-refresh
-    if (wsRef.current) {
+    // Stop WebSocket and auto-refresh immediately
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.close();
+      wsRef.current = null;
     }
     if (refreshIntervalRef.current) {
       clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
     }
+    setIsConnected(false);
     
     try {
       // Try to load from database first
@@ -414,33 +426,60 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   // Export saved logs as formatted HTML (console-like appearance)
   const exportSavedLogs = (collection: SavedLogCollection) => {
     try {
-      const formatLogLevel = (level: string) => {
-        const levelColor = getLogLevelColor(level);
-        const badgeColor = getLogLevelBadgeColor(level);
-        return `<span class="log-level ${levelColor}" style="padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">${level.toUpperCase()}</span>`;
+      // Escape HTML to prevent issues
+      const escapeHtml = (unsafe: string) => {
+        return unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      };
+      
+      const getLevelBadgeStyle = (level: string) => {
+        switch (level.toUpperCase()) {
+          case 'ERROR':
+            return 'background: #ef4444; color: white;';
+          case 'WARN':
+            return 'background: #f59e0b; color: white;';
+          case 'INFO':
+            return 'background: #3b82f6; color: white;';
+          case 'DEBUG':
+            return 'background: #6b7280; color: white;';
+          default:
+            return 'background: #6b7280; color: white;';
+        }
       };
       
       const formatLogEntry = (log: ConsoleLog, index: number) => {
-        const timestamp = formatTimestamp(log.timestamp);
-        const levelStyle = getLogLevelColor(log.level);
-        return `
-          <div class="log-entry" style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 14px; display: flex; align-items: flex-start; gap: 8px;">
+        const timestamp = escapeHtml(formatTimestamp(log.timestamp));
+        const level = escapeHtml(log.level.toUpperCase());
+        const message = escapeHtml(log.message);
+        const source = log.source ? escapeHtml(log.source) : '';
+        const metadata = log.metadata ? escapeHtml(JSON.stringify(log.metadata, null, 2)) : '';
+        const badgeStyle = getLevelBadgeStyle(log.level);
+        
+        return `<div class="log-entry" style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 14px; display: flex; align-items: flex-start; gap: 8px; ${index % 2 === 0 ? '' : 'background-color: #f9fafb;'}">
             <span class="log-timestamp" style="color: #6b7280; font-size: 12px; white-space: nowrap; margin-top: 2px;">${timestamp}</span>
-            <span class="log-level-badge ${levelStyle}" style="padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; min-width: 50px; text-align: center;">${log.level}</span>
+            <span class="log-level-badge" style="padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; min-width: 50px; text-align: center; ${badgeStyle}">${level}</span>
             <div class="log-content" style="flex: 1;">
-              <div class="log-message" style="white-space: pre-wrap; word-break: break-word;">${log.message}</div>
-              ${log.source ? `<div class="log-source" style="color: #9ca3af; font-size: 11px; margin-top: 2px;">Source: ${log.source}</div>` : ''}
-              ${log.metadata ? `<details class="log-metadata" style="margin-top: 4px; font-size: 12px;"><summary style="color: #6b7280; cursor: pointer;">Metadata</summary><pre style="background: #f9fafb; padding: 8px; border-radius: 4px; margin-top: 4px; overflow-x: auto; font-size: 11px;">${JSON.stringify(log.metadata, null, 2)}</pre></details>` : ''}
+              <div class="log-message" style="white-space: pre-wrap; word-break: break-word;">${message}</div>
+              ${source ? `<div class="log-source" style="color: #9ca3af; font-size: 11px; margin-top: 2px;">Source: ${source}</div>` : ''}
+              ${metadata ? `<details class="log-metadata" style="margin-top: 4px; font-size: 12px;"><summary style="color: #6b7280; cursor: pointer;">Metadata</summary><pre style="background: #f9fafb; padding: 8px; border-radius: 4px; margin-top: 4px; overflow-x: auto; font-size: 11px;">${metadata}</pre></details>` : ''}
             </div>
           </div>`;
       };
+      
+      const collectionName = escapeHtml(collection.name);
+      const savedTimestamp = escapeHtml(formatTimestamp(collection.savedAt));
+      const exportTimestamp = escapeHtml(new Date().toLocaleString());
       
       const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Console Logs - ${collection.name}</title>
+    <title>Console Logs - ${collectionName}</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
@@ -472,25 +511,14 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
             border-radius: 8px;
             overflow: hidden;
         }
-        .log-entry:nth-child(even) {
-            background-color: #f9fafb;
-        }
         .log-entry:hover {
-            background-color: #f1f5f9;
+            background-color: #f1f5f9 !important;
         }
-        /* Log level colors */
-        .text-red-500 { color: #ef4444; background-color: #fef2f2; }
-        .text-yellow-600 { color: #d97706; background-color: #fffbeb; }
-        .text-blue-600 { color: #2563eb; background-color: #eff6ff; }
-        .text-gray-600 { color: #4b5563; background-color: #f9fafb; }
-        .text-gray-700 { color: #374151; background-color: #f9fafb; }
-        
         @media (max-width: 768px) {
             body { padding: 10px; }
             .log-entry { font-size: 12px; padding: 6px 8px; }
             .log-timestamp { display: none; }
         }
-        
         @media print {
             body { background: white; }
             .header { background: white; border: 1px solid #ccc; }
@@ -502,17 +530,15 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     <div class="header">
         <h1>Console Logs Export</h1>
         <div class="header-info">
-            <strong>Collection:</strong> ${collection.name}<br>
+            <strong>Collection:</strong> ${collectionName}<br>
             <strong>Total Entries:</strong> ${collection.totalEntries}<br>
-            <strong>Saved:</strong> ${formatTimestamp(collection.savedAt)}<br>
-            <strong>Exported:</strong> ${new Date().toLocaleString()}
+            <strong>Saved:</strong> ${savedTimestamp}<br>
+            <strong>Exported:</strong> ${exportTimestamp}
         </div>
     </div>
-    
     <div class="logs-container">
         ${collection.logs.map((log, index) => formatLogEntry(log, index)).join('')}
     </div>
-    
     <div style="margin-top: 20px; padding: 16px; background: #f8fafc; border-radius: 8px; text-align: center; color: #64748b; font-size: 12px;">
         Generated by Enhanced Console • ${collection.logs.length} log entries
     </div>
@@ -523,8 +549,10 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       const url = URL.createObjectURL(dataBlob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `console-logs-${collection.name}-${new Date().toISOString().split('T')[0]}.html`;
+      link.download = `console-logs-${collection.name.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
       toast({
@@ -532,9 +560,10 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         description: `Log collection exported as formatted HTML file with ${collection.logs.length} entries`,
       });
     } catch (error) {
+      console.error('Export error:', error);
       toast({
         title: 'Export Failed',
-        description: 'Failed to export log collection',
+        description: `Failed to export log collection: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: 'destructive',
       });
     }
@@ -545,22 +574,32 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     if (isPaused) {
       // Resume: restart WebSocket and auto-refresh
       setIsPaused(false);
-      setupWebSocket();
-      setupAutoRefresh();
-      fetchLogs(); // Get latest logs
+      // Wait a bit for state to update, then setup connections
+      setTimeout(() => {
+        setupWebSocket();
+        setupAutoRefresh();
+        fetchLogs(); // Get latest logs
+      }, 100);
       toast({
         title: 'Console Resumed',
         description: 'Live log streaming resumed',
       });
     } else {
-      // Pause: stop WebSocket and auto-refresh
+      // Pause: stop WebSocket and auto-refresh immediately
       setIsPaused(true);
-      if (wsRef.current) {
+      
+      // Cleanup WebSocket
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         wsRef.current.close();
+        wsRef.current = null;
       }
+      
+      // Cleanup auto-refresh interval
       if (refreshIntervalRef.current) {
         clearInterval(refreshIntervalRef.current);
+        refreshIntervalRef.current = null;
       }
+      
       setIsConnected(false);
       toast({
         title: 'Console Paused',
