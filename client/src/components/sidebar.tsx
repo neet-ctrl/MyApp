@@ -108,7 +108,7 @@ export function Sidebar({
         {navigationItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
-          
+
           return (
             <button
               key={item.id}
@@ -154,7 +154,7 @@ export function Sidebar({
             Default
           </Button>
         </div>
-        
+
         <div className="flex space-x-2">
           <Button
             variant="outline"
@@ -177,7 +177,7 @@ export function Sidebar({
             <span>PdfImg</span>
           </Button>
         </div>
-        
+
         {session && (
           <Button
             variant="destructive"

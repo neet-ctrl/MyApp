@@ -209,7 +209,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
       {/* Content area with iframe */}
       <CardContent className="p-0 flex-1 overflow-hidden relative">
         <iframe
-          src="/FinalCropper/public/molview/index.html"
+          src="/FinalCropper/public/index.html"
           className="w-full h-full border-0"
           title="Advanced Image Cropper"
           allow="fullscreen; camera; microphone; clipboard-read; clipboard-write"
