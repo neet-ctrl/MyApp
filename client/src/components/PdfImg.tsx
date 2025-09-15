@@ -224,7 +224,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
       <CardContent className="p-0 flex-1 overflow-hidden relative">
         <iframe
           id="pdfimg-iframe"
-          src="/FinalCropper/public/index.html"
+          src="https://shaktiprojects.github.io/batch-images-cropper/"
           className="w-full h-full border-0"
           title="Advanced Image Cropper"
           allow="fullscreen; camera; microphone; clipboard-read; clipboard-write"
@@ -241,6 +241,15 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
           data-testid="pdfimg-iframe"
           onLoad={(e) => {
             console.log('PdfImg iframe loaded successfully');
+            // Try to inject styles to ensure proper loading
+            try {
+              const iframe = e.target as HTMLIFrameElement;
+              if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage({ type: 'IFRAME_LOADED' }, '*');
+              }
+            } catch (error) {
+              console.log('Cannot access iframe content due to CORS');
+            }
           }}
           onError={(e) => {
             console.error('PdfImg iframe failed to load');
