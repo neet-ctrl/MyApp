@@ -67,46 +67,46 @@ const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB chunks for processing
 // Utility functions for file processing
 const validateFiles = (files: File[]): { valid: boolean; errors: string[] } => {
   const errors: string[] = [];
-
+  
   // Check individual file sizes
   const oversizedFiles = files.filter(file => file.size > MAX_FILE_SIZE);
   if (oversizedFiles.length > 0) {
     errors.push(`${oversizedFiles.length} files exceed 500MB limit: ${oversizedFiles.map(f => f.name).join(', ')}`);
   }
-
+  
   // Check total size
   const totalSize = files.reduce((sum, file) => sum + file.size, 0);
   if (totalSize > MAX_TOTAL_SIZE) {
     errors.push(`Total size ${Math.round(totalSize / (1024 * 1024))}MB exceeds 5GB limit`);
   }
-
+  
   return { valid: errors.length === 0, errors };
 };
 
 const processFileChunked = async (file: File): Promise<{path: string, content: string, encoding: string}> => {
   const path = file.webkitRelativePath || file.name;
   const MAX_MEMORY_SIZE = 50 * 1024 * 1024; // 50MB max in memory at once
-
+  
   // Check if file is likely binary based on extension or MIME type
   const isBinary = file.type.startsWith('image/') || 
                  file.type.startsWith('video/') || 
                  file.type.startsWith('audio/') || 
                  file.type.startsWith('application/') ||
                  Boolean(file.name.match(/\.(jpg|jpeg|png|gif|bmp|ico|svg|pdf|zip|tar|gz|exe|bin|dll|so|woff|woff2|ttf|otf)$/i));
-
+  
   // For very large files, read in chunks to prevent memory overflow
   if (file.size > MAX_MEMORY_SIZE) {
     return processLargeFileInChunks(file, path, isBinary);
   }
-
+  
   // For smaller files, use the original method but with better error handling
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-
+    
     reader.onload = () => {
       try {
         const result = reader.result;
-
+        
         if (isBinary && typeof result === 'string') {
           // For binary files, use base64 encoding and remove data URL prefix
           const base64Content = result.includes(',') ? result.split(',')[1] : result;
@@ -127,11 +127,11 @@ const processFileChunked = async (file: File): Promise<{path: string, content: s
         reject(new Error(`Failed to process file content: ${file.name} - ${error}`));
       }
     };
-
+    
     reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
-
+    
     reader.onabort = () => reject(new Error(`File reading aborted: ${file.name}`));
-
+    
     try {
       if (isBinary) {
         reader.readAsDataURL(file);
@@ -153,14 +153,14 @@ const processLargeFileInChunks = async (
   const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunks
   const chunks: string[] = [];
   let offset = 0;
-
+  
   while (offset < file.size) {
     const chunk = file.slice(offset, offset + CHUNK_SIZE);
-
+    
     try {
       const chunkContent = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-
+        
         reader.onload = () => {
           const result = reader.result;
           if (isBinary && typeof result === 'string') {
@@ -171,19 +171,19 @@ const processLargeFileInChunks = async (
             resolve(result?.toString() || '');
           }
         };
-
+        
         reader.onerror = () => reject(new Error(`Failed to read chunk at offset ${offset}`));
-
+        
         if (isBinary) {
           reader.readAsDataURL(chunk);
         } else {
           reader.readAsText(chunk, 'utf-8');
         }
       });
-
+      
       chunks.push(chunkContent);
       offset += CHUNK_SIZE;
-
+      
       // Add small delay and memory cleanup between chunks
       if (chunks.length % 5 === 0) { // Every 5 chunks (50MB)
         await new Promise(resolve => setTimeout(resolve, 50));
@@ -191,18 +191,18 @@ const processLargeFileInChunks = async (
           (window as any).gc();
         }
       }
-
+      
     } catch (error) {
       throw new Error(`Failed to process large file ${file.name}: ${error}`);
     }
   }
-
+  
   // Combine all chunks
   const content = chunks.join('');
-
+  
   // Clear chunks array to free memory
   chunks.length = 0;
-
+  
   return {
     path,
     content,
@@ -216,39 +216,39 @@ const processFilesInBatches = async (
   onProgress?: (processed: number, total: number, currentFile: string) => void
 ): Promise<{path: string, content: string, encoding: string}[]> => {
   const results: {path: string, content: string, encoding: string}[] = [];
-
+  
   // Sort files by size to process smaller files first
   const sortedFiles = [...files].sort((a, b) => a.size - b.size);
-
+  
   for (let i = 0; i < sortedFiles.length; i++) {
     const file = sortedFiles[i];
     onProgress?.(i, sortedFiles.length, file.name);
-
+    
     try {
       console.log(`Processing file ${i + 1}/${sortedFiles.length}: ${file.name} (${Math.round(file.size / 1024 / 1024 * 100) / 100}MB)`);
-
+      
       const result = await processFileChunked(file);
       results.push(result);
-
+      
       // Aggressive memory management after each file
       await new Promise(resolve => setTimeout(resolve, 100));
-
+      
       // Force garbage collection if available
       if (typeof (window as any).gc === 'function') {
         (window as any).gc();
       }
-
+      
       // For very large files, add extra delay
       if (file.size > 100 * 1024 * 1024) { // > 100MB
         await new Promise(resolve => setTimeout(resolve, 500));
       }
-
+      
     } catch (error) {
       console.error(`Failed to process file ${file.name}:`, error);
       throw new Error(`Failed to process file ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
-
+  
   return results;
 };
 
@@ -280,7 +280,7 @@ export function GitHubSync() {
   const [personalAccessToken, setPersonalAccessToken] = useState('');
   const [showPATSettings, setShowPATSettings] = useState(false);
   const [isTestingPAT, setIsTestingPAT] = useState(false);
-
+  
   // Cancel functionality state
   const [cancelController, setCancelController] = useState<AbortController | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -293,14 +293,12 @@ export function GitHubSync() {
     queryKey: ['github-user'],
     queryFn: async () => {
       const headers: HeadersInit = {};
-
-      // Priority 1: Environment variables (server-side PAT)
-      // Priority 2: User-provided PAT
-      // Priority 3: Default fallback
+      
+      // Add custom PAT if available
       if (personalAccessToken && personalAccessToken.trim()) {
         headers['X-GitHub-PAT'] = personalAccessToken.trim();
       }
-
+      
       const response = await fetch('/api/github/user', { headers });
       if (!response.ok) {
         throw new Error('Not authenticated');
@@ -315,12 +313,12 @@ export function GitHubSync() {
     queryKey: ['github-repos'],
     queryFn: async () => {
       const headers: HeadersInit = {};
-
+      
       // Add custom PAT if available
       if (personalAccessToken && personalAccessToken.trim()) {
         headers['X-GitHub-PAT'] = personalAccessToken.trim();
       }
-
+      
       const response = await fetch('/api/github/repos', { headers });
       if (!response.ok) {
         throw new Error('Failed to fetch repositories');
@@ -658,7 +656,7 @@ export function GitHubSync() {
           if (controller.signal.aborted) {
             throw new Error('Upload cancelled');
           }
-
+          
           setSyncProgress(prev => ({
             ...prev,
             message: `Processing files for Python... (${processed + 1}/${total})`,
@@ -685,12 +683,12 @@ export function GitHubSync() {
         repoFullName: targetRepo,
         targetPath: targetPath.trim(),
       });
-
+      
     } catch (error) {
       if (error instanceof Error && error.message === 'Upload cancelled') {
         return; // Already handled in cancel function
       }
-
+      
       toast({
         variant: 'destructive',
         title: 'File processing failed',
@@ -714,29 +712,29 @@ export function GitHubSync() {
   ) => {
     const CHUNK_SIZE = 2; // Files per chunk - very conservative for stability
     const chunks = [];
-
+    
     // Split files into chunks
     for (let i = 0; i < filesData.length; i += CHUNK_SIZE) {
       chunks.push(filesData.slice(i, i + CHUNK_SIZE));
     }
-
+    
     let totalFilesUploaded = 0;
     let totalErrors: string[] = [];
-
+    
     for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
       if (controller.signal.aborted) {
         throw new Error('Upload cancelled');
       }
-
+      
       const chunk = chunks[chunkIndex];
-
+      
       setSyncProgress(prev => ({
         ...prev,
         message: `Uploading chunk ${chunkIndex + 1} of ${chunks.length}...`,
         progress: 50 + Math.round((chunkIndex / chunks.length) * 50), // 50-100% for upload
         currentFile: `Chunk ${chunkIndex + 1}: ${chunk.length} files`
       }));
-
+      
       try {
         const response = await fetch('/api/github/sync-chunked', {
           method: 'POST',
@@ -751,24 +749,24 @@ export function GitHubSync() {
             totalChunks: chunks.length
           })
         });
-
+        
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.error || `Chunk ${chunkIndex + 1} failed`);
         }
-
+        
         const result = await response.json();
         totalFilesUploaded += result.filesUploaded || 0;
         if (result.errors) {
           totalErrors.push(...result.errors);
         }
-
+        
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         totalErrors.push(`Chunk ${chunkIndex + 1}: ${errorMsg}`);
       }
     }
-
+    
     // Final update
     setCancelController(null);
     setSyncProgress({
@@ -780,7 +778,7 @@ export function GitHubSync() {
       errors: totalErrors,
       canCancel: false
     });
-
+    
     if (totalErrors.length === 0) {
       toast({
         title: 'Chunked sync completed',
@@ -863,7 +861,7 @@ export function GitHubSync() {
           if (controller.signal.aborted) {
             throw new Error('Upload cancelled');
           }
-
+          
           setSyncProgress(prev => ({
             ...prev,
             message: `Processing files... (${processed + 1}/${total})`,
@@ -887,7 +885,7 @@ export function GitHubSync() {
 
       // Use chunked upload for large file sets to prevent timeouts and memory issues
       const shouldUseChunkedUpload = filesData.length > 2 || filesData.some(f => f.content.length > 1024 * 1024); // > 1MB content
-
+      
       if (shouldUseChunkedUpload) {
         await handleChunkedUpload(filesData, targetRepo, targetPath.trim(), controller);
       } else {
@@ -897,12 +895,12 @@ export function GitHubSync() {
           targetPath: targetPath.trim(),
         });
       }
-
+      
     } catch (error) {
       if (error instanceof Error && error.message === 'Upload cancelled') {
         return; // Already handled in cancel function
       }
-
+      
       toast({
         variant: 'destructive',
         title: 'File processing failed',
@@ -942,7 +940,7 @@ export function GitHubSync() {
             <div className="text-center text-muted-foreground text-sm">
               <p>Enter your GitHub Personal Access Token to connect to your repositories. A default token is available if you don't have one.</p>
             </div>
-
+            
             <div>
               <Label htmlFor="auth-pat-token" className="text-sm font-medium mb-2 block">
                 Personal Access Token (Optional)
@@ -1053,7 +1051,7 @@ export function GitHubSync() {
                 <p className="text-sm text-muted-foreground">@{githubUser.login}</p>
               </div>
             </div>
-
+            
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Public repositories</span>
               <Badge variant="secondary">
@@ -1084,7 +1082,7 @@ export function GitHubSync() {
                   <span>Python Script</span>
                 </TabsTrigger>
               </TabsList>
-
+              
               <TabsContent value="nodejs" className="space-y-4">
             <div>
               <Label className="text-sm font-medium mb-2 block">Select Files or Folders</Label>
@@ -1116,33 +1114,25 @@ export function GitHubSync() {
                     </div>
                   </Button>
                 </div>
-
+                
                 <div>
                   <input
                     type="file"
-                    {...({ webkitdirectory: "true" } as any)}
+                    {...({ webkitdirectory: "" } as any)}
                     multiple
                     onChange={(e) => {
-                      const target = e.target as HTMLInputElement;
-                      if (target.files && target.files.length > 0) {
-                        setSelectedFiles(Array.from(target.files));
-                        console.log('Folder selected:', target.files.length, 'files');
+                      if (e.target.files) {
+                        setSelectedFiles(Array.from(e.target.files));
                       }
                     }}
-                    style={{ display: 'none' }}
+                    className="hidden"
                     id="nodejs-folder-input"
                     data-testid="input-nodejs-folder"
                   />
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => {
-                      const input = document.getElementById('nodejs-folder-input') as HTMLInputElement;
-                      if (input) {
-                        input.value = ''; // Reset input
-                        input.click();
-                      }
-                    }}
+                    onClick={() => document.getElementById('nodejs-folder-input')?.click()}
                     className="w-full h-20 border-dashed"
                     data-testid="button-nodejs-select-folder"
                   >
@@ -1153,7 +1143,7 @@ export function GitHubSync() {
                   </Button>
                 </div>
               </div>
-
+              
               {selectedFiles.length > 0 && (
                 <div className="mt-3 p-3 bg-muted rounded-lg">
                   <p className="text-sm font-medium mb-2">Selected files ({selectedFiles.length}):</p>
@@ -1168,7 +1158,7 @@ export function GitHubSync() {
                       <div className="text-xs text-muted-foreground">... and {selectedFiles.length - 10} more files</div>
                     )}
                   </div>
-
+                  
                   {/* File size warnings */}
                   <div className="mt-2 text-xs">
                     {selectedFiles.some(f => f.size > MAX_FILE_SIZE) && (
@@ -1190,7 +1180,7 @@ export function GitHubSync() {
                 </div>
               )}
             </div>
-
+            
             <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
               <div className="flex items-center space-x-2 mb-2">
                 <Upload className="w-4 h-4 text-blue-600" />
@@ -1261,7 +1251,7 @@ export function GitHubSync() {
                     data-testid="input-new-repo-name"
                   />
                 </div>
-
+                
                 <div className="flex items-center justify-between">
                   <Label htmlFor="new-repo-private" className="text-sm font-medium">
                     Private Repository
@@ -1335,33 +1325,25 @@ export function GitHubSync() {
                         </div>
                       </Button>
                     </div>
-
+                    
                     <div>
                       <input
                         type="file"
-                        {...({ webkitdirectory: "true" } as any)}
+                        {...({ webkitdirectory: "" } as any)}
                         multiple
                         onChange={(e) => {
-                          const target = e.target as HTMLInputElement;
-                          if (target.files && target.files.length > 0) {
-                            setSelectedFiles(Array.from(target.files));
-                            console.log('Python folder selected:', target.files.length, 'files');
+                          if (e.target.files) {
+                            setSelectedFiles(Array.from(e.target.files));
                           }
                         }}
-                        style={{ display: 'none' }}
+                        className="hidden"
                         id="python-folder-input"
                         data-testid="input-python-folder"
                       />
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => {
-                          const input = document.getElementById('python-folder-input') as HTMLInputElement;
-                          if (input) {
-                            input.value = ''; // Reset input
-                            input.click();
-                          }
-                        }}
+                        onClick={() => document.getElementById('python-folder-input')?.click()}
                         className="w-full h-20 border-dashed"
                         data-testid="button-python-select-folder"
                       >
@@ -1372,7 +1354,7 @@ export function GitHubSync() {
                       </Button>
                     </div>
                   </div>
-
+                  
                   {selectedFiles.length > 0 && (
                     <div className="mt-3 p-3 bg-muted rounded-lg">
                       <p className="text-sm font-medium mb-2">Selected files ({selectedFiles.length}):</p>
@@ -1445,7 +1427,7 @@ export function GitHubSync() {
                         data-testid="input-new-repo-name-python"
                       />
                     </div>
-
+                    
                     <div className="flex items-center justify-between">
                       <Label htmlFor="new-repo-private-python" className="text-sm font-medium">
                         Private Repository
@@ -1505,26 +1487,15 @@ export function GitHubSync() {
             {/* Current status */}
             {githubSettingsData && (
               <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                {githubSettingsData.isEnvironmentActive ? (
-                  <p className="font-medium text-green-700 dark:text-green-300">
-                    ✓ Using GitHub PAT from environment variables (highest priority)
-                  </p>
-                ) : githubSettingsData.settings?.personalAccessToken ? (
-                  <p className="font-medium text-green-700 dark:text-green-300">
-                    ✓ Using custom Personal Access Token
-                  </p>
-                ) : githubSettingsData.hasDefaultPAT ? (
+                {githubSettingsData.isDefaultActive ? (
                   <p className="font-medium text-blue-700 dark:text-blue-300">
                     ✓ Using default GitHub token
                   </p>
                 ) : (
-                  <p className="font-medium text-red-700 dark:text-red-300">
-                    ⚠ No GitHub token configured
+                  <p className="font-medium text-green-700 dark:text-green-300">
+                    ✓ Using custom Personal Access Token
                   </p>
                 )}
-                <p className="mt-1 text-xs">
-                  Active source: {githubSettingsData.activeSource || 'none'}
-                </p>
               </div>
             )}
 
