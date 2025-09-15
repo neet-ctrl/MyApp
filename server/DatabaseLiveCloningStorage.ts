@@ -40,6 +40,10 @@ export class DatabaseLiveCloningStorage implements IStorage {
   private tokenIdCounter: number = 1;
   private defaultPAT: string = process.env.GITHUB_PERSONAL_ACCESS_TOKEN || process.env.GITHUB_PAT || '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';
 
+  // Log Collections storage maps for fallback
+  private logCollections: Map<number, any> = new Map();
+  private logCollectionIdCounter: number = 1;
+
   // Non-critical storage methods (using in-memory for now)
   async getGitHubSettings(userId: string): Promise<GitHubSettings | null> {
     return this.githubSettings.get(userId) || null;
@@ -402,5 +406,156 @@ export class DatabaseLiveCloningStorage implements IStorage {
       .where(lt(consoleLogs.timestamp, cutoffDate));
     
     return result.rowCount ?? 0;
+  }
+}
+
+
+  // Console Logs Management
+  async saveConsoleLog(log: InsertConsoleLog): Promise<ConsoleLog> {
+    try {
+      const [savedLog] = await db.insert(consoleLogs)
+        .values({
+          level: log.level,
+          message: log.message,
+          source: log.source || 'application',
+          metadata: log.metadata || null,
+        })
+        .returning();
+      return savedLog;
+    } catch (error) {
+      console.error('Failed to save console log to database:', error);
+      throw error;
+    }
+  }
+
+  async getConsoleLogs(limit: number = 100, offset: number = 0): Promise<ConsoleLog[]> {
+    try {
+      const logs = await db.select()
+        .from(consoleLogs)
+        .orderBy(desc(consoleLogs.timestamp))
+        .limit(limit)
+        .offset(offset);
+      return logs;
+    } catch (error) {
+      console.error('Failed to get console logs from database:', error);
+      throw error;
+    }
+  }
+
+  async getConsoleLogsByLevel(level: string, limit: number = 100): Promise<ConsoleLog[]> {
+    try {
+      const logs = await db.select()
+        .from(consoleLogs)
+        .where(eq(consoleLogs.level, level))
+        .orderBy(desc(consoleLogs.timestamp))
+        .limit(limit);
+      return logs;
+    } catch (error) {
+      console.error('Failed to get console logs by level from database:', error);
+      throw error;
+    }
+  }
+
+  async clearOldConsoleLogs(olderThanDays: number): Promise<number> {
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
+      
+      const result = await db.delete(consoleLogs)
+        .where(lt(consoleLogs.timestamp, cutoffDate.toISOString()));
+
+      return result.rowCount || 0;
+    } catch (error) {
+      console.error('Failed to clear old console logs from database:', error);
+      throw error;
+    }
+  }
+
+  // Log Collection Management
+  async saveLogCollection(data: {
+    name: string;
+    totalEntries: number;
+    savedAt: string;
+    logsData: string;
+  }) {
+    try {
+      const { logCollections } = await import('@shared/schema');
+      
+      const [collection] = await db.insert(logCollections)
+        .values({
+          name: data.name,
+          totalEntries: data.totalEntries,
+          savedAt: data.savedAt,
+          logsData: data.logsData,
+        })
+        .returning();
+      return collection;
+    } catch (error) {
+      console.log('Database not available, using memory storage for log collection');
+      // Fallback to memory storage
+      const collection = {
+        id: this.logCollectionIdCounter++,
+        name: data.name,
+        totalEntries: data.totalEntries,
+        savedAt: data.savedAt,
+        logsData: data.logsData,
+      };
+      this.logCollections.set(collection.id, collection);
+      return collection;
+    }
+  }
+
+  async getLogCollections() {
+    try {
+      const { logCollections } = await import('@shared/schema');
+      
+      return await db.select({
+        id: logCollections.id,
+        name: logCollections.name,
+        totalEntries: logCollections.totalEntries,
+        savedAt: logCollections.savedAt,
+      }).from(logCollections)
+        .orderBy(desc(logCollections.savedAt));
+    } catch (error) {
+      console.log('Database not available, using memory storage for log collections');
+      // Fallback to memory storage
+      return Array.from(this.logCollections.values())
+        .map(collection => ({
+          id: collection.id,
+          name: collection.name,
+          totalEntries: collection.totalEntries,
+          savedAt: collection.savedAt,
+        }))
+        .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime());
+    }
+  }
+
+  async getLogCollection(id: number) {
+    try {
+      const { logCollections } = await import('@shared/schema');
+      
+      const [collection] = await db.select()
+        .from(logCollections)
+        .where(eq(logCollections.id, id));
+      return collection;
+    } catch (error) {
+      console.log('Database not available, using memory storage for log collection');
+      // Fallback to memory storage
+      return this.logCollections.get(id);
+    }
+  }
+
+  async deleteLogCollection(id: number): Promise<boolean> {
+    try {
+      const { logCollections } = await import('@shared/schema');
+      
+      const result = await db.delete(logCollections)
+        .where(eq(logCollections.id, id));
+      return (result.rowCount || 0) > 0;
+    } catch (error) {
+      console.log('Database not available, using memory storage for log collection');
+      // Fallback to memory storage
+      return this.logCollections.delete(id);
+    }
   }
 }
