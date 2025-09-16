@@ -91,8 +91,16 @@ app.use((req, res, next) => {
     console.log(`📥 [${deploymentEnv}] Static request: /FinalCropper/build${req.path}`);
     console.log(`   📍 Full path requested: ${req.originalUrl}`);
     const filePath = path.join(finalCropperBuildPath, req.path);
+    const fallbackPath = path.join('public/FinalCropper/public', req.path);
+    
     console.log(`   🎯 Resolving to: ${filePath}`);
     console.log(`   ✅ File exists: ${fs.existsSync(filePath)}`);
+    
+    // If primary build path doesn't exist, try fallback from public
+    if (!fs.existsSync(filePath) && fs.existsSync(fallbackPath)) {
+      console.log(`   🔄 Using fallback: ${fallbackPath}`);
+      return res.sendFile(path.resolve(fallbackPath));
+    }
     next();
   }, express.static(finalCropperBuildPath));
   

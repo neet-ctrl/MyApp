@@ -27,6 +27,24 @@ RUN pip3 install -r requirements.txt
 # Copy everything from workspace (including FinalCropper/build)
 COPY . .
 
+# CRITICAL FIX: Ensure FinalCropper build directory exists with proper structure
+RUN echo "=== FINALCROPPER BUILD VERIFICATION & FIX ===" && \
+    echo "Checking FinalCropper structure..." && \
+    ls -la /app/FinalCropper/ 2>/dev/null || echo "FinalCropper missing" && \
+    ls -la /app/FinalCropper/build/ 2>/dev/null || echo "FinalCropper/build missing" && \
+    if [ ! -d "/app/FinalCropper/build" ]; then \
+        echo "Creating missing FinalCropper/build directory..." && \
+        mkdir -p /app/FinalCropper/build && \
+        if [ -d "/app/public/FinalCropper/public" ]; then \
+            echo "Copying from public source as fallback..." && \
+            cp -r /app/public/FinalCropper/public/* /app/FinalCropper/build/ 2>/dev/null || echo "Source copy failed"; \
+        fi; \
+    fi && \
+    echo "Final structure check:" && \
+    ls -la /app/FinalCropper/build/ 2>/dev/null && \
+    echo "MolView files check:" && \
+    ls -la /app/FinalCropper/build/molview/ 2>/dev/null || echo "No molview directory"
+
 # Verify critical files (debug step)
 RUN echo "=== VERIFYING ALL FILES COPIED ===" && \
     ls -la /app/tmp/ 2>/dev/null || echo "tmp missing" && \
