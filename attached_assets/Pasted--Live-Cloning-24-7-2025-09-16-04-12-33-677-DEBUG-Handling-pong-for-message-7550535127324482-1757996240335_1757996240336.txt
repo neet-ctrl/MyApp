@@ -1,0 +1,134 @@
+
+🔄 Live Cloning (24/7): [2025-09-16 04:12:33,677] DEBUG: Handling pong for message 7550535127324482916
+[2025-09-16 04:12:33,677] DEBUG: Receiving items from the network...
+4:12:38 AM [express] GET /api/console-logs/collections 304 in 188ms :: {"collections":[{"id":14,"nam…
+📥 [RAILWAY_PRODUCTION] Static request: /FinalCropper/build/service-worker.js
+   🎯 Trying primary: /app/FinalCropper/build/service-worker.js
+   ✅ Primary exists: false
+   🔄 Trying fallback: /app/public/FinalCropper/public/service-worker.js
+   ✅ Fallback exists: false
+   ❌ File not found in any location
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/index.html
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/index.html
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/index.html
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/index.html
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-app.min.css
+   ❌ MolView file not found: /build/molview-app.min.css
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-desktop.min.css
+   ❌ MolView file not found: /build/molview-desktop.min.css
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-base.min.js
+   ❌ MolView file not found: /build/molview-base.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-datasets.min.js
+   ❌ MolView file not found: /build/molview-datasets.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-app.min.js
+   ❌ MolView file not found: /build/molview-app.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/molview-logo.png
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/molview-logo.png
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-applib.min.js
+   ❌ MolView file not found: /build/molview-applib.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-core.min.js
+   ❌ MolView file not found: /build/molview-core.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-molpad.min.js
+   ❌ MolView file not found: /build/molview-molpad.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SearchBar.jpg
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/help/SearchBar.jpg
+🔄 Live Cloning (24/7): [2025-09-16 04:13:33,733] DEBUG: Assigned msg_id = 7550535385265350952 to PingRequest (7fa5d047aa30)
+[2025-09-16 04:13:33,733] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+🔄 Live Cloning (24/7): [2025-09-16 04:13:33,733] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:13:33,733] DEBUG: Waiting for messages to send...
+[2025-09-16 04:13:33,733] DEBUG: Assigned msg_id = 7550535385266878740 to MsgsAck (7fa5d047a760)
+[2025-09-16 04:13:33,733] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 04:13:33,733] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:13:33,733] DEBUG: Waiting for messages to send...
+🔄 Live Cloning (24/7): [2025-09-16 04:13:33,737] DEBUG: Handling pong for message 7550535385265350952
+[2025-09-16 04:13:33,737] DEBUG: Receiving items from the network...
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/index.html
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/index.html
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/index.html
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/index.html
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-app.min.css
+   ❌ MolView file not found: /build/molview-app.min.css
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-desktop.min.css
+   ❌ MolView file not found: /build/molview-desktop.min.css
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-applib.min.js
+   ❌ MolView file not found: /build/molview-applib.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-datasets.min.js
+   ❌ MolView file not found: /build/molview-datasets.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-core.min.js
+   ❌ MolView file not found: /build/molview-core.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-molpad.min.js
+   ❌ MolView file not found: /build/molview-molpad.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-base.min.js
+   ❌ MolView file not found: /build/molview-base.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-app.min.js
+   ❌ MolView file not found: /build/molview-app.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/molview-logo.png
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/molview-logo.png
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/index.html
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/index.html
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SearchBar.jpg
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/help/SearchBar.jpg
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/index.html
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/index.html
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-app.min.css
+   ❌ MolView file not found: /build/molview-app.min.css
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-desktop.min.css
+   ❌ MolView file not found: /build/molview-desktop.min.css
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-datasets.min.js
+   ❌ MolView file not found: /build/molview-datasets.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-applib.min.js
+   ❌ MolView file not found: /build/molview-applib.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-core.min.js
+   ❌ MolView file not found: /build/molview-core.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-base.min.js
+   ❌ MolView file not found: /build/molview-base.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-molpad.min.js
+   ❌ MolView file not found: /build/molview-molpad.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-app.min.js
+   ❌ MolView file not found: /build/molview-app.min.js
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/molview-logo.png
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/molview-logo.png
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SearchBar.jpg
+   ✅ Serving from primary: /app/public/FinalCropper/public/molview/img/help/SearchBar.jpg
+🔄 Live Cloning (24/7): [2025-09-16 04:14:33,783] DEBUG: Assigned msg_id = 7550535643164516716 to PingRequest (7fa5d047a7f0)
+[2025-09-16 04:14:33,783] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+[2025-09-16 04:14:33,783] DEBUG: Encrypted messages put in a queue to be sent
+🔄 Live Cloning (24/7): [2025-09-16 04:14:33,783] DEBUG: Waiting for messages to send...
+[2025-09-16 04:14:33,783] DEBUG: Assigned msg_id = 7550535643166049272 to MsgsAck (7fa5d047a9d0)
+[2025-09-16 04:14:33,783] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 04:14:33,783] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:14:33,783] DEBUG: Waiting for messages to send...
+🔄 Live Cloning (24/7): [2025-09-16 04:14:33,786] DEBUG: Handling pong for message 7550535643164516716
+[2025-09-16 04:14:33,787] DEBUG: Receiving items from the network...
+🔄 Live Cloning (24/7): [2025-09-16 04:15:33,840] DEBUG: Assigned msg_id = 7550535901089362072 to PingRequest (7fa5d047a8b0)
+[2025-09-16 04:15:33,840] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+🔄 Live Cloning (24/7): [2025-09-16 04:15:33,840] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:15:33,840] DEBUG: Waiting for messages to send...
+[2025-09-16 04:15:33,840] DEBUG: Assigned msg_id = 7550535901090911792 to MsgsAck (7fa5d047a4c0)
+[2025-09-16 04:15:33,840] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 04:15:33,840] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:15:33,840] DEBUG: Waiting for messages to send...
+🔄 Live Cloning (24/7): [2025-09-16 04:15:33,844] DEBUG: Handling pong for message 7550535901089362072
+🔄 Live Cloning (24/7): [2025-09-16 04:15:33,844] DEBUG: Receiving items from the network...
+🔄 Live Cloning (24/7): [2025-09-16 04:16:33,900] DEBUG: Assigned msg_id = 7550536159027354780 to PingRequest (7fa5d047a880)
+[2025-09-16 04:16:33,900] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+🔄 Live Cloning (24/7): [2025-09-16 04:16:33,900] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:16:33,900] DEBUG: Waiting for messages to send...

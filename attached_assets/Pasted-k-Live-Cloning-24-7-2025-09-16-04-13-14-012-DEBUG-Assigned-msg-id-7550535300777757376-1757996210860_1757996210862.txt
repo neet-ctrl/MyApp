@@ -1,0 +1,200 @@
+k...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:13:14,012] DEBUG: Assigned msg_id = 7550535300777757376 to PingRequest (7f510da4f710)
+[2025-09-16 04:13:14,012] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+[2025-09-16 04:13:14,012] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:13:14,012] DEBUG: Waiting for messages to send...
+[2025-09-16 04:13:14,013] DEBUG: Assigned msg_id = 7550535300781225892 to MsgsAck (7f510b1d63d0)
+[2025-09-16 04:13:14,013] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 04:13:14,013] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:13:14,013] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:13:14,079] DEBUG: Handling pong for message 7550535300777757376
+
+🔄 Live Cloning (24/7): [2025-09-16 04:13:14,079] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:14:14,072] DEBUG: Assigned msg_id = 7550535558718571056 to PingRequest (7f510da4f710)
+
+🔄 Live Cloning (24/7): [2025-09-16 04:14:14,073] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+[2025-09-16 04:14:14,073] DEBUG: Encrypted messages put in a queue to be sent
+
+🔄 Live Cloning (24/7): [2025-09-16 04:14:14,073] DEBUG: Waiting for messages to send...
+[2025-09-16 04:14:14,074] DEBUG: Assigned msg_id = 7550535558726119388 to MsgsAck (7f510b1d7310)
+[2025-09-16 04:14:14,074] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 04:14:14,075] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:14:14,075] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:14:14,139] DEBUG: Handling pong for message 7550535558718571056
+[2025-09-16 04:14:14,139] DEBUG: Receiving items from the network...
+
+4:15:03 AM [express] GET /api/console-logs/collections 200 in 563ms :: {"collections":[{"id":14,"nam…
+4:15:06 AM [express] GET /api/console-logs/collections 304 in 138ms :: {"collections":[{"id":14,"nam…
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/index.html
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/index.html
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/css/main.549c6d27.css
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/css/main.549c6d27.css
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/main.c9d5262c.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/main.c9d5262c.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/service-worker.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/service-worker.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/index.html
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/index.html
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+🔄 Live Cloning (24/7): [2025-09-16 04:15:14,134] DEBUG: Assigned msg_id = 7550535816661496168 to PingRequest (7f510da4f710)
+[2025-09-16 04:15:14,134] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+[2025-09-16 04:15:14,134] DEBUG: Encrypted messages put in a queue to be sent
+
+🔄 Live Cloning (24/7): [2025-09-16 04:15:14,134] DEBUG: Waiting for messages to send...
+[2025-09-16 04:15:14,134] DEBUG: Assigned msg_id = 7550535816663455012 to MsgsAck (7f510b06c510)
+[2025-09-16 04:15:14,134] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 04:15:14,134] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:15:14,135] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:15:14,199] DEBUG: Handling pong for message 7550535816661496168
+
+🔄 Live Cloning (24/7): [2025-09-16 04:15:14,199] DEBUG: Receiving items from the network...
+
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/css/main.549c6d27.css
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/css/main.549c6d27.css
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/142.cfc317b6.chunk.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/142.cfc317b6.chunk.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/27.7ae57fb6.chunk.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/27.7ae57fb6.chunk.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/505.da78a30e.chunk.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/505.da78a30e.chunk.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/508.89d576a0.chunk.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/508.89d576a0.chunk.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/658.5dbf9992.chunk.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/658.5dbf9992.chunk.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/index.html
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/index.html
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/index.html
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/index.html
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/867.76aaa2e5.chunk.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/867.76aaa2e5.chunk.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/build/molview-app.min.css
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-app.min.css
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/build/molview-desktop.min.css
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-desktop.min.css
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/build/molview-base.min.js
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-base.min.js
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/build/molview-applib.min.js
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-applib.min.js
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/build/molview-datasets.min.js
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-datasets.min.js
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/build/molview-core.min.js
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-core.min.js
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/build/molview-molpad.min.js
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-molpad.min.js
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/build/molview-app.min.js
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-app.min.js
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/molview-logo.png
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/molview-logo.png
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/help/SearchBar.jpg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/help/SearchBar.jpg
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/905.f2641c93.chunk.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/905.f2641c93.chunk.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/main.c9d5262c.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/main.c9d5262c.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/brand.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/brand.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/layout/model.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/layout/model.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/layout/hsplit.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/layout/hsplit.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/layout/sketcher.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/layout/sketcher.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/layout/vsplit.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/layout/vsplit.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/bond/double.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/double.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/bond/wedge.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/wedge.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/bond/single.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/single.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/bond/triple.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/triple.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/bond/hash.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/hash.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/frag/benzene.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/benzene.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/frag/cyclohexane.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cyclohexane.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/action/skeletal-off.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/skeletal-off.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/action/lasso.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/lasso.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/action/undo.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/undo.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/action/erase.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/erase.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/frag/cyclobutane.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cyclobutane.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/frag/cyclopentane.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cyclopentane.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/frag/cyclopropane.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cyclopropane.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/action/clean.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/clean.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/action/chain.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/chain.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/action/center.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/center.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/action/rect.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/rect.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/action/clear.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/clear.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/action/move.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/move.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/frag/cycloheptane.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cycloheptane.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/action/color.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/color.svg
+📥 [REPLIT_WORKSPACE] MolView static request: /FinalCropper/public/molview/img/action/redo.svg
+   ✅ Serving from primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/redo.svg
+🔄 Live Cloning (24/7): [2025-09-16 04:16:14,195] DEBUG: Assigned msg_id = 7550536074604006432 to PingRequest (7f510da4f710)
+[2025-09-16 04:16:14,195] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+[2025-09-16 04:16:14,195] DEBUG: Encrypted messages put in a queue to be sent
+
+🔄 Live Cloning (24/7): [2025-09-16 04:16:14,195] DEBUG: Waiting for messages to send...
+[2025-09-16 04:16:14,195] DEBUG: Assigned msg_id = 7550536074606434484 to MsgsAck (7f510b06c4d0)
+[2025-09-16 04:16:14,195] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 04:16:14,196] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:16:14,196] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:16:14,261] DEBUG: Handling pong for message 7550536074604006432
+[2025-09-16 04:16:14,261] DEBUG: Receiving items from the network...
+
