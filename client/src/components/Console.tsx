@@ -512,12 +512,33 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   };
 
   // Delete saved log collection
-  const deleteSavedLogs = (collectionId: string) => {
-    setSavedLogCollections(prev => prev.filter(c => c.id !== collectionId));
-    toast({
-      title: 'Collection Deleted',
-      description: 'Log collection has been deleted',
-    });
+  const deleteSavedLogs = async (collectionId: string) => {
+    try {
+      // Try to delete from database first
+      const response = await fetch(`/api/console-logs/collections/${collectionId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove from local state only after successful API deletion
+        setSavedLogCollections(prev => prev.filter(c => c.id !== collectionId));
+        toast({
+          title: 'Collection Deleted',
+          description: 'Log collection has been permanently deleted',
+        });
+      } else {
+        throw new Error('Failed to delete collection from database');
+      }
+    } catch (error) {
+      console.error('Error deleting log collection:', error);
+      // Fallback: Remove from local state only (for localStorage collections)
+      setSavedLogCollections(prev => prev.filter(c => c.id !== collectionId));
+      toast({
+        title: 'Collection Deleted',
+        description: 'Log collection has been deleted locally',
+        variant: 'default',
+      });
+    }
   };
 
   // Export saved logs as formatted HTML (console-like appearance)

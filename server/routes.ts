@@ -323,6 +323,31 @@ export async function registerRoutes(app: Express): Promise<Express> {
     }
   });
 
+  // Delete specific log collection
+  app.delete('/api/console-logs/collections/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const collectionId = parseInt(id);
+      
+      if (isNaN(collectionId)) {
+        return res.status(400).json({ error: 'Invalid collection ID' });
+      }
+
+      const deleted = await storage.deleteLogCollection(collectionId);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: 'Log collection not found' });
+      }
+
+      logger.info(`Deleted log collection with ID: ${collectionId}`);
+      res.json({ message: 'Log collection deleted successfully' });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to delete log collection: ${errorMessage}`);
+      res.status(500).json({ error: 'Failed to delete log collection' });
+    }
+  });
+
   // =====================================================
   // Telegram Bot Management API
   // Add API endpoints for download management
