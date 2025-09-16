@@ -127,8 +127,20 @@ app.use((req, res, next) => {
   const molviewUpload = multer({ dest: 'public/FinalCropper/public/molview/php/uploads/structures/' });
   const dbUpload = multer({ dest: 'public/FinalCropper/public/molview/php/uploads/' });
 
-  // Serve MolView static files
-  app.use('/FinalCropper/public/molview', express.static('public/FinalCropper/public/molview'));
+  // Serve MolView static files with detailed logging
+  const molviewPath = path.resolve('public/FinalCropper/public/molview');
+  console.log(`📁 [${deploymentEnv}] Setting up MolView static serving:`);
+  console.log(`   📂 Resolved path: ${molviewPath}`);
+  console.log(`   ✅ Directory exists: ${fs.existsSync(molviewPath)}`);
+  
+  app.use('/FinalCropper/public/molview', (req, res, next) => {
+    console.log(`📥 [${deploymentEnv}] MolView static request: /FinalCropper/public/molview${req.path}`);
+    console.log(`   📍 Full path requested: ${req.originalUrl}`);
+    const filePath = path.join(molviewPath, req.path);
+    console.log(`   🎯 Resolving to: ${filePath}`);
+    console.log(`   ✅ File exists: ${fs.existsSync(filePath)}`);
+    next();
+  }, express.static(molviewPath));
 
   // MolView PHP endpoint replacements
   app.get('/FinalCropper/public/molview/php/download_db.php', (req, res) => {

@@ -190,7 +190,29 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
               onClick={() => {
                 const iframe = document.querySelector('#pdfimg-iframe') as HTMLIFrameElement;
                 if (iframe) {
-                  iframe.src = '/FinalCropper/public/molview/index.html';
+                  const newSrc = '/FinalCropper/public/molview/index.html';
+                  console.log('🧬 [Molview] Button clicked - switching iframe source');
+                  console.log(`   🔄 From: ${iframe.src}`);
+                  console.log(`   ➡️  To: ${newSrc}`);
+                  console.log(`   🌐 Current location: ${window.location.origin}${window.location.pathname}`);
+                  
+                  // Check if the target URL is accessible before switching
+                  fetch(newSrc, { method: 'HEAD' })
+                    .then(response => {
+                      console.log(`   🔍 Molview URL accessibility: ${response.status} ${response.statusText}`);
+                      if (response.ok) {
+                        iframe.src = newSrc;
+                        console.log(`   ✅ Molview iframe source updated successfully`);
+                      } else {
+                        console.error(`   ❌ Molview URL not accessible: ${response.status} ${response.statusText}`);
+                      }
+                    })
+                    .catch(error => {
+                      console.error(`   🚫 Molview URL check failed: ${error.message}`);
+                      // Still try to load it in case the HEAD request fails but GET works
+                      iframe.src = newSrc;
+                      console.log(`   🤞 Attempting to load Molview despite HEAD request failure`);
+                    });
                 }
               }}
               className="h-6 px-2 text-xs"
@@ -240,10 +262,41 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
           }}
           data-testid="pdfimg-iframe"
           onLoad={(e) => {
-            console.log('PdfImg iframe loaded successfully');
+            const iframe = e.target as HTMLIFrameElement;
+            console.log('🎨 [PdfImg] Iframe loaded successfully');
+            console.log(`   📍 Source URL: ${iframe.src}`);
+            console.log(`   🌐 Current location: ${window.location.origin}${window.location.pathname}`);
+            console.log(`   ✅ Content window available: ${!!iframe.contentWindow}`);
+            
+            // Attempt to detect iframe content loading status
+            try {
+              const contentDoc = iframe.contentDocument || iframe.contentWindow?.document;
+              if (contentDoc) {
+                console.log(`   📄 Content document title: ${contentDoc.title}`);
+                console.log(`   📊 Content readyState: ${contentDoc.readyState}`);
+              }
+            } catch (error) {
+              console.log(`   🔒 Cross-origin content (normal behavior): ${error instanceof Error ? error.message : 'Access denied'}`);
+            }
           }}
           onError={(e) => {
-            console.error('PdfImg iframe failed to load');
+            const iframe = e.target as HTMLIFrameElement;
+            console.error('🚨 [PdfImg] Iframe failed to load');
+            console.error(`   📍 Failed source URL: ${iframe.src}`);
+            console.error(`   🌐 Current location: ${window.location.origin}${window.location.pathname}`);
+            console.error(`   📋 Base URL: ${document.baseURI}`);
+            
+            // Check if the URL is accessible
+            fetch(iframe.src, { method: 'HEAD' })
+              .then(response => {
+                console.error(`   🔍 URL accessibility check: ${response.status} ${response.statusText}`);
+                if (!response.ok) {
+                  console.error(`   ❌ Server returned error: ${response.status}`);
+                }
+              })
+              .catch(fetchError => {
+                console.error(`   🚫 URL fetch failed: ${fetchError.message}`);
+              });
           }}
         />
       </CardContent>
