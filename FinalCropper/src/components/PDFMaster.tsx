@@ -129,16 +129,37 @@ const StatusBarBuffer = () => {
     );
 };
 
-// Set up PDF.js worker - use local worker for reliability  
-if (typeof window !== 'undefined') {
-  pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
-  console.log('PDF Worker loaded locally');
-}
+  // Set up PDF.js worker - handle both standalone and iframe contexts
+  if (typeof window !== 'undefined') {
+    // Try to detect if we're running in the main app or standalone FinalCropper
+    const isMainApp = window.location.pathname.includes('FinalCropper') === false;
 
-interface SplitLine {
-  id: string;
-  points: { x: number; y: number }[];
-  isDrawing: boolean;
+    let workerPath;
+    if (isMainApp) {
+      // Running in main application context - point to FinalCropper's public folder
+      workerPath = '/FinalCropper/public/pdf.worker.js';
+    } else {
+      // Running standalone in FinalCropper app
+      workerPath = '/pdf.worker.js';
+    }
+
+    pdfjs.GlobalWorkerOptions.workerSrc = workerPath;
+    console.log('PDF Worker path set to:', workerPath, 'Context:', isMainApp ? 'Main App' : 'Standalone');
+
+    // Add error handling for worker loading
+    const originalConsoleError = console.error;
+    console.error = function(...args) {
+      if (args[0] && args[0].toString().includes('pdf.worker')) {
+        console.warn('PDF Worker failed to load from:', workerPath);
+        console.warn('Trying fallback worker path...');
+
+        // Try fallback path
+        const fallbackPath = isMainApp ? '/pdf.worker.js' : '/FinalCropper/public/pdf.worker.js';
+        pdfjs.GlobalWorkerOptions.workerSrc = fallbackPath;
+        console.log('Fallback PDF Worker path set to:', fallbackPath);
+      }
+      originalConsoleError.apply(console, args);
+    };
 }
 
 interface PDFPage {

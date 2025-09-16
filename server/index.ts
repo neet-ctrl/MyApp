@@ -63,11 +63,38 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  try {
+  // Enhanced Environment Detection and Logging
+  const isWorkspace = process.env.REPL_ID || process.env.REPLIT_DEV_DOMAIN;
+  const isRailway = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID;
+  const deploymentEnv = isWorkspace ? 'REPLIT_WORKSPACE' : isRailway ? 'RAILWAY_PRODUCTION' : 'UNKNOWN';
+  
+  console.log('\n🌟 ===== DEPLOYMENT ENVIRONMENT DETECTION =====');
+  console.log(`🔍 Environment: ${deploymentEnv}`);
+  console.log(`🔍 NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`🔍 Workspace Indicators: REPL_ID=${!!process.env.REPL_ID}, REPLIT_DEV_DOMAIN=${!!process.env.REPLIT_DEV_DOMAIN}`);
+  console.log(`🔍 Railway Indicators: RAILWAY_ENVIRONMENT=${!!process.env.RAILWAY_ENVIRONMENT}, RAILWAY_PROJECT_ID=${!!process.env.RAILWAY_PROJECT_ID}`);
+  console.log(`🔍 Working Directory: ${process.cwd()}`);
+  console.log(`🔍 Module Directory: ${path.dirname(import.meta.dirname)}`);
+  console.log('🌟 =============================================\n');
+
   // Run automatic setup first
   await autoSetup();
   
-  // Serve FinalCropper build folder before Vite catch-all
-  app.use('/FinalCropper/build', express.static(path.resolve('FinalCropper/build')));
+  // Enhanced static file serving with detailed logging
+  const finalCropperBuildPath = path.resolve('FinalCropper/build');
+  console.log(`📁 [${deploymentEnv}] Setting up FinalCropper/build static serving:`);
+  console.log(`   📂 Resolved path: ${finalCropperBuildPath}`);
+  console.log(`   ✅ Directory exists: ${fs.existsSync(finalCropperBuildPath)}`);
+  
+  app.use('/FinalCropper/build', (req, res, next) => {
+    console.log(`📥 [${deploymentEnv}] Static request: /FinalCropper/build${req.path}`);
+    console.log(`   📍 Full path requested: ${req.originalUrl}`);
+    const filePath = path.join(finalCropperBuildPath, req.path);
+    console.log(`   🎯 Resolving to: ${filePath}`);
+    console.log(`   ✅ File exists: ${fs.existsSync(filePath)}`);
+    next();
+  }, express.static(finalCropperBuildPath));
   
   await registerRoutes(app);
   const server = createServer(app);
@@ -192,14 +219,37 @@ app.use((req, res, next) => {
     }
   });
 
+  // Enhanced static file serving configuration with environment-specific logging
+  console.log(`\n📂 [${deploymentEnv}] Static File Serving Configuration:`);
+  console.log(`   🔧 app.get("env"): ${app.get("env")}`);
+  console.log(`   🔧 NODE_ENV: ${process.env.NODE_ENV}`);
+  
+  const publicPath = path.resolve('public');
+  console.log(`   📁 Public directory path: ${publicPath}`);
+  console.log(`   ✅ Public directory exists: ${fs.existsSync(publicPath)}`);
+  
+  // CRITICAL FIX: Serve public directory in ALL environments, not just development
+  // This fixes the Molview button HTML display issue in Railway
+  app.use('/public', (req, res, next) => {
+    console.log(`📥 [${deploymentEnv}] Public static request: /public${req.path}`);
+    const filePath = path.join(publicPath, req.path);
+    console.log(`   🎯 Resolving to: ${filePath}`);
+    console.log(`   ✅ File exists: ${fs.existsSync(filePath)}`);
+    next();
+  }, express.static(publicPath));
+  
+  // Also serve root public files (for compatibility)
+  app.use(express.static(publicPath));
+  console.log(`   ✅ [${deploymentEnv}] Public directory static serving enabled`);
+  
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
-    // Serve static files from public directory in development mode
-    app.use(express.static('public'));
+    console.log(`   🔧 [${deploymentEnv}] Setting up Vite development server`);
     await setupVite(app, server);
   } else {
+    console.log(`   🔧 [${deploymentEnv}] Setting up production static server`);
     serveStatic(app);
   }
 
@@ -222,4 +272,13 @@ app.use((req, res, next) => {
       console.error('Failed to start Live Cloning service:', error);
     }
   });
-})();
+  
+  } catch (error) {
+    console.error('🚨 CRITICAL STARTUP ERROR:', error);
+    console.error('🚨 Stack trace:', error instanceof Error ? error.stack : 'No stack trace available');
+    process.exit(1);
+  }
+})().catch(err => {
+  console.error('🚨 UNHANDLED STARTUP ERROR:', err);
+  process.exit(1);
+});
