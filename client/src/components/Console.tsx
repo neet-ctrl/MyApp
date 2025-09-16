@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Maximize2, Minimize2, Copy, RotateCcw, GripVertical, Archive, Clock, Download, Trash2, Pause, Play, Server, Monitor } from 'lucide-react';
+import { Maximize2, Minimize2, Copy, RotateCcw, GripVertical, Archive, Clock, Download, Trash2, Pause, Play, Server, Monitor, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { globalBrowserConsoleCapture, BrowserConsoleLog } from '@/lib/browserConsoleCapture';
 
@@ -58,6 +58,9 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   // Pause/Resume functionality
   const [isPaused, setIsPaused] = useState(false);
   
+  // Error dialog functionality
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  
   // Get browser logs from global capture and convert format
   const [globalBrowserLogs, setGlobalBrowserLogs] = useState<ConsoleLog[]>([]);
   
@@ -98,6 +101,24 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   
   // Derived state for current logs based on view mode
   const currentLogs = logViewMode === 'server' ? serverLogs : globalBrowserLogs;
+  
+  // Error counting logic
+  const getErrorCounts = () => {
+    const counts = { ERROR: 0, WARN: 0, INFO: 0, DEBUG: 0, LOG: 0 };
+    currentLogs.forEach(log => {
+      const level = log.level.toUpperCase();
+      if (counts.hasOwnProperty(level)) {
+        counts[level as keyof typeof counts]++;
+      }
+    });
+    return counts;
+  };
+
+  const errorCounts = getErrorCounts();
+  const totalErrors = errorCounts.ERROR + errorCounts.WARN;
+  const errorLogs = currentLogs.filter(log => 
+    log.level.toUpperCase() === 'ERROR' || log.level.toUpperCase() === 'WARN'
+  );
   
   // Helper function to serialize console arguments
   const serializeConsoleArgs = (args: any[]): string => {
@@ -1146,6 +1167,21 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
               <RotateCcw className="h-3 w-3" />
             </Button>
             
+            {/* Error Count Button */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowErrorDialog(true)}
+              className={`h-6 px-2 text-xs ${totalErrors > 0 ? 'text-red-500 hover:text-red-600 hover:bg-red-50' : 'text-muted-foreground'}`}
+              data-testid="button-errors"
+              title={`Show errors and warnings (${totalErrors} total)`}
+            >
+              <AlertTriangle className="h-3 w-3 mr-1" />
+              {totalErrors > 0 && (
+                <span className="font-bold">{totalErrors}</span>
+              )}
+            </Button>
+            
             {/* Enhanced Clipboard Button with Dropdown */}
             <div className="relative group">
               <Button
@@ -1561,6 +1597,140 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
                 Close
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Error and Warnings Dialog */}
+      <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] z-[1001] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <span>Errors and Warnings ({logViewMode === 'server' ? 'Server' : 'Browser'} Logs)</span>
+            </DialogTitle>
+            <DialogDescription>
+              Showing {errorLogs.length} error{errorLogs.length !== 1 ? 's' : ''} and warning{errorLogs.length !== 1 ? 's' : ''} from current logs.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* Error summary */}
+            <div className="flex items-center justify-between mb-4 p-3 bg-red-50 dark:bg-red-950 rounded-md">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Badge variant="destructive" className="text-xs">
+                    {errorCounts.ERROR} ERRORS
+                  </Badge>
+                  <Badge variant="outline" className="text-xs text-yellow-600 border-yellow-600">
+                    {errorCounts.WARN} WARNINGS
+                  </Badge>
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  Total: {totalErrors} issues
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const errorText = errorLogs.map(log => 
+                      `[${log.level}] ${new Date(log.timestamp).toLocaleString()}: ${log.message}`
+                    ).join('\n');
+                    navigator.clipboard.writeText(errorText);
+                    toast({ title: "Error logs copied to clipboard" });
+                  }}
+                  data-testid="button-copy-errors"
+                >
+                  <Copy className="h-3 w-3 mr-1" />
+                  Copy All
+                </Button>
+              </div>
+            </div>
+            
+            {/* Error logs display */}
+            <div className="flex-1 min-h-0 overflow-auto">
+              {errorLogs.length === 0 ? (
+                <div className="flex items-center justify-center h-32 text-muted-foreground">
+                  <div className="text-center">
+                    <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                    <p>No errors or warnings found!</p>
+                    <p className="text-xs">All {currentLogs.length} log entries are info, debug, or log level.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {errorLogs.map((log, index) => {
+                    const getLogLevelColor = (level: string) => {
+                      switch (level.toUpperCase()) {
+                        case 'ERROR': return 'bg-red-100 dark:bg-red-900 text-red-900 dark:text-red-100 border-l-4 border-red-500';
+                        case 'WARN': return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100 border-l-4 border-yellow-500';
+                        default: return 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-l-4 border-gray-400';
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={`${log.id}-${index}`}
+                        className={`p-3 rounded-md font-mono text-sm cursor-pointer transition-all duration-150 hover:shadow-md ${getLogLevelColor(log.level)}`}
+                        onClick={() => {
+                          navigator.clipboard.writeText(`[${log.level}] ${log.timestamp}: ${log.message}`);
+                          toast({ title: "Log entry copied to clipboard" });
+                        }}
+                        data-testid={`error-entry-${index}`}
+                        title="Click to copy this error/warning"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            {/* Error Header */}
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                              <Badge 
+                                variant={log.level.toUpperCase() === 'ERROR' ? 'destructive' : 'outline'} 
+                                className={`text-xs font-bold ${log.level.toUpperCase() === 'WARN' ? 'text-yellow-700 border-yellow-600' : ''}`}
+                              >
+                                {log.level.toUpperCase()}
+                              </Badge>
+                              <span className="text-xs font-medium opacity-70">
+                                {log.timestamp}
+                              </span>
+                              {log.source && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {log.source}
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            {/* Error Message */}
+                            <div className="whitespace-pre-wrap break-words">
+                              {log.message}
+                            </div>
+                            
+                            {/* Metadata if available */}
+                            {log.metadata && (
+                              <details className="mt-2">
+                                <summary className="text-xs opacity-70 cursor-pointer hover:opacity-100">
+                                  Show Details
+                                </summary>
+                                <pre className="text-xs mt-1 p-2 bg-black/10 dark:bg-white/10 rounded overflow-x-auto">
+                                  {typeof log.metadata === 'string' ? log.metadata : JSON.stringify(log.metadata, null, 2)}
+                                </pre>
+                              </details>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex justify-end mt-4">
+            <Button variant="outline" onClick={() => setShowErrorDialog(false)}>
+              Close
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

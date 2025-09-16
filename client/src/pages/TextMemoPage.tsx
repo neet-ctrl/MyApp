@@ -19,6 +19,7 @@ function CreateMemoDialog({ open, onOpenChange, onSubmit }: CreateMemoDialogProp
   const [title, setTitle] = useState("");
   const [hint, setHint] = useState("");
   const [description, setDescription] = useState("");
+  const [content, setContent] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,13 +29,14 @@ function CreateMemoDialog({ open, onOpenChange, onSubmit }: CreateMemoDialogProp
       title: title.trim(),
       hint: hint.trim() || undefined,
       description: description.trim() || undefined,
-      content: ""
+      content: content.trim() || ""
     });
 
     // Reset form
     setTitle("");
     setHint("");
     setDescription("");
+    setContent("");
     onOpenChange(false);
   };
 
@@ -42,16 +44,17 @@ function CreateMemoDialog({ open, onOpenChange, onSubmit }: CreateMemoDialogProp
     setTitle("");
     setHint("");
     setDescription("");
+    setContent("");
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px] h-[600px] flex flex-col">
         <DialogHeader>
           <DialogTitle>Create New Memo</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-4">
           <div>
             <label htmlFor="title" className="text-sm font-medium">
               Title *
@@ -86,8 +89,21 @@ function CreateMemoDialog({ open, onOpenChange, onSubmit }: CreateMemoDialogProp
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter description (optional)"
-              rows={3}
+              rows={2}
               data-testid="input-description"
+            />
+          </div>
+          <div className="flex-1 flex flex-col">
+            <label htmlFor="content" className="text-sm font-medium mb-2">
+              Content
+            </label>
+            <Textarea
+              id="content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write your memo content here..."
+              className="flex-1 resize-none"
+              data-testid="input-content"
             />
           </div>
           <div className="flex justify-end gap-2">
@@ -113,35 +129,53 @@ function CreateMemoDialog({ open, onOpenChange, onSubmit }: CreateMemoDialogProp
   );
 }
 
-interface MemoEditorDialogProps {
+interface MemoViewDialogProps {
   memo: TextMemo | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (id: number, content: string) => void;
+  onEdit: (memo: TextMemo) => void;
+  onDelete: (id: number) => void;
 }
 
-function MemoEditorDialog({ memo, open, onOpenChange, onSave }: MemoEditorDialogProps) {
-  const [content, setContent] = useState(memo?.content || "");
-  const [isEditing, setIsEditing] = useState(false);
-
-  const handleSave = () => {
-    if (memo) {
-      onSave(memo.id, content);
-      setIsEditing(false);
-    }
-  };
-
-  const handleClose = () => {
-    setContent(memo?.content || "");
-    setIsEditing(false);
-    onOpenChange(false);
-  };
+function MemoViewDialog({ memo, open, onOpenChange, onEdit, onDelete }: MemoViewDialogProps) {
+  const { toast } = useToast();
 
   if (!memo) return null;
 
+  const handleCopy = () => {
+    const textToCopy = memo.content || "";
+    navigator.clipboard.writeText(textToCopy);
+    toast({ title: "Content copied to clipboard" });
+  };
+
+  const handleDownload = () => {
+    const content = memo.content || "";
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${memo.title}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleEdit = () => {
+    onEdit(memo);
+    onOpenChange(false);
+  };
+
+  const handleDelete = () => {
+    if (confirm("Are you sure you want to delete this memo?")) {
+      onDelete(memo.id);
+      onOpenChange(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] h-[500px] flex flex-col">
+      <DialogContent className="sm:max-w-[700px] h-[600px] flex flex-col">
         <DialogHeader>
           <div className="flex justify-between items-center">
             <DialogTitle>{memo.title}</DialogTitle>
@@ -149,51 +183,32 @@ function MemoEditorDialog({ memo, open, onOpenChange, onSave }: MemoEditorDialog
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => setIsEditing(!isEditing)}
+                onClick={handleEdit}
                 data-testid="button-edit"
               >
                 <Edit3 className="h-4 w-4" />
               </Button>
-              {isEditing && (
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                  data-testid="button-save"
-                >
-                  <Save className="h-4 w-4" />
-                </Button>
-              )}
             </div>
           </div>
         </DialogHeader>
         
-        <div className="flex-1 flex flex-col space-y-4">
+        <div className="flex-1 flex flex-col space-y-4 overflow-hidden">
           <div className="text-sm text-muted-foreground">
             {memo.description && <p><strong>Description:</strong> {memo.description}</p>}
             {memo.hint && <p><strong>Hint:</strong> {memo.hint}</p>}
             <p><strong>Created:</strong> {memo.createdAt ? new Date(memo.createdAt).toLocaleString() : 'Unknown'}</p>
           </div>
           
-          <div className="flex-1">
-            {isEditing ? (
-              <Textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Write your memo content here..."
-                className="h-full resize-none"
-                data-testid="textarea-content"
-              />
-            ) : (
-              <div className="h-full p-3 border rounded-md bg-muted/50 overflow-auto whitespace-pre-wrap">
-                {content || "No content yet. Click the edit button to add content."}
-              </div>
-            )}
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 p-3 border rounded-md bg-muted/50 overflow-auto whitespace-pre-wrap text-sm">
+              {memo.content || "No content available"}
+            </div>
           </div>
           
           <div className="flex justify-end gap-2">
             <Button
               variant="outline"
-              onClick={() => navigator.clipboard.writeText(content)}
+              onClick={handleCopy}
               data-testid="button-copy"
             >
               <Copy className="h-4 w-4 mr-2" />
@@ -201,30 +216,152 @@ function MemoEditorDialog({ memo, open, onOpenChange, onSave }: MemoEditorDialog
             </Button>
             <Button
               variant="outline"
-              onClick={() => {
-                const blob = new Blob([content], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${memo.title}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-              }}
+              onClick={handleDownload}
               data-testid="button-download"
             >
               <Download className="h-4 w-4 mr-2" />
               Download
             </Button>
-            <Button variant="outline" onClick={handleClose} data-testid="button-close">
+            <Button
+              variant="outline"
+              onClick={handleDelete}
+              className="text-destructive hover:text-destructive"
+              data-testid="button-delete"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="button-close">
               Close
             </Button>
-            {content !== memo.content && (
-              <Button onClick={handleSave} data-testid="button-save-changes">
-                Save Changes
-              </Button>
-            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface MemoEditDialogProps {
+  memo: TextMemo | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (id: number, updates: Partial<TextMemo>) => void;
+}
+
+function MemoEditDialog({ memo, open, onOpenChange, onSave }: MemoEditDialogProps) {
+  const [title, setTitle] = useState("");
+  const [hint, setHint] = useState("");
+  const [description, setDescription] = useState("");
+  const [content, setContent] = useState("");
+
+  // Update form when memo changes
+  useEffect(() => {
+    if (memo) {
+      setTitle(memo.title || "");
+      setHint(memo.hint || "");
+      setDescription(memo.description || "");
+      setContent(memo.content || "");
+    }
+  }, [memo]);
+
+  if (!memo) return null;
+
+  const handleSave = () => {
+    if (!title.trim()) return;
+
+    onSave(memo.id, {
+      title: title.trim(),
+      hint: hint.trim() || undefined,
+      description: description.trim() || undefined,
+      content: content || ""
+    });
+    onOpenChange(false);
+  };
+
+  const handleCancel = () => {
+    // Reset to original values
+    setTitle(memo.title || "");
+    setHint(memo.hint || "");
+    setDescription(memo.description || "");
+    setContent(memo.content || "");
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] h-[600px] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Edit Memo</DialogTitle>
+        </DialogHeader>
+        
+        <div className="flex-1 flex flex-col space-y-4">
+          <div>
+            <label htmlFor="edit-title" className="text-sm font-medium">
+              Title *
+            </label>
+            <Input
+              id="edit-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter memo title"
+              data-testid="input-edit-title"
+            />
+          </div>
+          <div>
+            <label htmlFor="edit-hint" className="text-sm font-medium">
+              Hint
+            </label>
+            <Input
+              id="edit-hint"
+              value={hint}
+              onChange={(e) => setHint(e.target.value)}
+              placeholder="Enter a hint (optional)"
+              data-testid="input-edit-hint"
+            />
+          </div>
+          <div>
+            <label htmlFor="edit-description" className="text-sm font-medium">
+              Description
+            </label>
+            <Textarea
+              id="edit-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter description (optional)"
+              rows={2}
+              data-testid="input-edit-description"
+            />
+          </div>
+          <div className="flex-1 flex flex-col">
+            <label htmlFor="edit-content" className="text-sm font-medium mb-2">
+              Content
+            </label>
+            <Textarea
+              id="edit-content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write your memo content here..."
+              className="flex-1 resize-none"
+              data-testid="input-edit-content"
+            />
+          </div>
+          
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              data-testid="button-edit-cancel"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={!title.trim()}
+              data-testid="button-edit-save"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Save Changes
+            </Button>
           </div>
         </div>
       </DialogContent>
@@ -234,20 +371,23 @@ function MemoEditorDialog({ memo, open, onOpenChange, onSave }: MemoEditorDialog
 
 interface MemoCardProps {
   memo: TextMemo;
+  onView: (memo: TextMemo) => void;
   onEdit: (memo: TextMemo) => void;
   onDelete: (id: number) => void;
 }
 
-function MemoCard({ memo, onEdit, onDelete }: MemoCardProps) {
+function MemoCard({ memo, onView, onEdit, onDelete }: MemoCardProps) {
   const { toast } = useToast();
 
-  const handleCopy = () => {
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const text = `Title: ${memo.title}\nDescription: ${memo.description || 'N/A'}\nContent: ${memo.content || 'N/A'}`;
     navigator.clipboard.writeText(text);
     toast({ title: "Copied to clipboard" });
   };
 
-  const handleDownload = () => {
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const content = `${memo.title}\n\n${memo.description ? memo.description + '\n\n' : ''}${memo.content || ''}`;
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -260,10 +400,14 @@ function MemoCard({ memo, onEdit, onDelete }: MemoCardProps) {
     URL.revokeObjectURL(url);
   };
 
+  const previewContent = memo.content ? 
+    memo.content.substring(0, 100) + (memo.content.length > 100 ? '...' : '') : 
+    'No content';
+
   return (
     <Card 
       className="h-48 cursor-pointer hover:shadow-lg transition-all duration-200 relative group"
-      onClick={() => onEdit(memo)}
+      onClick={() => onView(memo)}
       data-testid={`card-memo-${memo.id}`}
     >
       <CardHeader className="pb-2">
@@ -284,11 +428,15 @@ function MemoCard({ memo, onEdit, onDelete }: MemoCardProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleCopy(); }}>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(memo); }}>
+                <Edit3 className="h-4 w-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleCopy}>
                 <Copy className="h-4 w-4 mr-2" />
                 Copy
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDownload(); }}>
+              <DropdownMenuItem onClick={handleDownload}>
                 <Download className="h-4 w-4 mr-2" />
                 Download
               </DropdownMenuItem>
@@ -306,10 +454,13 @@ function MemoCard({ memo, onEdit, onDelete }: MemoCardProps) {
       <CardContent className="pt-0">
         <div className="space-y-2">
           {memo.description && (
-            <p className="text-xs text-muted-foreground line-clamp-3" data-testid={`text-description-${memo.id}`}>
+            <p className="text-xs text-muted-foreground line-clamp-2" data-testid={`text-description-${memo.id}`}>
               {memo.description}
             </p>
           )}
+          <p className="text-xs text-gray-600 line-clamp-2" data-testid={`text-content-preview-${memo.id}`}>
+            {previewContent}
+          </p>
           <div className="text-xs text-muted-foreground" data-testid={`text-date-${memo.id}`}>
             {memo.createdAt ? new Date(memo.createdAt).toLocaleDateString() : 'Unknown date'}
           </div>
@@ -322,32 +473,34 @@ function MemoCard({ memo, onEdit, onDelete }: MemoCardProps) {
 export default function TextMemoPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedMemo, setSelectedMemo] = useState<TextMemo | null>(null);
-  const [editorOpen, setEditorOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [memos, setMemos] = useState<TextMemo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Load memos on mount - exactly like log collections
+  // Load memos on mount
   useEffect(() => {
-    const loadMemos = async () => {
-      try {
-        const response = await fetch('/api/text-memos');
-        if (response.ok) {
-          const data = await response.json();
-          if (Array.isArray(data)) {
-            setMemos(data);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load memos:', error);
-        toast({ title: "Failed to load memos", variant: "destructive" });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadMemos();
   }, []);
+
+  const loadMemos = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/text-memos');
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setMemos(data);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load memos:', error);
+      toast({ title: "Failed to load memos", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleCreateMemo = async (memo: InsertTextMemo) => {
     try {
@@ -372,19 +525,52 @@ export default function TextMemoPage() {
     }
   };
 
-  const handleEditMemo = (memo: TextMemo) => {
-    setSelectedMemo(memo);
-    setEditorOpen(true);
+  const handleViewMemo = async (memo: TextMemo) => {
+    // Always fetch fresh data to ensure content is up to date
+    try {
+      const response = await fetch(`/api/text-memos/${memo.id}`);
+      if (response.ok) {
+        const freshMemo = await response.json();
+        setSelectedMemo(freshMemo);
+        setViewDialogOpen(true);
+      } else {
+        setSelectedMemo(memo);
+        setViewDialogOpen(true);
+      }
+    } catch (error) {
+      console.error('Error fetching memo:', error);
+      setSelectedMemo(memo);
+      setViewDialogOpen(true);
+    }
   };
 
-  const handleSaveMemo = async (id: number, content: string) => {
+  const handleEditMemo = async (memo: TextMemo) => {
+    // Always fetch fresh data before editing
+    try {
+      const response = await fetch(`/api/text-memos/${memo.id}`);
+      if (response.ok) {
+        const freshMemo = await response.json();
+        setSelectedMemo(freshMemo);
+        setEditDialogOpen(true);
+      } else {
+        setSelectedMemo(memo);
+        setEditDialogOpen(true);
+      }
+    } catch (error) {
+      console.error('Error fetching memo for edit:', error);
+      setSelectedMemo(memo);
+      setEditDialogOpen(true);
+    }
+  };
+
+  const handleSaveMemo = async (id: number, updates: Partial<TextMemo>) => {
     try {
       const response = await fetch(`/api/text-memos/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify(updates),
       });
 
       if (response.ok) {
@@ -465,6 +651,7 @@ export default function TextMemoPage() {
               <MemoCard
                 key={memo.id}
                 memo={memo}
+                onView={handleViewMemo}
                 onEdit={handleEditMemo}
                 onDelete={handleDeleteMemo}
               />
@@ -479,10 +666,18 @@ export default function TextMemoPage() {
         onSubmit={handleCreateMemo}
       />
 
-      <MemoEditorDialog
+      <MemoViewDialog
         memo={selectedMemo}
-        open={editorOpen}
-        onOpenChange={setEditorOpen}
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        onEdit={handleEditMemo}
+        onDelete={handleDeleteMemo}
+      />
+
+      <MemoEditDialog
+        memo={selectedMemo}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
         onSave={handleSaveMemo}
       />
     </div>
