@@ -1,12 +1,12 @@
 {
-  "running": true,
+  "running": false,
   "processed_messages": 0,
-  "last_activity": "2025-09-16T04:19:19.961083",
-  "session_valid": true,
+  "last_activity": "2025-09-16T04:54:02.308703",
+  "session_valid": false,
   "bot_enabled": true,
   "filter_words": true,
   "add_signature": true,
   "signature": "Final testbbb",
   "total_links": 1,
-  "message": "Live cloning bot is running"
+  "message": "Bot stopped"
 }

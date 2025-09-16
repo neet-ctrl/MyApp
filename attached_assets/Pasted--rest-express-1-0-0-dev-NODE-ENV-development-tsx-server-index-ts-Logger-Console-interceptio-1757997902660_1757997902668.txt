@@ -1,0 +1,597 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+🔍 Logger: Console interception enabled - capturing ALL application logs
+✅ Loaded persistent live cloning settings: {
+  botEnabled: true,
+  filterWords: true,
+  addSignature: true,
+  signature: 'Final testbbb',
+  sessionString: '1BVtsOMQBu...[REDACTED]'
+}
+
+🌟 ===== DEPLOYMENT ENVIRONMENT DETECTION =====
+🔍 Environment: REPLIT_WORKSPACE
+🔍 NODE_ENV: development
+🔍 Workspace Indicators: REPL_ID=true, REPLIT_DEV_DOMAIN=true
+🔍 Railway Indicators: RAILWAY_ENVIRONMENT=false, RAILWAY_PROJECT_ID=false
+🔍 Working Directory: /home/runner/workspace
+🔍 Module Directory: /home/runner/workspace
+🌟 =============================================
+
+[2025-09-16 04:38:42] INFO    🔧 Starting automatic setup...
+[2025-09-16 04:38:42] INFO    ✅ Database connection verified
+[2025-09-16 04:38:42] INFO    🔧 Ensuring text_memos schema is up to date...
+[2025-09-16 04:38:43] INFO    ✅ text_memos schema is ready
+[2025-09-16 04:38:43] INFO    ✅ All directories created/verified
+[2025-09-16 04:38:43] INFO    ✅ All required packages are available
+[2025-09-16 04:38:43] DEBUG   ✅ Node.js version: OK
+[2025-09-16 04:38:43] DEBUG   ✅ File system write access: OK
+[2025-09-16 04:38:43] DEBUG   ✅ Downloads directory: OK
+[2025-09-16 04:38:43] INFO    ✅ Environment verification completed
+[2025-09-16 04:38:43] INFO    ✅ Automatic setup completed successfully
+📁 [REPLIT_WORKSPACE] Setting up FinalCropper/build static serving:
+   📂 Primary path: /home/runner/workspace/FinalCropper/build
+   📂 Fallback path: /home/runner/workspace/public/FinalCropper/public
+   ✅ Primary exists: true
+   ✅ Fallback exists: true
+📁 [REPLIT_WORKSPACE] Setting up COMPREHENSIVE MolView static serving:
+   📂 Primary: /home/runner/workspace/public/FinalCropper/public/molview -> Exists: true
+   📂 Build_V1: /home/runner/workspace/FinalCropper/build/molview -> Exists: true
+   📂 Build_V2: /home/runner/workspace/FinalCropper/public/molview -> Exists: true
+   📂 Public_Alt: /home/runner/workspace/public/molview -> Exists: false
+   📂 Root_Alt: /home/runner/workspace/molview -> Exists: false
+   ✅ Added static middleware for Primary
+   ✅ Added static middleware for Build_V1
+   ✅ Added static middleware for Build_V2
+   ✅ Added dedicated build directory routes
+
+📂 [REPLIT_WORKSPACE] Static File Serving Configuration:
+   🔧 app.get("env"): development
+   🔧 NODE_ENV: development
+   📁 Public directory path: /home/runner/workspace/public
+   ✅ Public directory exists: true
+   ✅ [REPLIT_WORKSPACE] Public directory static serving enabled
+   🔧 [REPLIT_WORKSPACE] Setting up Vite development server
+4:38:43 AM [express] serving on port 5000
+🚀 Starting Live Cloning service for 24/7 always-running architecture...
+📋 Loaded persistent settings for auto-start: {
+  botEnabled: true,
+  filterWords: true,
+  addSignature: true,
+  signature: 'Final testbbb',
+  sessionString: '1BVtsOMQBu6wplr-ZbfL7BQSkwtsPGOnN-Oqnyv6IjoOX5oAI2UKYcPenVulY5ZOXU68KgIit3nSz306ooXKlQsT_AmnaN5QOU1w0dNmAHqS_MZVmx-3e0KR88Gfh25GnLf60IVvYVcX2cwn8azW-6hvydVQ-IpZpRc8nT_i3N7PeS1YnI0wvYDT1L3TN8hYdI5-KmpBRARKbAAtRqHOcepoclRHn6CZnyfOoJ3-sGUZmHuduj3bbcdGTF-MtpMdpVek6HRr6Ije5AlSrmYyZvNXS4U9w_f2zwSHVEUNe1_Eet5inT9cQT_7EGXn45YKerl2KIXeKviE9juH-ZTVzjg3_M01DdmI='
+}
+📝 Using persistent config session string
+📎 Loaded 1 entity links from Python config.json
+📎 Total loaded for auto-start: 1 entity links and 0 word filters
+🔄 Starting Live Cloning Python process for 24/7 operation...
+✅ Live Cloning 24/7 service started successfully!
+📊 Running with 1 entity links and bot enabled: true
+🌟 Service will run continuously until server shutdown
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,690] DEBUG: Using selector: EpollSelector
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,704] INFO: 
+================================================================================
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,705] INFO:                               SYSTEM INFORMATION                              
+[2025-09-16 04:38:55,705] INFO: ================================================================================
+[2025-09-16 04:38:55,705] INFO: Python Version: 3.11.13
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,716] INFO: Platform: Linux-6.2.16-x86_64-with-glibc2.40
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,777] INFO: Architecture: ('64bit', '')
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,777] INFO: Machine: x86_64
+[2025-09-16 04:38:55,777] INFO: Node: fe01dd15d04d
+[2025-09-16 04:38:55,777] INFO: System: Linux
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,777] INFO: Processor: 
+[2025-09-16 04:38:55,778] INFO: Current Working Directory: /home/runner/workspace/bot_source/live-cloning
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,778] INFO: Script Location: /home/runner/workspace/bot_source/live-cloning/enhanced_logger.py
+[2025-09-16 04:38:55,778] INFO: Python Executable: /home/runner/workspace/.pythonlibs/bin/python3
+[2025-09-16 04:38:55,778] INFO: 
+================================================================================
+[2025-09-16 04:38:55,778] INFO:                             ENVIRONMENT VARIABLES                             
+[2025-09-16 04:38:55,778] INFO: ================================================================================
+[2025-09-16 04:38:55,778] INFO: TG_API_ID: 28403662
+[2025-09-16 04:38:55,778] INFO: TG_API_HASH: 079509d4...
+[2025-09-16 04:38:55,778] INFO: LIVE_CLONING_INSTANCE_ID: live_cloning_auto_1757997523541
+[2025-09-16 04:38:55,778] INFO: NODE_ENV: development
+[2025-09-16 04:38:55,778] INFO: PATH: /home/runner/workspace/node_modules/.bin:/home/runner/node_modules/.bin:/home/node_modules/.bin:/node_modules/.bin:/nix/store/lz7iav1hd92jbv44zf2rdd7b2mj23536-nodejs-20.19.3/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/nix/store/mxcq77rlan82dzpv3cgj0fh6qvv8ncil-bzip2-1.0.8-bin/bin:/nix/store/lmci3q5pnjkas9d2x81kd05jgmiffkn3-tk-8.6.13/bin:/nix/store/0xj7i7pnp1xyk09qg8dgsvl60gz1psyl-brotli-1.1.0/bin:/nix/store/0g1s8yd0biawp32fl3i7kdbi219jx6aq-openssh-9.7p1/bin:/nix/store/6i4xxaa812vsbli9jkq4mksdddrk27lw-xz-5.4.6-bin/bin:/nix/store/aa0kd17cjag4j4jfjdyiq1f1rf9nk2gm-gh-2.49.2/bin:/nix/store/ic7bslpvcsh3888azrf8sxz1xzc42jwq-libjpeg-turbo-3.0.3-bin/bin:/nix/store/lg6c3mlv18qhvsiwf0yl27ryq016w0cz-libwebp-1.4.0/bin:/nix/store/n0g1wrj6h8g5knynm8i3832ps41snada-fontconfig-2.15.0-bin/bin:/nix/store/a6yfhfzpmvz8v73796djqk811p4b6wan-freetype-2.13.2-dev/bin:/nix/store/1rdmf4lap3f82pqdlmrgj1vjs08dk5xw-libpng-apng-1.6.43-dev/bin:/nix/store/8nfjxqhnqb1h4wsd07pz8ph81kskw65q-nano-8.0/bin:/nix/store/bhkrx8pzqy12v6jmil17lkl8zgcyck0l-lcms2-2.16-bin/bin:/nix/store/qannz09m66qpcy3ny1f4nkl4ql0g71ks-openssl-3.0.13-bin/bin:/nix/store/z8dx4c6z528qi2w1p38yzg17g8q5jnln-cargo-1.77.2/bin:/nix/store/p16s3zg96afj68mfp17m03svhwmdgcz8-tcl-8.6.13/bin:/nix/store/lja3blbngvaiik9bxifdlypilh4glzhw-openjpeg-2.5.2/bin:/nix/store/p2rq6p1k69hsb53mq0q8dxk32f7vs4p3-railway-3.7.0/bin:/nix/store/j2zdy07sb5nbiskhp5g79c93rj9076n0-rustc-wrapper-1.77.2/bin:/nix/store/0kv8fh7h31jzp0ran1p772zfjm8znf7j-libtiff-4.6.0-bin/bin:/nix/store/cm58jpx9hqzpg0g1azm1pnif0fifk310-libdeflate-1.20/bin:/nix/store/w7ldv9b1vc48a235g7ib2kjyqlrzfv0s-postgresql-16.9/bin:/home/runner/workspace/.pythonlibs/bin:/nix/store/2lcqw1d28vklbk8ikiwad28iq2smwndv-python-wrapped-0.1.0/bin:/nix/store/2qx6jrl9h5hwpsry3ilbiihgmrnrvp50-pip-wrapper/bin:/nix/store/mx06wb8qp5z14na666bwnm1f2mxxwzj0-poetry-wrapper/bin:/nix/store/w4ml96z06nzljipl8hjlfvwg4pkxknyx-uv-0.5.11/bin:/nix/store/djy8g4cghlw19fmy6zblim1waxkr7mf2-npx/bin:/home/runner/workspace/.config/npm/node_global/bin:/home/runner/workspace/node_modules/.bin:/nix/store/8y4ls7z2sfxbq6ch3yp45l28p29qswvx-nodejs-20.19.3-wrapped/bin:/nix/store/nj22dzxzzx4m80lfa91fzqh8k9lvwigw-bun-1.2.16/bin:/nix/store/pciji08qkvcg3191yykpfipdcbbic9k5-pnpm-10.12.4/bin:/nix/store/6mzbvyzh4dfgfab6lciclji7awp9w3c4-yarn-1.22.22/bin:/nix/store/gvg9vrp821nmnyf9pxig6pss1sjywd5w-prettier-3.5.3/bin:/nix/store/ckxxssz70fkcr1fv5l4qn0mv1a66vc1i-pid1/bin:/nix/store/s7bk3jqgq54wriw50r9n4sip8j627nih-replit-runtime-path/bin:/home/runner/.nix-profile/bin:/home/runner/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+[2025-09-16 04:38:55,779] INFO: 
+================================================================================
+[2025-09-16 04:38:55,779] INFO:                             CONFIGURATION SOURCES                             
+[2025-09-16 04:38:55,779] INFO: ================================================================================
+[2025-09-16 04:38:55,779] INFO: Config File: config.json
+[2025-09-16 04:38:55,779] INFO:   Full Path: /home/runner/workspace/bot_source/live-cloning/config.json
+[2025-09-16 04:38:55,779] INFO:   Exists: True
+[2025-09-16 04:38:55,779] INFO:   Content Keys: ['api_id', 'api_hash', 'bot_enabled', 'sudo', 'filter_words', 'add_signature', 'signature', 'entities', 'filters']
+[2025-09-16 04:38:55,779] INFO:   API ID Source: 28403662
+[2025-09-16 04:38:55,779] INFO:   API Hash Source: 079509d4...
+[2025-09-16 04:38:55,779] INFO:   Entity Links Count: 1
+[2025-09-16 04:38:55,779] INFO:   Entity Links: [[4762322172, 4679407328]]
+[2025-09-16 04:38:55,779] INFO: 
+[2025-09-16 04:38:55,780] INFO: Config File: ../config/live_cloning_persistent_settings.json
+[2025-09-16 04:38:55,780] INFO:   Full Path: /home/runner/workspace/bot_source/config/live_cloning_persistent_settings.json
+[2025-09-16 04:38:55,780] INFO:   Exists: False
+[2025-09-16 04:38:55,780] INFO: 
+[2025-09-16 04:38:55,780] INFO: Config File: ../config/bot-config.json
+[2025-09-16 04:38:55,780] INFO:   Full Path: /home/runner/workspace/bot_source/config/bot-config.json
+[2025-09-16 04:38:55,780] INFO:   Exists: False
+[2025-09-16 04:38:55,780] INFO: 
+[2025-09-16 04:38:55,780] INFO: Config File: plugins/jsons/config.json
+[2025-09-16 04:38:55,780] INFO:   Full Path: /home/runner/workspace/bot_source/live-cloning/plugins/jsons/config.json
+[2025-09-16 04:38:55,780] INFO:   Exists: True
+[2025-09-16 04:38:55,781] INFO:   Content Keys: ['api_id', 'api_hash', 'bot_enabled', 'sudo', 'filter_words', 'add_signature', 'signature']
+[2025-09-16 04:38:55,781] INFO:   API ID Source: 
+[2025-09-16 04:38:55,781] INFO:   API Hash Source: ...
+[2025-09-16 04:38:55,781] INFO: 
+[2025-09-16 04:38:55,781] INFO: Config File: plugins/jsons/entities.json
+[2025-09-16 04:38:55,781] INFO:   Full Path: /home/runner/workspace/bot_source/live-cloning/plugins/jsons/entities.json
+[2025-09-16 04:38:55,781] INFO:   Exists: True
+[2025-09-16 04:38:55,781] INFO:   Content Keys: ['entities']
+[2025-09-16 04:38:55,781] INFO:   Entity Links Count: 0
+[2025-09-16 04:38:55,781] INFO:   Entity Links: []
+[2025-09-16 04:38:55,781] INFO: 
+[2025-09-16 04:38:55,782] INFO: 🚀 DIRECT AUTO-START - NO VALIDATION REQUIRED!
+[2025-09-16 04:38:55,782] INFO: Connected Account: 28403662
+[2025-09-16 04:38:55,782] INFO: Entity Links: 1
+[2025-09-16 04:38:55,782] INFO: 🚀 STARTING LIVE CLONING - AUTO-START GUARANTEED!
+[2025-09-16 04:38:55,782] INFO: 
+================================================================================
+[2025-09-16 04:38:55,782] INFO:                                CLIENT CREATION                                
+[2025-09-16 04:38:55,782] INFO: ================================================================================
+[2025-09-16 04:38:55,782] INFO: Creating TelegramClient with API ID: 28403662
+[2025-09-16 04:38:55,783] INFO: API Hash: 079509d4...
+[2025-09-16 04:38:55,783] INFO: Session String Length: 353
+[2025-09-16 04:38:55,783] INFO: Connecting to 91.108.56.196:443/TcpFull...
+[2025-09-16 04:38:55,783] DEBUG: Connection attempt 1...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,847] DEBUG: Connection success!
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,847] DEBUG: Starting send loop
+[2025-09-16 04:38:55,847] DEBUG: Starting receive loop
+[2025-09-16 04:38:55,847] INFO: Connection to 91.108.56.196:443/TcpFull complete!
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,847] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,847] DEBUG: Assigned msg_id = 7550541922665143488 to InvokeWithLayerRequest (7fd9803cea10)
+[2025-09-16 04:38:55,848] DEBUG: Encrypting 1 message(s) in 80 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,848] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:55,848] DEBUG: Waiting for messages to send...
+[2025-09-16 04:38:55,848] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,913] DEBUG: Handling bad salt for message 7550541922665143488
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,913] DEBUG: 1 message(s) will be resent
+[2025-09-16 04:38:55,913] DEBUG: Receiving items from the network...
+[2025-09-16 04:38:55,913] DEBUG: Assigned msg_id = 7550541922927345752 to InvokeWithLayerRequest (7fd9803cea10)
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,913] DEBUG: Encrypting 1 message(s) in 80 bytes for sending
+[2025-09-16 04:38:55,913] DEBUG: Encrypted messages put in a queue to be sent
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,913] DEBUG: Waiting for messages to send...
+[2025-09-16 04:38:55,913] DEBUG: Assigned msg_id = 7550541922929447648 to MsgsAck (7fd97fd63a50)
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,914] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 04:38:55,914] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:55,914] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,978] DEBUG: Handling container
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,978] DEBUG: Handling new session created
+[2025-09-16 04:38:55,978] DEBUG: Handling acknowledge for [7550541922927345752]
+[2025-09-16 04:38:55,978] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,989] DEBUG: Handling RPC result for message 7550541922927345752
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,989] DEBUG: Receiving items from the network...
+[2025-09-16 04:38:55,990] DEBUG: Assigned msg_id = 7550541923234036920 to GetUsersRequest (7fd9803cea10)
+[2025-09-16 04:38:55,990] DEBUG: Encrypting 1 message(s) in 32 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:55,990] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:55,990] DEBUG: Waiting for messages to send...
+[2025-09-16 04:38:55,990] DEBUG: Assigned msg_id = 7550541923235618112 to MsgsAck (7fd97f723d50)
+[2025-09-16 04:38:55,990] DEBUG: Encrypting 1 message(s) in 60 bytes for sending
+[2025-09-16 04:38:55,990] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:55,991] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,106] DEBUG: Handling RPC result for message 7550541923234036920
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,107] DEBUG: Receiving items from the network...
+[2025-09-16 04:38:56,107] DEBUG: Assigned msg_id = 7550541923997831464 to GetStateRequest (7fd9803cea10)
+[2025-09-16 04:38:56,107] DEBUG: Encrypting 1 message(s) in 20 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,107] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:56,107] DEBUG: Waiting for messages to send...
+[2025-09-16 04:38:56,107] DEBUG: Assigned msg_id = 7550541923999382140 to MsgsAck (7fd97f723d10)
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,107] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,108] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:56,108] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,177] DEBUG: Handling RPC result for message 7550541923997831464
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,178] DEBUG: Receiving items from the network...
+[2025-09-16 04:38:56,178] DEBUG: Assigned msg_id = 7550541924281613468 to GetDifferenceRequest (7fd9803cea10)
+[2025-09-16 04:38:56,178] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,178] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:56,178] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,178] DEBUG: Assigned msg_id = 7550541924283228992 to MsgsAck (7fd97f723e50)
+[2025-09-16 04:38:56,178] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,179] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:56,179] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,254] DEBUG: Handling RPC result for message 7550541924281613468
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,255] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,255] DEBUG: Assigned msg_id = 7550541924590527652 to GetUsersRequest (7fd97f723150)
+[2025-09-16 04:38:56,255] DEBUG: Encrypting 1 message(s) in 32 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,255] DEBUG: Encrypted messages put in a queue to be sent
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,255] DEBUG: Waiting for messages to send...
+[2025-09-16 04:38:56,255] DEBUG: Assigned msg_id = 7550541924592485548 to MsgsAck (7fd97f723650)
+[2025-09-16 04:38:56,256] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 04:38:56,256] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:56,256] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,325] DEBUG: Handling RPC result for message 7550541924590527652
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,326] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,326] DEBUG: Assigned msg_id = 7550541924874014020 to GetUsersRequest (7fd97f723e90)
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,326] DEBUG: Encrypting 1 message(s) in 32 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,326] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:56,326] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,326] DEBUG: Assigned msg_id = 7550541924876196028 to MsgsAck (7fd97f723810)
+[2025-09-16 04:38:56,327] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,327] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:56,327] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,396] DEBUG: Handling RPC result for message 7550541924874014020
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,396] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,396] INFO: 
+================================================================================
+[2025-09-16 04:38:56,397] INFO:                           CLIENT CONNECTION DETAILS                           
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,397] INFO: ================================================================================
+[2025-09-16 04:38:56,397] INFO: Connected User ID: 6956029558
+[2025-09-16 04:38:56,397] INFO: Connected Username: Ashaktihvc
+[2025-09-16 04:38:56,397] INFO: Connected First Name: Shakti_Kumar''''00012905611''''
+[2025-09-16 04:38:56,397] INFO: Connected Last Name: 
+[2025-09-16 04:38:56,397] INFO: Client Connection State: True
+[2025-09-16 04:38:56,397] INFO: Client DC ID: Unknown
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,397] INFO: Client Session: StringSession
+[2025-09-16 04:38:56,397] INFO: Connected as: Shakti_Kumar''''00012905611'''' (@Ashaktihvc) - ID: 6956029558
+[2025-09-16 04:38:56,397] INFO: 🔄 Syncing dialogs to load entities...
+[2025-09-16 04:38:56,397] DEBUG: Assigned msg_id = 7550541925160432936 to GetDialogsRequest (7fd97fd63a10)
+[2025-09-16 04:38:56,398] DEBUG: Encrypting 1 message(s) in 48 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,398] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:56,398] DEBUG: Waiting for messages to send...
+[2025-09-16 04:38:56,398] DEBUG: Assigned msg_id = 7550541925161655544 to MsgsAck (7fd97f720c10)
+[2025-09-16 04:38:56,398] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,398] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:56,398] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,650] DEBUG: Handling RPC result for message 7550541925160432936
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,655] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,657] INFO: ✅ Successfully synced 57 chats - entities are now available
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,657] INFO: 
+================================================================================
+[2025-09-16 04:38:56,658] INFO:                            DIALOGS SYNCHRONIZATION                            
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,658] INFO: ================================================================================
+[2025-09-16 04:38:56,658] INFO: Total Dialogs Synced: 57
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,658] INFO: Dialog Details:
+[2025-09-16 04:38:56,658] INFO:   1. 📽 HD Movies (ID: 2004217231, Type: Channel)
+[2025-09-16 04:38:56,658] INFO:   2. Pw Real Test Series 2026 (ID: 1992859101, Type: Channel)
+[2025-09-16 04:38:56,658] INFO:   3. PW AITS NEET TEST SERIES 2026 (ID: 2186541033, Type: Channel)
+[2025-09-16 04:38:56,658] INFO:   4. Testing (ID: 8154976061, Type: User)
+[2025-09-16 04:38:56,658] INFO:   5. Puppet 3 (ID: 4679407328, Type: Chat)
+[2025-09-16 04:38:56,658] INFO:   6. Tele (ID: 4762322172, Type: Chat)
+[2025-09-16 04:38:56,658] INFO:   7. Shakti_Kumar''''00012905611'''' (ID: 6956029558, Type: User)
+[2025-09-16 04:38:56,658] INFO:   8. Telegram (ID: 777000, Type: User)
+[2025-09-16 04:38:56,658] INFO:   9. PBCF1_2025 (ID: 2526219042, Type: Channel)
+[2025-09-16 04:38:56,658] INFO:   10. 12th Zoology 🏋️‍♀️ (ID: 7634388518, Type: User)
+[2025-09-16 04:38:56,658] INFO:   ... and 47 more dialogs
+[2025-09-16 04:38:56,659] INFO: 
+================================================================================
+[2025-09-16 04:38:56,659] INFO:                           ENTITY RESOLUTION PROCESS                           
+[2025-09-16 04:38:56,659] INFO: ================================================================================
+[2025-09-16 04:38:56,659] INFO: Total Entity Pairs to Process: 1
+[2025-09-16 04:38:56,659] INFO: Unique Entity IDs: [4679407328, 4762322172]
+[2025-09-16 04:38:56,659] INFO: Entity ID: 4679407328
+[2025-09-16 04:38:56,659] INFO:   Type: <class 'int'>
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,659] INFO:   Value Range Check: False
+[2025-09-16 04:38:56,659] INFO:   Is 32-bit safe: False
+[2025-09-16 04:38:56,659] INFO:   Is 64-bit: True
+[2025-09-16 04:38:56,659] INFO:   Binary: 0b100010110111010100001011011100000
+[2025-09-16 04:38:56,659] INFO:   Hex: 0x116ea16e0
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,659] INFO: Entity ID: 4762322172
+[2025-09-16 04:38:56,659] INFO:   Type: <class 'int'>
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,659] INFO:   Value Range Check: False
+[2025-09-16 04:38:56,659] INFO:   Is 32-bit safe: False
+[2025-09-16 04:38:56,659] INFO:   Is 64-bit: True
+[2025-09-16 04:38:56,659] INFO:   Binary: 0b100011011110110110100010011111100
+[2025-09-16 04:38:56,659] INFO:   Hex: 0x11bdb44fc
+[2025-09-16 04:38:56,659] INFO: 🔍 Pre-resolving 1 entity link pairs...
+[2025-09-16 04:38:56,660] DEBUG: Assigned msg_id = 7550541926208619236 to GetChatsRequest (7fd97f78c250)
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,660] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 04:38:56,660] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:56,660] DEBUG: Waiting for messages to send...
+[2025-09-16 04:38:56,660] DEBUG: Assigned msg_id = 7550541926209686400 to MsgsAck (7fd97f76fa90)
+[2025-09-16 04:38:56,660] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,660] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:56,660] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,731] DEBUG: Handling RPC result for message 7550541926208619236
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,732] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,732] INFO: ✅ Resolved entity: 4679407328 -> Puppet 3
+[2025-09-16 04:38:56,732] INFO: Resolving Entity 4679407328:
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,732] INFO:   Success: True
+[2025-09-16 04:38:56,732] INFO:   Name: Puppet 3
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,732] INFO:   Type: Chat
+[2025-09-16 04:38:56,732] INFO:   ID: 4679407328
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,732] DEBUG: Assigned msg_id = 7550541926499772192 to GetChatsRequest (7fd97f783d10)
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,732] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 04:38:56,733] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:56,733] DEBUG: Waiting for messages to send...
+[2025-09-16 04:38:56,733] DEBUG: Assigned msg_id = 7550541926501222728 to MsgsAck (7fd97f76fe90)
+[2025-09-16 04:38:56,733] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,733] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:56,733] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,807] DEBUG: Handling RPC result for message 7550541926499772192
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,807] DEBUG: Receiving items from the network...
+[2025-09-16 04:38:56,807] INFO: ✅ Resolved entity: 4762322172 -> Tele
+[2025-09-16 04:38:56,807] INFO: Resolving Entity 4762322172:
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,807] INFO:   Success: True
+[2025-09-16 04:38:56,807] INFO:   Name: Tele
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,808] INFO:   Type: Chat
+[2025-09-16 04:38:56,808] INFO:   ID: 4762322172
+[2025-09-16 04:38:56,808] INFO: ✅ Pre-resolution complete: 2/2 entities resolved
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,809] INFO: LIVE CLONING BOT STARTED! 🚀
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,810] DEBUG: Assigned msg_id = 7550541926808529020 to GetStateRequest (7fd97fd30dd0)
+[2025-09-16 04:38:56,810] DEBUG: Encrypting 1 message(s) in 20 bytes for sending
+[2025-09-16 04:38:56,810] DEBUG: Encrypted messages put in a queue to be sent
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,810] DEBUG: Waiting for messages to send...
+[2025-09-16 04:38:56,810] DEBUG: Assigned msg_id = 7550541926809923292 to MsgsAck (7fd97f8b7990)
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,810] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,810] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:38:56,810] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,896] DEBUG: Handling RPC result for message 7550541926808529020
+
+🔄 Live Cloning (24/7): [2025-09-16 04:38:56,897] DEBUG: Receiving items from the network...
+
+4:39:01 AM [express] GET /api/console-logs/collections 200 in 149ms :: {"collections":[{"id":14,"nam…
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/index.html
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/index.html
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/css/main.549c6d27.css
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/css/main.549c6d27.css
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/main.c9d5262c.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/main.c9d5262c.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+4:39:14 AM [express] GET /api/console-logs/collections 200 in 144ms :: {"collections":[{"id":14,"nam…
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/service-worker.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/service-worker.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/index.html
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/index.html
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/css/main.549c6d27.css
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/css/main.549c6d27.css
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/142.cfc317b6.chunk.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/142.cfc317b6.chunk.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/27.7ae57fb6.chunk.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/27.7ae57fb6.chunk.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/505.da78a30e.chunk.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/505.da78a30e.chunk.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/508.89d576a0.chunk.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/508.89d576a0.chunk.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/658.5dbf9992.chunk.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/658.5dbf9992.chunk.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/index.html
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/index.html
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/index.html
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/index.html
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/index.html
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/index.html
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/build/molview-app.min.css
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-app.min.css
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-app.min.css
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/build/molview-base.min.js
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-base.min.js
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-base.min.js
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/build/molview-desktop.min.css
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-desktop.min.css
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-desktop.min.css
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/build/molview-applib.min.js
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-applib.min.js
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-applib.min.js
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/build/molview-datasets.min.js
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-datasets.min.js
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-datasets.min.js
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/build/molview-core.min.js
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-core.min.js
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-core.min.js
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/build/molview-molpad.min.js
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-molpad.min.js
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-molpad.min.js
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/867.76aaa2e5.chunk.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/867.76aaa2e5.chunk.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/build/molview-app.min.js
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-app.min.js
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/build/molview-app.min.js
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/molview-logo.png
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/molview-logo.png
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/molview-logo.png
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/905.f2641c93.chunk.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/905.f2641c93.chunk.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/help/SearchBar.jpg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/help/SearchBar.jpg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/help/SearchBar.jpg
+📥 [REPLIT_WORKSPACE] Static request: /FinalCropper/build/static/js/main.c9d5262c.js
+   🎯 Trying primary: /home/runner/workspace/FinalCropper/build/static/js/main.c9d5262c.js
+   ✅ Primary exists: true
+   ✅ Serving from primary path
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/brand.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/brand.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/brand.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/layout/model.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/layout/model.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/layout/model.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/layout/hsplit.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/layout/hsplit.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/layout/hsplit.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/layout/vsplit.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/layout/vsplit.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/layout/vsplit.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/layout/sketcher.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/layout/sketcher.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/layout/sketcher.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/bond/single.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/single.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/single.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/bond/triple.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/triple.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/triple.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/bond/double.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/double.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/double.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/bond/hash.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/hash.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/hash.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/bond/wedge.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/wedge.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/bond/wedge.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/frag/benzene.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/benzene.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/benzene.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/frag/cyclopentane.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cyclopentane.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cyclopentane.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/frag/cyclobutane.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cyclobutane.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cyclobutane.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/action/erase.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/erase.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/erase.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/frag/cycloheptane.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cycloheptane.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cycloheptane.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/frag/cyclopropane.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cyclopropane.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cyclopropane.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/action/rect.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/rect.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/rect.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/action/color.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/color.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/color.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/action/clear.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/clear.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/clear.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/action/move.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/move.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/move.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/action/skeletal-off.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/skeletal-off.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/skeletal-off.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/action/undo.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/undo.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/undo.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/frag/cyclohexane.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cyclohexane.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/frag/cyclohexane.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/action/lasso.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/lasso.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/lasso.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/action/chain.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/chain.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/chain.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/action/clean.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/clean.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/clean.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/action/center.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/center.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/center.svg
+📥 [REPLIT_WORKSPACE] MolView request: /FinalCropper/public/molview/img/action/redo.svg
+   🔍 Checking Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/redo.svg
+   ✅ FOUND in Primary: /home/runner/workspace/public/FinalCropper/public/molview/img/action/redo.svg
+🔄 Live Cloning (24/7): [2025-09-16 04:39:56,315] DEBUG: Ass

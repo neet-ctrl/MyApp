@@ -172,9 +172,18 @@ app.use((req, res, next) => {
   app.use('/FinalCropper/public/molview', (req, res, next) => {
     console.log(`📥 [${deploymentEnv}] MolView request: /FinalCropper/public/molview${req.path}`);
     
+    // Remove leading slash from req.path for proper relative path resolution
+    const relativePath = req.path.startsWith('/') ? req.path.slice(1) : req.path;
+    
+    // Security: Prevent path traversal attacks
+    if (relativePath.includes('..') || path.isAbsolute(relativePath)) {
+      console.log(`   🚫 SECURITY: Path traversal attempt blocked: ${relativePath}`);
+      return res.status(400).send('Invalid path');
+    }
+    
     // Try each location in order of priority
     for (const { name, path: dirPath } of molviewPaths) {
-      const filePath = path.join(dirPath, req.path);
+      const filePath = path.join(dirPath, relativePath);
       console.log(`   🔍 Checking ${name}: ${filePath}`);
       
       if (fs.existsSync(filePath)) {

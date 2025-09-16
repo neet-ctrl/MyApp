@@ -1,0 +1,93 @@
+[ 9/15] COPY . .
+[ 9/15] COPY . .
+[10/15] RUN echo "=== COMPREHENSIVE MOLVIEW FILE VERIFICATION & FIX ===" &&     echo "🔍 Checking all MolView locations..." &&     echo "📁 Primary source check:" &&     ls -la /app/public/FinalCropper/public/molview/build/ 2>/dev/null || echo "❌ Primary source missing" &&     echo "📁 Build target check:" &&     ls -la /app/FinalCropper/build/molview/build/ 2>/dev/null || echo "❌ Build target missing" &&     echo "📁 Public target check:" &&     ls -la /app/FinalCropper/public/molview/build/ 2>/dev/null || echo "❌ Public target missing" &&     echo "🔧 Creating all required directories..." &&     mkdir -p /app/FinalCropper/build/molview/build &&     mkdir -p /app/FinalCropper/public/molview/build &&     mkdir -p /app/molview/build &&     mkdir -p /app/public/molview/build &&     echo "🔄 Copying MolView files to ALL possible locations..." &&     if [ -d "/app/public/FinalCropper/public/molview" ]; then         echo "✅ Copying to FinalCropper/build/molview..." &&         cp -r /app/public/FinalCropper/public/molview/* /app/FinalCropper/build/molview/ 2>/dev/null &&         echo "✅ Copying to FinalCropper/public/molview..." &&         cp -r /app/public/FinalCropper/public/molview/* /app/FinalCropper/public/molview/ 2>/dev/null &&         echo "✅ Copying to root molview..." &&         cp -r /app/public/FinalCropper/public/molview/* /app/molview/ 2>/dev/null &&         echo "✅ Copying to public/molview..." &&         cp -r /app/public/FinalCropper/public/molview/* /app/public/molview/ 2>/dev/null;     fi &&     echo "🔍 Final verification - checking critical MolView files:" &&     for location in "/app/public/FinalCropper/public/molview" "/app/FinalCropper/build/molview" "/app/FinalCropper/public/molview" "/app/molview" "/app/public/molview"; do         echo "📂 Checking $location:";         ls -la "$location/build/" 2>/dev/null | head -10 || echo "❌ No build directory";         if [ -f "$location/build/molview-app.min.js" ]; then echo "✅ molview-app.min.js found"; else echo "❌ molview-app.min.js missing"; fi;         if [ -f "$location/build/molview-app.min.css" ]; then echo "✅ molview-app.min.css found"; else echo "❌ molview-app.min.css missing"; fi;         if [ -f "$location/build/molview-base.min.js" ]; then echo "✅ molview-base.min.js found"; else echo "❌ molview-base.min.js missing"; fi;         if [ -f "$location/build/molview-datasets.min.js" ]; then echo "✅ molview-datasets.min.js found"; else echo "❌ molview-datasets.min.js missing"; fi;     done &&     echo "🔍 Verifying file sizes (should not be 0 bytes):" &&     for location in "/app/public/FinalCropper/public/molview" "/app/FinalCropper/build/molview" "/app/FinalCropper/public/molview"; do         if [ -d "$location/build" ]; then             echo "📏 Checking file sizes in $location/build/";             ls -lah "$location/build/"*.min.* 2>/dev/null || echo "No min files found";         fi;     done
+=== COMPREHENSIVE MOLVIEW FILE VERIFICATION & FIX ===
+🔍 Checking all MolView locations...
+📁 Primary source check:
+
+❌ Primary source missing
+📁 Build target check:
+
+❌ Build target missing
+📁 Public target check:
+
+❌ Public target missing
+🔧 Creating all required directories...
+
+🔄 Copying MolView files to ALL possible locations...
+✅ Copying to FinalCropper/build/molview...
+
+✅ Copying to FinalCropper/public/molview...
+
+✅ Copying to root molview...
+
+✅ Copying to public/molview...
+
+🔍 Final verification - checking critical MolView files:
+📂 Checking /app/public/FinalCropper/public/molview:
+
+❌ molview-app.min.js missing
+❌ molview-app.min.css missing
+❌ molview-base.min.js missing
+❌ molview-datasets.min.js missing
+📂 Checking /app/FinalCropper/build/molview:
+
+total 8
+drwxr-xr-x 2 root root 4096 Sep 16 04:56 .
+drwxr-xr-x 6 root root 4096 Sep 16 04:56 ..
+
+❌ molview-app.min.js missing
+❌ molview-app.min.css missing
+
+❌ molview-base.min.js missing
+❌ molview-datasets.min.js missing
+📂 Checking /app/FinalCropper/public/molview:
+
+total 12
+drwxr-xr-x 2 root root 4096 Sep 16 04:56 .
+drwxr-xr-x 1 root root 4096 Sep 16 04:56 ..
+
+❌ molview-app.min.js missing
+❌ molview-app.min.css missing
+❌ molview-base.min.js missing
+
+❌ molview-datasets.min.js missing
+📂 Checking /app/molview:
+
+total 8
+drwxr-xr-x 2 root root 4096 Sep 16 04:56 .
+drwxr-xr-x 6 root root 4096 Sep 16 04:56 ..
+
+❌ molview-app.min.js missing
+❌ molview-app.min.css missing
+❌ molview-base.min.js missing
+❌ molview-datasets.min.js missing
+
+📂 Checking /app/public/molview:
+
+total 8
+drwxr-xr-x 2 root root 4096 Sep 16 04:56 .
+drwxr-xr-x 6 root root 4096 Sep 16 04:56 ..
+
+❌ molview-app.min.js missing
+❌ molview-app.min.css missing
+❌ molview-base.min.js missing
+❌ molview-datasets.min.js missing
+🔍 Verifying file sizes (should not be 0 bytes):
+
+📏 Checking file sizes in /app/FinalCropper/build/molview/build/
+
+No min files found
+📏 Checking file sizes in /app/FinalCropper/public/molview/build/
+
+No min files found
+
+[10/15] RUN echo "=== COMPREHENSIVE MOLVIEW FILE VERIFICATION & FIX ===" &&     echo "🔍 Checking all MolView locations..." &&     echo "📁 Primary source check:" &&     ls -la /app/public/FinalCropper/public/molview/build/ 2>/dev/null || echo "❌ Primary source missing" &&     echo "📁 Build target check:" &&     ls -la /app/FinalCropper/build/molview/build/ 2>/dev/null || echo "❌ Build target missing" &&     echo "📁 Public target check:" &&     ls -la /app/FinalCropper/public/molview/build/ 2>/dev/null || echo "❌ Public target missing" &&     echo "🔧 Creating all required directories..." &&     mkdir -p /app/FinalCropper/build/molview/build &&     mkdir -p /app/FinalCropper/public/molview/build &&     mkdir -p /app/molview/build &&     mkdir -p /app/public/molview/build &&     echo "🔄 Copying MolView files to ALL possible locations..." &&     if [ -d "/app/public/FinalCropper/public/molview" ]; then         echo "✅ Copying to FinalCropper/build/molview..." &&         cp -r /app/public/FinalCropper/public/molview/* /app/FinalCropper/build/molview/ 2>/dev/null &&         echo "✅ Copying to FinalCropper/public/molview..." &&         cp -r /app/public/FinalCropper/public/molview/* /app/FinalCropper/public/molview/ 2>/dev/null &&         echo "✅ Copying to root molview..." &&         cp -r /app/public/FinalCropper/public/molview/* /app/molview/ 2>/dev/null &&         echo "✅ Copying to public/molview..." &&         cp -r /app/public/FinalCropper/public/molview/* /app/public/molview/ 2>/dev/null;     fi &&     echo "🔍 Final verification - checking critical MolView files:" &&     for location in "/app/public/FinalCropper/public/molview" "/app/FinalCropper/build/molview" "/app/FinalCropper/public/molview" "/app/molview" "/app/public/molview"; do         echo "📂 Checking $location:";         ls -la "$location/build/" 2>/dev/null | head -10 || echo "❌ No build directory";         if [ -f "$location/build/molview-app.min.js" ]; then echo "✅ molview-app.min.js found"; else echo "❌ molview-app.min.js missing"; fi;         if [ -f "$location/build/molview-app.min.css" ]; then echo "✅ molview-app.min.css found"; else echo "❌ molview-app.min.css missing"; fi;         if [ -f "$location/build/molview-base.min.js" ]; then echo "✅ molview-base.min.js found"; else echo "❌ molview-base.min.js missing"; fi;         if [ -f "$location/build/molview-datasets.min.js" ]; then echo "✅ molview-datasets.min.js found"; else echo "❌ molview-datasets.min.js missing"; fi;     done &&     echo "🔍 Verifying file sizes (should not be 0 bytes):" &&     for location in "/app/public/FinalCropper/public/molview" "/app/FinalCropper/build/molview" "/app/FinalCropper/public/molview"; do         if [ -d "$location/build" ]; then             echo "📏 Checking file sizes in $location/build/";             ls -lah "$location/build/"*.min.* 2>/dev/null || echo "No min files found";         fi;     done
+[11/15] RUN echo "=== VERIFYING ALL FILES COPIED ===" &&     ls -la /app/tmp/ 2>/dev/null || echo "tmp missing" &&     echo "=== Settings file ===" &&     ls -la /app/config/live_cloning_persistent_settings.json 2>/dev/null || echo "settings missing" &&     echo "=== Config files ===" &&     ls -la /app/config/ 2>/dev/null || echo "config missing" &&     ls -la /app/bot_source/ 2>/dev/null || echo "bot_source missing" &&     echo "=== FinalCropper BUILD VERIFICATION ===" &&     ls -la /app/FinalCropper/build/ &&     cat /app/FinalCropper/build/index.html | head -20 &&     echo "=== FinalCropper DIRECTORY CHECK ===" &&     ls -la /app/FinalCropper/ 2>/dev/null || echo "FinalCropper missing" &&     echo "=== END VERIFICATION ==="
+=== VERIFYING ALL FILES COPIED ===
+
+total 20
+drwxr-xr-x 3 root root 4096 Sep 14 11:42 .
+drwxr-xr-x 1 root root 4096 Sep 16 04:56 ..
+drwxr-xr-x 2 root root 4096 Sep 15 16:55 config
+-rw-r--r-- 1 root root  480 Sep 14 11:42 live_cloning_persistent_settings.json

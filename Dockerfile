@@ -29,33 +29,37 @@ COPY . .
 
 # COMPREHENSIVE MOLVIEW BUILD VERIFICATION & REPAIR
 RUN echo "=== COMPREHENSIVE MOLVIEW FILE VERIFICATION & FIX ===" && \
-    echo "🔍 Checking all MolView locations..." && \
-    echo "📁 Primary source check:" && \
-    ls -la /app/public/FinalCropper/public/molview/build/ 2>/dev/null || echo "❌ Primary source missing" && \
-    echo "📁 Build target check:" && \
-    ls -la /app/FinalCropper/build/molview/build/ 2>/dev/null || echo "❌ Build target missing" && \
-    echo "📁 Public target check:" && \
-    ls -la /app/FinalCropper/public/molview/build/ 2>/dev/null || echo "❌ Public target missing" && \
+    echo "🔍 First, verifying source files exist..." && \
+    ls -la /app/public/FinalCropper/public/molview/build/ && \
     echo "🔧 Creating all required directories..." && \
-    mkdir -p /app/FinalCropper/build/molview/build && \
-    mkdir -p /app/FinalCropper/public/molview/build && \
-    mkdir -p /app/molview/build && \
-    mkdir -p /app/public/molview/build && \
+    mkdir -p /app/FinalCropper/build/molview && \
+    mkdir -p /app/FinalCropper/public/molview && \
+    mkdir -p /app/molview && \
+    mkdir -p /app/public/molview && \
     echo "🔄 Copying MolView files to ALL possible locations..." && \
     if [ -d "/app/public/FinalCropper/public/molview" ]; then \
-        echo "✅ Copying to FinalCropper/build/molview..." && \
-        cp -r /app/public/FinalCropper/public/molview/* /app/FinalCropper/build/molview/ 2>/dev/null && \
-        echo "✅ Copying to FinalCropper/public/molview..." && \
-        cp -r /app/public/FinalCropper/public/molview/* /app/FinalCropper/public/molview/ 2>/dev/null && \
-        echo "✅ Copying to root molview..." && \
-        cp -r /app/public/FinalCropper/public/molview/* /app/molview/ 2>/dev/null && \
-        echo "✅ Copying to public/molview..." && \
-        cp -r /app/public/FinalCropper/public/molview/* /app/public/molview/ 2>/dev/null; \
+        echo "✅ Source directory found, starting copies..." && \
+        echo "📂 Copying entire molview directory to FinalCropper/build/..." && \
+        cp -r /app/public/FinalCropper/public/molview/* /app/FinalCropper/build/molview/ && \
+        echo "📂 Copying entire molview directory to FinalCropper/public/..." && \
+        cp -r /app/public/FinalCropper/public/molview/* /app/FinalCropper/public/molview/ && \
+        echo "📂 Copying entire molview directory to root molview/..." && \
+        cp -r /app/public/FinalCropper/public/molview/* /app/molview/ && \
+        echo "📂 Copying entire molview directory to public/molview/..." && \
+        cp -r /app/public/FinalCropper/public/molview/* /app/public/molview/ && \
+        echo "✅ All copy operations completed"; \
+    else \
+        echo "❌ Source directory /app/public/FinalCropper/public/molview not found!"; \
+        exit 1; \
     fi && \
     echo "🔍 Final verification - checking critical MolView files:" && \
     for location in "/app/public/FinalCropper/public/molview" "/app/FinalCropper/build/molview" "/app/FinalCropper/public/molview" "/app/molview" "/app/public/molview"; do \
         echo "📂 Checking $location:"; \
-        ls -la "$location/build/" 2>/dev/null | head -10 || echo "❌ No build directory"; \
+        if [ -d "$location/build" ]; then \
+            ls -la "$location/build/" | head -10; \
+        else \
+            echo "❌ No build directory in $location"; \
+        fi; \
         if [ -f "$location/build/molview-app.min.js" ]; then echo "✅ molview-app.min.js found"; else echo "❌ molview-app.min.js missing"; fi; \
         if [ -f "$location/build/molview-app.min.css" ]; then echo "✅ molview-app.min.css found"; else echo "❌ molview-app.min.css missing"; fi; \
         if [ -f "$location/build/molview-base.min.js" ]; then echo "✅ molview-base.min.js found"; else echo "❌ molview-base.min.js missing"; fi; \
@@ -65,7 +69,7 @@ RUN echo "=== COMPREHENSIVE MOLVIEW FILE VERIFICATION & FIX ===" && \
     for location in "/app/public/FinalCropper/public/molview" "/app/FinalCropper/build/molview" "/app/FinalCropper/public/molview"; do \
         if [ -d "$location/build" ]; then \
             echo "📏 Checking file sizes in $location/build/"; \
-            ls -lah "$location/build/"*.min.* 2>/dev/null || echo "No min files found"; \
+            ls -lah "$location/build/"*.min.* || echo "No min files found in $location/build/"; \
         fi; \
     done
 
