@@ -27,23 +27,38 @@ RUN pip3 install -r requirements.txt
 # Copy everything from workspace (including FinalCropper/build)
 COPY . .
 
-# CRITICAL FIX: Ensure FinalCropper build directory exists with proper structure
-RUN echo "=== FINALCROPPER BUILD VERIFICATION & FIX ===" && \
-    echo "Checking FinalCropper structure..." && \
-    ls -la /app/FinalCropper/ 2>/dev/null || echo "FinalCropper missing" && \
-    ls -la /app/FinalCropper/build/ 2>/dev/null || echo "FinalCropper/build missing" && \
-    if [ ! -d "/app/FinalCropper/build" ]; then \
-        echo "Creating missing FinalCropper/build directory..." && \
-        mkdir -p /app/FinalCropper/build && \
-        if [ -d "/app/public/FinalCropper/public" ]; then \
-            echo "Copying from public source as fallback..." && \
-            cp -r /app/public/FinalCropper/public/* /app/FinalCropper/build/ 2>/dev/null || echo "Source copy failed"; \
-        fi; \
+# COMPREHENSIVE MOLVIEW BUILD VERIFICATION & REPAIR
+RUN echo "=== COMPREHENSIVE MOLVIEW FILE VERIFICATION & FIX ===" && \
+    echo "🔍 Checking all MolView locations..." && \
+    echo "📁 Primary source check:" && \
+    ls -la /app/public/FinalCropper/public/molview/build/ 2>/dev/null || echo "❌ Primary source missing" && \
+    echo "📁 Build target check:" && \
+    ls -la /app/FinalCropper/build/molview/build/ 2>/dev/null || echo "❌ Build target missing" && \
+    echo "📁 Public target check:" && \
+    ls -la /app/FinalCropper/public/molview/build/ 2>/dev/null || echo "❌ Public target missing" && \
+    echo "🔧 Creating all required directories..." && \
+    mkdir -p /app/FinalCropper/build/molview/build && \
+    mkdir -p /app/FinalCropper/public/molview/build && \
+    mkdir -p /app/molview/build && \
+    mkdir -p /app/public/molview/build && \
+    echo "🔄 Copying MolView files to ALL possible locations..." && \
+    if [ -d "/app/public/FinalCropper/public/molview" ]; then \
+        echo "✅ Copying to FinalCropper/build/molview..." && \
+        cp -r /app/public/FinalCropper/public/molview/* /app/FinalCropper/build/molview/ 2>/dev/null && \
+        echo "✅ Copying to FinalCropper/public/molview..." && \
+        cp -r /app/public/FinalCropper/public/molview/* /app/FinalCropper/public/molview/ 2>/dev/null && \
+        echo "✅ Copying to root molview..." && \
+        cp -r /app/public/FinalCropper/public/molview/* /app/molview/ 2>/dev/null && \
+        echo "✅ Copying to public/molview..." && \
+        cp -r /app/public/FinalCropper/public/molview/* /app/public/molview/ 2>/dev/null; \
     fi && \
-    echo "Final structure check:" && \
-    ls -la /app/FinalCropper/build/ 2>/dev/null && \
-    echo "MolView files check:" && \
-    ls -la /app/FinalCropper/build/molview/ 2>/dev/null || echo "No molview directory"
+    echo "🔍 Final verification - checking critical MolView files:" && \
+    for location in "/app/FinalCropper/build/molview" "/app/FinalCropper/public/molview" "/app/molview" "/app/public/molview"; do \
+        echo "📂 Checking $location:"; \
+        ls -la "$location/build/" 2>/dev/null | head -5 || echo "❌ No build directory"; \
+        if [ -f "$location/build/molview-app.min.js" ]; then echo "✅ molview-app.min.js found"; else echo "❌ molview-app.min.js missing"; fi; \
+        if [ -f "$location/build/molview-app.min.css" ]; then echo "✅ molview-app.min.css found"; else echo "❌ molview-app.min.css missing"; fi; \
+    done
 
 # Verify critical files (debug step)
 RUN echo "=== VERIFYING ALL FILES COPIED ===" && \

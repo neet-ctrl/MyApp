@@ -154,52 +154,64 @@ app.use((req, res, next) => {
   const molviewUpload = multer({ dest: 'public/FinalCropper/public/molview/php/uploads/structures/' });
   const dbUpload = multer({ dest: 'public/FinalCropper/public/molview/php/uploads/' });
 
-  // Serve MolView static files with comprehensive fallback
-  const molviewPrimaryPath = path.resolve('public/FinalCropper/public/molview');
-  const molviewBuildPath = path.resolve('FinalCropper/build/molview');
-  const molviewPublicPath = path.resolve('FinalCropper/public/molview');
+  // COMPREHENSIVE MOLVIEW FILE SERVING WITH 100% FALLBACK COVERAGE
+  const molviewPaths = [
+    { name: 'Primary', path: path.resolve('public/FinalCropper/public/molview') },
+    { name: 'Build_V1', path: path.resolve('FinalCropper/build/molview') },
+    { name: 'Build_V2', path: path.resolve('FinalCropper/public/molview') },
+    { name: 'Public_Alt', path: path.resolve('public/molview') },
+    { name: 'Root_Alt', path: path.resolve('molview') }
+  ];
   
-  console.log(`📁 [${deploymentEnv}] Setting up MolView static serving:`);
-  console.log(`   📂 Primary path: ${molviewPrimaryPath}`);
-  console.log(`   📂 Build path: ${molviewBuildPath}`);
-  console.log(`   📂 Public path: ${molviewPublicPath}`);
-  console.log(`   ✅ Primary exists: ${fs.existsSync(molviewPrimaryPath)}`);
-  console.log(`   ✅ Build exists: ${fs.existsSync(molviewBuildPath)}`);
-  console.log(`   ✅ Public exists: ${fs.existsSync(molviewPublicPath)}`);
+  console.log(`📁 [${deploymentEnv}] Setting up COMPREHENSIVE MolView static serving:`);
+  molviewPaths.forEach(({ name, path: dirPath }) => {
+    console.log(`   📂 ${name}: ${dirPath} -> Exists: ${fs.existsSync(dirPath)}`);
+  });
   
+  // CRITICAL FIX: Create multiple route handlers with precise fallback order
   app.use('/FinalCropper/public/molview', (req, res, next) => {
-    console.log(`📥 [${deploymentEnv}] MolView static request: /FinalCropper/public/molview${req.path}`);
+    console.log(`📥 [${deploymentEnv}] MolView request: /FinalCropper/public/molview${req.path}`);
     
-    const primaryFile = path.join(molviewPrimaryPath, req.path);
-    const buildFile = path.join(molviewBuildPath, req.path);
-    const publicFile = path.join(molviewPublicPath, req.path);
-    
-    // Try primary location first
-    if (fs.existsSync(primaryFile)) {
-      console.log(`   ✅ Serving from primary: ${primaryFile}`);
-      return res.sendFile(path.resolve(primaryFile));
+    // Try each location in order of priority
+    for (const { name, path: dirPath } of molviewPaths) {
+      const filePath = path.join(dirPath, req.path);
+      console.log(`   🔍 Checking ${name}: ${filePath}`);
+      
+      if (fs.existsSync(filePath)) {
+        const stat = fs.statSync(filePath);
+        if (stat.isFile()) {
+          console.log(`   ✅ FOUND in ${name}: ${filePath}`);
+          return res.sendFile(path.resolve(filePath));
+        }
+      }
     }
     
-    // Try build location
-    if (fs.existsSync(buildFile)) {
-      console.log(`   ✅ Serving from build: ${buildFile}`);
-      return res.sendFile(path.resolve(buildFile));
+    console.log(`   ❌ FILE NOT FOUND: ${req.path}`);
+    console.log(`   🔍 Available files in primary directory:`);
+    
+    try {
+      const primaryDir = molviewPaths[0].path;
+      if (fs.existsSync(primaryDir)) {
+        const buildDir = path.join(primaryDir, 'build');
+        if (fs.existsSync(buildDir)) {
+          const files = fs.readdirSync(buildDir);
+          console.log(`   📁 Build directory contents: ${files.join(', ')}`);
+        }
+      }
+    } catch (e) {
+      console.log(`   ❌ Error listing directory: ${e}`);
     }
     
-    // Try public location
-    if (fs.existsSync(publicFile)) {
-      console.log(`   ✅ Serving from public: ${publicFile}`);
-      return res.sendFile(path.resolve(publicFile));
-    }
-    
-    console.log(`   ❌ MolView file not found: ${req.path}`);
     next();
   });
   
-  // Add static middleware for all possible locations
-  app.use('/FinalCropper/public/molview', express.static(molviewPrimaryPath));
-  app.use('/FinalCropper/public/molview', express.static(molviewBuildPath));
-  app.use('/FinalCropper/public/molview', express.static(molviewPublicPath));
+  // Add express.static middleware for each path as fallback
+  molviewPaths.forEach(({ name, path: dirPath }) => {
+    if (fs.existsSync(dirPath)) {
+      app.use('/FinalCropper/public/molview', express.static(dirPath));
+      console.log(`   ✅ Added static middleware for ${name}`);
+    }
+  });
 
   // MolView PHP endpoint replacements
   app.get('/FinalCropper/public/molview/php/download_db.php', (req, res) => {
