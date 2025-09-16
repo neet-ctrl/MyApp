@@ -2270,8 +2270,9 @@ if __name__ == "__main__":
       let resolvedFromEntity, resolvedToEntity;
       
       try {
-        // Get current session string using same logic as startLiveCloningService
-        let sessionString = process.env.LIVE_CLONING_SESSION;
+        // EXACT SAME SESSION PRIORITIZATION AS AUTO-START (from startLiveCloningService)
+        // Priority: Railway-specific session > Environment > Config file > Hardcoded fallback
+        let sessionString = process.env.RAILWAY_SESSION_STRING || process.env.LIVE_CLONING_SESSION;
         
         // Try to get from persistent settings file if not in env (same as startLiveCloningService)
         if (!sessionString) {
