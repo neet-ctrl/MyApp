@@ -16,6 +16,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
   const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [isMolViewActive, setIsMolViewActive] = useState(false);
 
   const pdfImgRef = useRef<HTMLDivElement>(null);
 
@@ -180,7 +181,9 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
         >
           <div className="flex items-center space-x-2">
             <GripVertical className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">🎨 Advanced Image Cropper</span>
+            <span className="text-sm font-medium">
+              {isMolViewActive ? '🧬 MolView Editor' : '🎨 Advanced Image Cropper'}
+            </span>
           </div>
           
           <div className="flex items-center space-x-1 no-drag">
@@ -190,8 +193,13 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
               onClick={() => {
                 const iframe = document.querySelector('#pdfimg-iframe') as HTMLIFrameElement;
                 if (iframe) {
-                  const newSrc = '/FinalCropper/public/molview/index.html';
-                  console.log('🧬 [Molview] Button clicked - switching iframe source');
+                  const newSrc = isMolViewActive 
+                    ? '/FinalCropper/build/index.html'
+                    : '/FinalCropper/public/molview/index.html';
+                  
+                  const viewName = isMolViewActive ? 'Image Cropper' : 'MolView';
+                  
+                  console.log(`🔄 [Toggle] Button clicked - switching to ${viewName}`);
                   console.log(`   🔄 From: ${iframe.src}`);
                   console.log(`   ➡️  To: ${newSrc}`);
                   console.log(`   🌐 Current location: ${window.location.origin}${window.location.pathname}`);
@@ -199,26 +207,28 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
                   // Check if the target URL is accessible before switching
                   fetch(newSrc, { method: 'HEAD' })
                     .then(response => {
-                      console.log(`   🔍 Molview URL accessibility: ${response.status} ${response.statusText}`);
+                      console.log(`   🔍 ${viewName} URL accessibility: ${response.status} ${response.statusText}`);
                       if (response.ok) {
                         iframe.src = newSrc;
-                        console.log(`   ✅ Molview iframe source updated successfully`);
+                        setIsMolViewActive(!isMolViewActive);
+                        console.log(`   ✅ ${viewName} iframe source updated successfully`);
                       } else {
-                        console.error(`   ❌ Molview URL not accessible: ${response.status} ${response.statusText}`);
+                        console.error(`   ❌ ${viewName} URL not accessible: ${response.status} ${response.statusText}`);
                       }
                     })
                     .catch(error => {
-                      console.error(`   🚫 Molview URL check failed: ${error.message}`);
+                      console.error(`   🚫 ${viewName} URL check failed: ${error.message}`);
                       // Still try to load it in case the HEAD request fails but GET works
                       iframe.src = newSrc;
-                      console.log(`   🤞 Attempting to load Molview despite HEAD request failure`);
+                      setIsMolViewActive(!isMolViewActive);
+                      console.log(`   🤞 Attempting to load ${viewName} despite HEAD request failure`);
                     });
                 }
               }}
               className="h-6 px-2 text-xs"
               data-testid="button-molview"
             >
-              🧬 MolView
+              {isMolViewActive ? '🎨 Image Editor' : '🧬 MolView'}
             </Button>
             <Button
               size="sm"
