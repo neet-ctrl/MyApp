@@ -2,13 +2,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Maximize2, Minimize2, Copy, RotateCcw, GripVertical, Archive, Clock, Download, Trash2, Pause, Play, Server, Monitor } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { globalBrowserConsoleCapture, BrowserConsoleLog } from '@/lib/browserConsoleCapture';
 
 interface ConsoleLog {
   id: number;
@@ -35,7 +36,6 @@ interface SavedLogCollection {
 export default function Console({ isOpen, onClose }: ConsoleProps) {
   const [isMaximized, setIsMaximized] = useState(false);
   const [serverLogs, setServerLogs] = useState<ConsoleLog[]>([]);
-  const [browserLogs, setBrowserLogs] = useState<ConsoleLog[]>([]);
   const [logViewMode, setLogViewMode] = useState<'server' | 'browser'>('server');
   const [isConnected, setIsConnected] = useState(false);
   const [position, setPosition] = useState({ x: 50, y: 50 });
@@ -58,8 +58,46 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   // Pause/Resume functionality
   const [isPaused, setIsPaused] = useState(false);
   
+  // Get browser logs from global capture and convert format
+  const [globalBrowserLogs, setGlobalBrowserLogs] = useState<ConsoleLog[]>([]);
+  
+  // Update browser logs from global capture
+  useEffect(() => {
+    const updateBrowserLogs = () => {
+      const globalLogs = globalBrowserConsoleCapture.getLogs();
+      const convertedLogs: ConsoleLog[] = globalLogs.map(log => ({
+        id: log.id,
+        level: log.level,
+        message: log.message,
+        timestamp: new Date(log.timestamp).toLocaleString('en-GB', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        }),
+        source: 'browser'
+      }));
+      setGlobalBrowserLogs(convertedLogs);
+    };
+    
+    // Update immediately
+    updateBrowserLogs();
+    
+    // Update periodically (every 500ms when console is open and not paused)
+    const interval = setInterval(() => {
+      if (isOpen && !isPaused) {
+        updateBrowserLogs();
+      }
+    }, 500);
+    
+    return () => clearInterval(interval);
+  }, [isOpen, isPaused]);
+  
   // Derived state for current logs based on view mode
-  const currentLogs = logViewMode === 'server' ? serverLogs : browserLogs;
+  const currentLogs = logViewMode === 'server' ? serverLogs : globalBrowserLogs;
   
   // Helper function to serialize console arguments
   const serializeConsoleArgs = (args: any[]): string => {
@@ -1445,6 +1483,9 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         <DialogContent className="z-[1001]">
           <DialogHeader>
             <DialogTitle>Save Current Logs</DialogTitle>
+            <DialogDescription>
+              Save the current log collection to persistent storage for future access.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -1476,6 +1517,9 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Copy Log Range</DialogTitle>
+            <DialogDescription>
+              Select a range of log entries to copy to your clipboard.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -1524,6 +1568,9 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         <DialogContent className="max-w-4xl max-h-[80vh] z-[1001]">
           <DialogHeader>
             <DialogTitle>Saved Log Collections</DialogTitle>
+            <DialogDescription>
+              Manage your saved log collections. Load, export, or delete previously saved logs.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             {savedLogCollections.length === 0 ? (

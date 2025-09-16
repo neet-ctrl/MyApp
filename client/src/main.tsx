@@ -43,5 +43,7 @@ if (typeof window !== 'undefined') {
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+// Start global browser console capture immediately
+import "./lib/browserConsoleCapture";
 
 createRoot(document.getElementById("root")!).render(<App />);
