@@ -128,76 +128,10 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     }).join(' ');
   };
   
-  // Create browser console log entry
-  const createBrowserLogEntry = (level: string, args: any[]): ConsoleLog => {
-    browserLogIdRef.current += 1;
-    const stack = new Error().stack;
-    const callerLine = stack?.split('\n')[3] || 'unknown';
-    
-    return {
-      id: browserLogIdRef.current,
-      level: level.toLowerCase(),
-      message: serializeConsoleArgs(args),
-      source: 'browser',
-      metadata: {
-        originalArgs: args,
-        caller: callerLine,
-        rawLevel: level
-      },
-      timestamp: new Date().toISOString()
-    };
-  };
+  // Browser console interception is now handled by globalBrowserConsoleCapture
+  // No need for local browser console management since we use the global capture
   
-  // Setup browser console interception
-  const setupBrowserConsoleCapture = () => {
-    if (isConsoleInterceptedRef.current || typeof window === 'undefined') return;
-    
-    // Store original console methods
-    originalConsoleRef.current = {
-      log: console.log,
-      info: console.info,
-      warn: console.warn,
-      error: console.error,
-      debug: console.debug
-    };
-    
-    // Patch console methods
-    const patchMethod = (method: keyof typeof console, level: string) => {
-      const original = originalConsoleRef.current![method as keyof typeof originalConsoleRef.current];
-      (console as any)[method] = (...args: any[]) => {
-        // Call original method to preserve native console behavior
-        original.apply(console, args);
-        
-        // Always capture browser logs (regardless of current view mode) but respect pause state
-        if (!isPausedRef.current) {
-          const logEntry = createBrowserLogEntry(level, args);
-          setBrowserLogs(prev => [logEntry, ...prev].slice(0, 1000)); // Keep last 1000
-        }
-      };
-    };
-    
-    patchMethod('log', 'info');
-    patchMethod('info', 'info');
-    patchMethod('warn', 'warn');
-    patchMethod('error', 'error');
-    patchMethod('debug', 'debug');
-    
-    isConsoleInterceptedRef.current = true;
-  };
-  
-  // Restore original console methods
-  const restoreOriginalConsole = () => {
-    if (!isConsoleInterceptedRef.current || !originalConsoleRef.current) return;
-    
-    console.log = originalConsoleRef.current.log;
-    console.info = originalConsoleRef.current.info;
-    console.warn = originalConsoleRef.current.warn;
-    console.error = originalConsoleRef.current.error;
-    console.debug = originalConsoleRef.current.debug;
-    
-    isConsoleInterceptedRef.current = false;
-    originalConsoleRef.current = null;
-  };
+  // Console restoration is handled by globalBrowserConsoleCapture
   
   const { toast } = useToast();
   
@@ -206,16 +140,6 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   const wsRef = useRef<WebSocket | null>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Browser console capture refs
-  const originalConsoleRef = useRef<{
-    log: typeof console.log;
-    info: typeof console.info;
-    warn: typeof console.warn;
-    error: typeof console.error;
-    debug: typeof console.debug;
-  } | null>(null);
-  const browserLogIdRef = useRef(0);
-  const isConsoleInterceptedRef = useRef(false);
   const isPausedRef = useRef(isPaused);
   
   // Keep refs updated with current state
@@ -259,17 +183,8 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     localStorage.setItem('console-saved-logs', JSON.stringify(savedLogCollections));
   }, [savedLogCollections]);
   
-  // Handle console interception - always intercept when console is open
-  useEffect(() => {
-    if (isOpen) {
-      setupBrowserConsoleCapture();
-    }
-    
-    // Cleanup on unmount or when console closes
-    return () => {
-      restoreOriginalConsole();
-    };
-  }, [isOpen]);
+  // Browser console is handled globally by browserConsoleCapture
+  // No local interception needed since global capture is always active
   
 
   // Fetch ALL logs from API (no limit, from deployment start)
