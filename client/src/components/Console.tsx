@@ -34,7 +34,9 @@ interface SavedLogCollection {
 
 export default function Console({ isOpen, onClose }: ConsoleProps) {
   const [isMaximized, setIsMaximized] = useState(false);
-  const [logs, setLogs] = useState<ConsoleLog[]>([]);
+  const [serverLogs, setServerLogs] = useState<ConsoleLog[]>([]);
+  const [browserLogs, setBrowserLogs] = useState<ConsoleLog[]>([]);
+  const [logViewMode, setLogViewMode] = useState<'server' | 'browser'>('server');
   const [isConnected, setIsConnected] = useState(false);
   const [position, setPosition] = useState({ x: 50, y: 50 });
   const [size, setSize] = useState({ width: 700, height: 500 });
@@ -55,6 +57,9 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   
   // Pause/Resume functionality
   const [isPaused, setIsPaused] = useState(false);
+  
+  // Derived state for current logs based on view mode
+  const currentLogs = logViewMode === 'server' ? serverLogs : browserLogs;
   
   const { toast } = useToast();
   
@@ -107,7 +112,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       if (response.ok) {
         const data = await response.json();
         if (data.length > 0) {
-          setLogs(prev => {
+          setServerLogs(prev => {
             const combined = offset === 0 ? data : [...prev, ...data];
             // Remove duplicates by ID
             const unique = combined.filter((log: ConsoleLog, index: number, self: ConsoleLog[]) => 
@@ -152,7 +157,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         if (isPaused) return; // Don't process messages if paused
         try {
           const logEntry = JSON.parse(event.data);
-          setLogs(prev => [logEntry, ...prev].slice(0, 1000)); // Keep last 1000 logs
+          setServerLogs(prev => [logEntry, ...prev].slice(0, 1000)); // Keep last 1000 logs
           scrollToBottom();
         } catch (error) {
           console.error('Failed to parse log entry:', error);
@@ -207,14 +212,14 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   // Copy functions
   const copyAllLogs = async () => {
     try {
-      const logText = logs.map(log => 
+      const logText = currentLogs.map(log => 
         `[${formatTimestamp(log.timestamp)}] ${log.level.toUpperCase()}: ${log.message}`
       ).join('\n');
       
       await navigator.clipboard.writeText(logText);
       toast({
         title: 'All Logs Copied',
-        description: `${logs.length} log entries copied to clipboard`,
+        description: `${currentLogs.length} log entries copied to clipboard`,
       });
     } catch (error) {
       toast({
@@ -227,7 +232,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
 
   const copySelectedLogs = async () => {
     try {
-      const selectedLogs = logs.filter(log => selectedLogIds.has(log.id));
+      const selectedLogs = currentLogs.filter(log => selectedLogIds.has(log.id));
       const logText = selectedLogs.map(log => 
         `[${formatTimestamp(log.timestamp)}] ${log.level.toUpperCase()}: ${log.message}`
       ).join('\n');
@@ -259,7 +264,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     }
 
     try {
-      const sortedLogs = [...logs].reverse(); // Show oldest first for range selection
+      const sortedLogs = [...currentLogs].reverse(); // Show oldest first for range selection
       const start = Math.max(0, rangeStart - 1);
       const end = Math.min(sortedLogs.length, rangeEnd);
       const rangeLogs = sortedLogs.slice(start, end);
@@ -320,8 +325,8 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: saveLogName.trim(),
-          logs: logs,
-          totalEntries: logs.length
+          logs: currentLogs,
+          totalEntries: currentLogs.length
         })
       });
 
@@ -332,9 +337,9 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         const newCollection: SavedLogCollection = {
           id: savedCollection.id || Date.now().toString(),
           name: saveLogName.trim(),
-          logs: [...logs],
+          logs: [...currentLogs],
           savedAt: new Date().toISOString(),
-          totalEntries: logs.length
+          totalEntries: currentLogs.length
         };
 
         setSavedLogCollections(prev => [newCollection, ...prev].slice(0, 50));
@@ -343,7 +348,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         
         toast({
           title: 'Logs Saved Permanently',
-          description: `Log collection "${newCollection.name}" saved to database with ${logs.length} entries`,
+          description: `Log collection "${newCollection.name}" saved to database with ${currentLogs.length} entries`,
         });
       } else {
         throw new Error('Failed to save to database');
@@ -353,9 +358,9 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       const newCollection: SavedLogCollection = {
         id: Date.now().toString(),
         name: saveLogName.trim(),
-        logs: [...logs],
+        logs: [...currentLogs],
         savedAt: new Date().toISOString(),
-        totalEntries: logs.length
+        totalEntries: currentLogs.length
       };
 
       setSavedLogCollections(prev => [newCollection, ...prev].slice(0, 50));
@@ -364,7 +369,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       
       toast({
         title: 'Logs Saved (Local)',
-        description: `Log collection "${newCollection.name}" saved locally with ${logs.length} entries`,
+        description: `Log collection "${newCollection.name}" saved locally with ${currentLogs.length} entries`,
         variant: 'destructive',
       });
     }
@@ -392,7 +397,12 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       if (response.ok) {
         const data = await response.json();
         if (data.collection && data.collection.logs) {
-          setLogs(data.collection.logs);
+          const loadedLogs = data.collection.logs;
+        if (logViewMode === 'server') {
+          setServerLogs(loadedLogs);
+        } else {
+          setBrowserLogs(loadedLogs);
+        }
           toast({
             title: 'Logs Loaded (Paused)',
             description: `Loaded "${collection.name}" with ${data.collection.logs.length} entries. Click Resume to continue live logs.`,
@@ -406,7 +416,11 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     }
 
     // Fallback to localStorage copy
-    setLogs(collection.logs || []);
+    if (logViewMode === 'server') {
+      setServerLogs(collection.logs || []);
+    } else {
+      setBrowserLogs(collection.logs || []);
+    }
     toast({
       title: 'Logs Loaded (Paused)',
       description: `Loaded "${collection.name}" with ${collection.totalEntries} entries. Click Resume to continue live logs.`,
@@ -435,9 +449,9 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       let logsToExport: ConsoleLog[] = [];
       
       // Strategy 1: Check if we have current logs loaded and this collection is being viewed
-      if (logs && logs.length > 0) {
-        console.log('Using current logs from memory:', logs.length);
-        logsToExport = logs;
+      if (currentLogs && currentLogs.length > 0) {
+        console.log('Using current logs from memory:', currentLogs.length);
+        logsToExport = currentLogs;
       }
       // Strategy 2: Try the collection's logs property
       else if (collection.logs && Array.isArray(collection.logs) && collection.logs.length > 0) {
@@ -640,7 +654,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         totalEntries: collection?.totalEntries,
         hasLogs: collection?.logs ? collection.logs.length : 'no logs property',
         hasLogsData: (collection as any)?.logsData ? 'yes' : 'no',
-        currentLogsLength: logs?.length || 0
+        currentLogsLength: currentLogs.length || 0
       });
       
       toast({
@@ -692,11 +706,17 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
 
   // Handle last log button (manual refresh)
   const handleLastLog = () => {
-    if (!isPaused) {
+    if (!isPaused && logViewMode === 'server') {
       fetchLogs();
       toast({
         title: 'Logs Refreshed',
         description: 'Console logs have been refreshed',
+      });
+    } else if (logViewMode === 'browser') {
+      toast({
+        title: 'Refresh Unavailable',
+        description: 'Browser logs cannot be manually refreshed',
+        variant: 'destructive',
       });
     } else {
       toast({
@@ -724,7 +744,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   };
 
   const selectAllLogs = () => {
-    setSelectedLogIds(new Set(logs.map(log => log.id)));
+    setSelectedLogIds(new Set(currentLogs.map(log => log.id)));
   };
 
   const clearSelection = () => {
@@ -951,7 +971,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
               <span className="text-sm font-medium">Enhanced Console</span>
             </div>
             <span className="text-xs text-muted-foreground">
-              {logs.length} logs • {isPaused ? 'Paused' : (isConnected ? 'Live' : 'Disconnected')}
+              {currentLogs.length} logs • {isPaused ? 'Paused' : (isConnected ? 'Live' : 'Disconnected')}
             </span>
             {isSelectionMode && (
               <Badge variant="secondary" className="text-xs">
@@ -1152,15 +1172,15 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
             }}
             data-testid="logs-container"
           >
-            {logs.length === 0 ? (
+            {currentLogs.length === 0 ? (
               <div className="text-center text-gray-500 mt-8 p-4">
                 <div className="text-lg mb-2">No logs available</div>
                 <div className="text-sm">Waiting for real-time logs...</div>
               </div>
             ) : (
               <div className="space-y-1 p-2 pb-16">
-                {logs.slice().reverse().map((log, index) => {
-                  const entryNumber = logs.length - index;
+                {currentLogs.slice().reverse().map((log, index) => {
+                  const entryNumber = currentLogs.length - index;
                   return (
                   <div 
                       key={log.id || index} 
@@ -1272,7 +1292,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
               />
             </div>
             <div className="text-sm text-muted-foreground">
-              This will save {logs.length} log entries persistently, surviving server restarts and page refreshes.
+              This will save {currentLogs.length} log entries persistently, surviving server restarts and page refreshes.
             </div>
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setShowSaveDialog(false)}>
@@ -1300,7 +1320,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
                   id="rangeStart"
                   type="number"
                   min="1"
-                  max={logs.length}
+                  max={currentLogs.length}
                   value={rangeStart || ''}
                   onChange={(e) => setRangeStart(parseInt(e.target.value) || null)}
                   placeholder="1"
@@ -1312,15 +1332,15 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
                   id="rangeEnd"
                   type="number"
                   min="1"
-                  max={logs.length}
+                  max={currentLogs.length}
                   value={rangeEnd || ''}
                   onChange={(e) => setRangeEnd(parseInt(e.target.value) || null)}
-                  placeholder={logs.length.toString()}
+                  placeholder={currentLogs.length.toString()}
                 />
               </div>
             </div>
             <div className="text-sm text-muted-foreground">
-              Total entries available: {logs.length}. Entries are numbered from oldest (1) to newest ({logs.length}).
+              Total entries available: {currentLogs.length}. Entries are numbered from oldest (1) to newest ({currentLogs.length}).
             </div>
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setShowRangeDialog(false)}>
