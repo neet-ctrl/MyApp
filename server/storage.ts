@@ -470,7 +470,7 @@ export class MemStorage implements IStorage {
       const { lt } = await import('drizzle-orm');
       
       const result = await db.delete(consoleLogs)
-        .where(lt(consoleLogs.timestamp, cutoffDate.toISOString()));
+        .where(lt(consoleLogs.timestamp, cutoffDate));
 
       return result.rowCount || 0;
     } catch (error) {

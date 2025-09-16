@@ -484,7 +484,9 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         if (logViewMode === 'server') {
           setServerLogs(loadedLogs);
         } else {
-          setBrowserLogs(loadedLogs);
+          // Browser logs can't be directly set as they come from global capture
+          // For saved browser log collections, we temporarily store them as server logs
+          setServerLogs(loadedLogs);
         }
           toast({
             title: 'Logs Loaded (Paused)',
@@ -502,7 +504,9 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     if (logViewMode === 'server') {
       setServerLogs(collection.logs || []);
     } else {
-      setBrowserLogs(collection.logs || []);
+      // Browser logs can't be directly set as they come from global capture
+      // For saved browser log collections, we temporarily store them as server logs
+      setServerLogs(collection.logs || []);
     }
     toast({
       title: 'Logs Loaded (Paused)',

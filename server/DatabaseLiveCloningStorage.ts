@@ -419,7 +419,7 @@ export class DatabaseLiveCloningStorage implements IStorage {
       cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
       
       const result = await db.delete(consoleLogs)
-        .where(lt(consoleLogs.timestamp, cutoffDate.toISOString()));
+        .where(lt(consoleLogs.timestamp, cutoffDate));
 
       return result.rowCount || 0;
     } catch (error) {
