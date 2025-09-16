@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Maximize2, Minimize2, Copy, RotateCcw, GripVertical, Archive, Clock, Download, Trash2, Pause, Play } from 'lucide-react';
+import { Maximize2, Minimize2, Copy, RotateCcw, GripVertical, Archive, Clock, Download, Trash2, Pause, Play, Server, Monitor } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ConsoleLog {
@@ -61,12 +61,123 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   // Derived state for current logs based on view mode
   const currentLogs = logViewMode === 'server' ? serverLogs : browserLogs;
   
+  // Helper function to serialize console arguments
+  const serializeConsoleArgs = (args: any[]): string => {
+    return args.map(arg => {
+      if (typeof arg === 'string') return arg;
+      if (arg instanceof Error) {
+        return `${arg.name}: ${arg.message}\n${arg.stack}`;
+      }
+      if (arg && typeof arg === 'object') {
+        try {
+          // Handle DOM elements
+          if (arg.nodeType) {
+            return `<${arg.tagName?.toLowerCase() || 'unknown'}${arg.id ? ` id="${arg.id}"` : ''}${arg.className ? ` class="${arg.className}"` : ''}>`;
+          }
+          // Handle circular references and depth limit
+          return JSON.stringify(arg, (key, value) => {
+            if (typeof value === 'object' && value !== null) {
+              if (value.nodeType) return `[DOM Element: ${value.tagName}]`;
+              if (typeof value === 'function') return '[Function]';
+            }
+            return value;
+          }, 2);
+        } catch (e) {
+          return '[Circular/Complex Object]';
+        }
+      }
+      return String(arg);
+    }).join(' ');
+  };
+  
+  // Create browser console log entry
+  const createBrowserLogEntry = (level: string, args: any[]): ConsoleLog => {
+    browserLogIdRef.current += 1;
+    const stack = new Error().stack;
+    const callerLine = stack?.split('\n')[3] || 'unknown';
+    
+    return {
+      id: browserLogIdRef.current,
+      level: level.toLowerCase(),
+      message: serializeConsoleArgs(args),
+      source: 'browser',
+      metadata: {
+        originalArgs: args,
+        caller: callerLine,
+        rawLevel: level
+      },
+      timestamp: new Date().toISOString()
+    };
+  };
+  
+  // Setup browser console interception
+  const setupBrowserConsoleCapture = () => {
+    if (isConsoleInterceptedRef.current || typeof window === 'undefined') return;
+    
+    // Store original console methods
+    originalConsoleRef.current = {
+      log: console.log,
+      info: console.info,
+      warn: console.warn,
+      error: console.error,
+      debug: console.debug
+    };
+    
+    // Patch console methods
+    const patchMethod = (method: keyof typeof console, level: string) => {
+      const original = originalConsoleRef.current![method as keyof typeof originalConsoleRef.current];
+      (console as any)[method] = (...args: any[]) => {
+        // Call original method to preserve native console behavior
+        original.apply(console, args);
+        
+        // Capture log if not paused and in browser mode
+        if (!isPaused && logViewMode === 'browser') {
+          const logEntry = createBrowserLogEntry(level, args);
+          setBrowserLogs(prev => [logEntry, ...prev].slice(0, 1000)); // Keep last 1000
+        }
+      };
+    };
+    
+    patchMethod('log', 'info');
+    patchMethod('info', 'info');
+    patchMethod('warn', 'warn');
+    patchMethod('error', 'error');
+    patchMethod('debug', 'debug');
+    
+    isConsoleInterceptedRef.current = true;
+  };
+  
+  // Restore original console methods
+  const restoreOriginalConsole = () => {
+    if (!isConsoleInterceptedRef.current || !originalConsoleRef.current) return;
+    
+    console.log = originalConsoleRef.current.log;
+    console.info = originalConsoleRef.current.info;
+    console.warn = originalConsoleRef.current.warn;
+    console.error = originalConsoleRef.current.error;
+    console.debug = originalConsoleRef.current.debug;
+    
+    isConsoleInterceptedRef.current = false;
+    originalConsoleRef.current = null;
+  };
+  
   const { toast } = useToast();
   
   const consoleRef = useRef<HTMLDivElement>(null);
   const logsContainerRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Browser console capture refs
+  const originalConsoleRef = useRef<{
+    log: typeof console.log;
+    info: typeof console.info;
+    warn: typeof console.warn;
+    error: typeof console.error;
+    debug: typeof console.debug;
+  } | null>(null);
+  const browserLogIdRef = useRef(0);
+  const isConsoleInterceptedRef = useRef(false);
 
   // Load saved log collections from database and localStorage on mount
   useEffect(() => {
@@ -103,6 +214,29 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   useEffect(() => {
     localStorage.setItem('console-saved-logs', JSON.stringify(savedLogCollections));
   }, [savedLogCollections]);
+  
+  // Handle console interception based on log view mode
+  useEffect(() => {
+    if (logViewMode === 'browser') {
+      setupBrowserConsoleCapture();
+    } else {
+      restoreOriginalConsole();
+    }
+    
+    // Cleanup on unmount or mode change
+    return () => {
+      if (logViewMode === 'browser') {
+        restoreOriginalConsole();
+      }
+    };
+  }, [logViewMode]);
+  
+  // Cleanup console interception on component unmount
+  useEffect(() => {
+    return () => {
+      restoreOriginalConsole();
+    };
+  }, []);
 
   // Fetch ALL logs from API (no limit, from deployment start)
   const fetchLogs = async (offset = 0) => {
@@ -868,10 +1002,21 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
 
   // Effect to setup WebSocket and intervals
   useEffect(() => {
-    if (isOpen && !isPaused) {
+    if (isOpen && !isPaused && logViewMode === 'server') {
       fetchLogs();
       setupWebSocket();
       setupAutoRefresh();
+    } else if (logViewMode === 'browser') {
+      // Cleanup server connections when switching to browser mode
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+        refreshIntervalRef.current = null;
+      }
+      setIsConnected(false);
     }
 
     return () => {
@@ -882,7 +1027,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         clearInterval(refreshIntervalRef.current);
       }
     };
-  }, [isOpen, isPaused]);
+  }, [isOpen, isPaused, logViewMode]);
 
   // Effect to handle mouse and touch events
   useEffect(() => {
@@ -970,8 +1115,39 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
               <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
               <span className="text-sm font-medium">Enhanced Console</span>
             </div>
+            
+            {/* Server/Browser Toggle */}
+            <div className="flex items-center bg-muted rounded-md p-1 space-x-0">
+              <Button
+                size="sm"
+                variant={logViewMode === 'server' ? 'secondary' : 'ghost'}
+                className="h-6 px-2 text-xs"
+                onClick={() => setLogViewMode('server')}
+                data-testid="button-log-source-server"
+                title="Show server logs"
+              >
+                <Server className="h-3 w-3 mr-1" />
+                Server
+              </Button>
+              <Button
+                size="sm"
+                variant={logViewMode === 'browser' ? 'secondary' : 'ghost'}
+                className="h-6 px-2 text-xs"
+                onClick={() => setLogViewMode('browser')}
+                data-testid="button-log-source-browser"
+                title="Show browser console logs"
+              >
+                <Monitor className="h-3 w-3 mr-1" />
+                Browser
+              </Button>
+            </div>
+            
+            <Badge variant="outline" className="text-xs">
+              {logViewMode === 'server' ? 'Server Logs' : 'Browser Logs'}
+            </Badge>
+            
             <span className="text-xs text-muted-foreground">
-              {currentLogs.length} logs • {isPaused ? 'Paused' : (isConnected ? 'Live' : 'Disconnected')}
+              {currentLogs.length} logs • {isPaused ? 'Paused' : (logViewMode === 'server' ? (isConnected ? 'Live' : 'Disconnected') : 'Capturing')}
             </span>
             {isSelectionMode && (
               <Badge variant="secondary" className="text-xs">
@@ -996,9 +1172,10 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
               size="sm"
               variant="ghost"
               onClick={handleLastLog}
+              disabled={logViewMode === 'browser'}
               className="h-6 w-6 p-0"
               data-testid="button-refresh"
-              title="Refresh logs"
+              title={logViewMode === 'browser' ? 'Refresh not available for browser logs' : 'Refresh server logs'}
             >
               <RotateCcw className="h-3 w-3" />
             </Button>
