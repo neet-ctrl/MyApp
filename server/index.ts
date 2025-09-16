@@ -81,28 +81,47 @@ app.use((req, res, next) => {
   // Run automatic setup first
   await autoSetup();
   
-  // Enhanced static file serving with detailed logging
+  // Enhanced static file serving with multiple fallback paths
   const finalCropperBuildPath = path.resolve('FinalCropper/build');
+  const publicFinalCropperPath = path.resolve('public/FinalCropper/public');
+  
   console.log(`📁 [${deploymentEnv}] Setting up FinalCropper/build static serving:`);
-  console.log(`   📂 Resolved path: ${finalCropperBuildPath}`);
-  console.log(`   ✅ Directory exists: ${fs.existsSync(finalCropperBuildPath)}`);
+  console.log(`   📂 Primary path: ${finalCropperBuildPath}`);
+  console.log(`   📂 Fallback path: ${publicFinalCropperPath}`);
+  console.log(`   ✅ Primary exists: ${fs.existsSync(finalCropperBuildPath)}`);
+  console.log(`   ✅ Fallback exists: ${fs.existsSync(publicFinalCropperPath)}`);
   
   app.use('/FinalCropper/build', (req, res, next) => {
     console.log(`📥 [${deploymentEnv}] Static request: /FinalCropper/build${req.path}`);
-    console.log(`   📍 Full path requested: ${req.originalUrl}`);
-    const filePath = path.join(finalCropperBuildPath, req.path);
-    const fallbackPath = path.join('public/FinalCropper/public', req.path);
     
-    console.log(`   🎯 Resolving to: ${filePath}`);
-    console.log(`   ✅ File exists: ${fs.existsSync(filePath)}`);
+    const primaryPath = path.join(finalCropperBuildPath, req.path);
+    const fallbackPath = path.join(publicFinalCropperPath, req.path);
     
-    // If primary build path doesn't exist, try fallback from public
-    if (!fs.existsSync(filePath) && fs.existsSync(fallbackPath)) {
-      console.log(`   🔄 Using fallback: ${fallbackPath}`);
+    console.log(`   🎯 Trying primary: ${primaryPath}`);
+    console.log(`   ✅ Primary exists: ${fs.existsSync(primaryPath)}`);
+    
+    // Try primary path first
+    if (fs.existsSync(primaryPath)) {
+      console.log(`   ✅ Serving from primary path`);
+      return res.sendFile(path.resolve(primaryPath));
+    }
+    
+    // Try fallback path
+    console.log(`   🔄 Trying fallback: ${fallbackPath}`);
+    console.log(`   ✅ Fallback exists: ${fs.existsSync(fallbackPath)}`);
+    
+    if (fs.existsSync(fallbackPath)) {
+      console.log(`   ✅ Serving from fallback path`);
       return res.sendFile(path.resolve(fallbackPath));
     }
+    
+    console.log(`   ❌ File not found in any location`);
     next();
-  }, express.static(finalCropperBuildPath));
+  });
+  
+  // Also serve static files from both directories
+  app.use('/FinalCropper/build', express.static(finalCropperBuildPath));
+  app.use('/FinalCropper/build', express.static(publicFinalCropperPath));
   
   await registerRoutes(app);
   const server = createServer(app);
@@ -135,20 +154,52 @@ app.use((req, res, next) => {
   const molviewUpload = multer({ dest: 'public/FinalCropper/public/molview/php/uploads/structures/' });
   const dbUpload = multer({ dest: 'public/FinalCropper/public/molview/php/uploads/' });
 
-  // Serve MolView static files with detailed logging
-  const molviewPath = path.resolve('public/FinalCropper/public/molview');
+  // Serve MolView static files with comprehensive fallback
+  const molviewPrimaryPath = path.resolve('public/FinalCropper/public/molview');
+  const molviewBuildPath = path.resolve('FinalCropper/build/molview');
+  const molviewPublicPath = path.resolve('FinalCropper/public/molview');
+  
   console.log(`📁 [${deploymentEnv}] Setting up MolView static serving:`);
-  console.log(`   📂 Resolved path: ${molviewPath}`);
-  console.log(`   ✅ Directory exists: ${fs.existsSync(molviewPath)}`);
+  console.log(`   📂 Primary path: ${molviewPrimaryPath}`);
+  console.log(`   📂 Build path: ${molviewBuildPath}`);
+  console.log(`   📂 Public path: ${molviewPublicPath}`);
+  console.log(`   ✅ Primary exists: ${fs.existsSync(molviewPrimaryPath)}`);
+  console.log(`   ✅ Build exists: ${fs.existsSync(molviewBuildPath)}`);
+  console.log(`   ✅ Public exists: ${fs.existsSync(molviewPublicPath)}`);
   
   app.use('/FinalCropper/public/molview', (req, res, next) => {
     console.log(`📥 [${deploymentEnv}] MolView static request: /FinalCropper/public/molview${req.path}`);
-    console.log(`   📍 Full path requested: ${req.originalUrl}`);
-    const filePath = path.join(molviewPath, req.path);
-    console.log(`   🎯 Resolving to: ${filePath}`);
-    console.log(`   ✅ File exists: ${fs.existsSync(filePath)}`);
+    
+    const primaryFile = path.join(molviewPrimaryPath, req.path);
+    const buildFile = path.join(molviewBuildPath, req.path);
+    const publicFile = path.join(molviewPublicPath, req.path);
+    
+    // Try primary location first
+    if (fs.existsSync(primaryFile)) {
+      console.log(`   ✅ Serving from primary: ${primaryFile}`);
+      return res.sendFile(path.resolve(primaryFile));
+    }
+    
+    // Try build location
+    if (fs.existsSync(buildFile)) {
+      console.log(`   ✅ Serving from build: ${buildFile}`);
+      return res.sendFile(path.resolve(buildFile));
+    }
+    
+    // Try public location
+    if (fs.existsSync(publicFile)) {
+      console.log(`   ✅ Serving from public: ${publicFile}`);
+      return res.sendFile(path.resolve(publicFile));
+    }
+    
+    console.log(`   ❌ MolView file not found: ${req.path}`);
     next();
-  }, express.static(molviewPath));
+  });
+  
+  // Add static middleware for all possible locations
+  app.use('/FinalCropper/public/molview', express.static(molviewPrimaryPath));
+  app.use('/FinalCropper/public/molview', express.static(molviewBuildPath));
+  app.use('/FinalCropper/public/molview', express.static(molviewPublicPath));
 
   // MolView PHP endpoint replacements
   app.get('/FinalCropper/public/molview/php/download_db.php', (req, res) => {
@@ -248,8 +299,7 @@ app.use((req, res, next) => {
   console.log(`   📁 Public directory path: ${publicPath}`);
   console.log(`   ✅ Public directory exists: ${fs.existsSync(publicPath)}`);
   
-  // CRITICAL FIX: Serve public directory in ALL environments, not just development
-  // This fixes the Molview button HTML display issue in Railway
+  // CRITICAL FIX: Serve public directory in ALL environments
   app.use('/public', (req, res, next) => {
     console.log(`📥 [${deploymentEnv}] Public static request: /public${req.path}`);
     const filePath = path.join(publicPath, req.path);
@@ -258,8 +308,12 @@ app.use((req, res, next) => {
     next();
   }, express.static(publicPath));
   
-  // Also serve root public files (for compatibility)
+  // Serve root public files (for compatibility)
   app.use(express.static(publicPath));
+  
+  // ADDITIONAL FIX: Serve FinalCropper files directly from public
+  app.use('/FinalCropper', express.static(path.join(publicPath, 'FinalCropper')));
+  
   console.log(`   ✅ [${deploymentEnv}] Public directory static serving enabled`);
   
   // importantly only setup vite in development and after
