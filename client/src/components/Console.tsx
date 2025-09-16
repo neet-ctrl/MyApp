@@ -512,31 +512,12 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   };
 
   // Delete saved log collection
-  const deleteSavedLogs = async (collectionId: string) => {
-    try {
-      const response = await fetch(`/api/console-logs/collections/${collectionId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        // Remove from local state only after successful deletion from database
-        setSavedLogCollections(prev => prev.filter(c => c.id !== collectionId));
-        toast({
-          title: 'Collection Deleted',
-          description: 'Log collection has been deleted successfully',
-        });
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to delete collection');
-      }
-    } catch (error) {
-      console.error('Failed to delete collection:', error);
-      toast({
-        title: 'Delete Failed',
-        description: error instanceof Error ? error.message : 'Failed to delete log collection',
-        variant: 'destructive',
-      });
-    }
+  const deleteSavedLogs = (collectionId: string) => {
+    setSavedLogCollections(prev => prev.filter(c => c.id !== collectionId));
+    toast({
+      title: 'Collection Deleted',
+      description: 'Log collection has been deleted',
+    });
   };
 
   // Export saved logs as formatted HTML (console-like appearance)
@@ -1019,30 +1000,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
 
   // Format timestamp for better readability
   const formatTimestamp = (timestamp: string) => {
-    try {
-      if (!timestamp) return 'Unknown time';
-      
-      const date = new Date(timestamp);
-      
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        console.warn('Invalid timestamp received:', timestamp);
-        return 'Invalid date';
-      }
-      
-      return date.toLocaleString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      });
-    } catch (error) {
-      console.error('Error formatting timestamp:', error, 'Original timestamp:', timestamp);
-      return 'Invalid date';
-    }
+    return new Date(timestamp).toLocaleString();
   };
 
   // Format log level with colors
