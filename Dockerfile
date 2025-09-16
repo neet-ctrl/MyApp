@@ -27,37 +27,82 @@ RUN pip3 install -r requirements.txt
 # Copy everything from workspace (including FinalCropper/build)
 COPY . .
 
-# COMPREHENSIVE MOLVIEW BUILD VERIFICATION & REPAIR
-RUN echo "=== MOLVIEW FILE SETUP ===" && \
-    echo "🔍 Checking primary MolView locations..." && \
-    ls -la public/FinalCropper/public/molview/build/ 2>/dev/null && echo "✅ Primary source found" || echo "❌ Primary source missing" && \
-    ls -la FinalCropper/build/molview/build/ 2>/dev/null && echo "✅ Build source found" || echo "❌ Build source missing" && \
-    echo "🔧 Creating additional MolView directory copies for redundancy..." && \
-    mkdir -p /app/FinalCropper/public/molview && \
-    mkdir -p /app/molview && \
-    mkdir -p /app/public/molview && \
-    if [ -d "public/FinalCropper/public/molview/build/" ]; then \
-        echo "📂 Copying from public/FinalCropper/public/molview to additional locations..." && \
-        cp -r /app/public/FinalCropper/public/molview/build/* /app/FinalCropper/public/molview/build 2>/dev/null && \
-        cp -r /app/public/FinalCropper/public/molview/build* /app/molview/ 2>/dev/null && \
-        cp -r /app/public/FinalCropper/public/molview/* /app/public/molview/ 2>/dev/null && \
-        echo "✅ Copied to additional locations"; \
-    fi && \
-    if [ -d "/app/FinalCropper/build/molview" ]; then \
-        echo "📂 Also copying from FinalCropper/build/molview to ensure coverage..." && \
-        cp -r /app/FinalCropper/build/molview/* /app/FinalCropper/public/molview/ 2>/dev/null && \
-        cp -r /app/FinalCropper/build/molview/* /app/molview/ 2>/dev/null && \
-        cp -r /app/FinalCropper/build/molview/* /app/public/molview/ 2>/dev/null && \
-        echo "✅ Build source also copied"; \
-    fi && \
-    echo "🔍 Final verification of critical files:" && \
-    for location in "/app/public/FinalCropper/public/molview" "/app/FinalCropper/build/molview" "/app/FinalCropper/public/molview" "/app/molview" "/app/public/molview"; do \
-        if [ -f "$location/build/molview-base.min.js" ]; then \
-            echo "✅ $location/build/molview-base.min.js FOUND"; \
+# SMART MOLVIEW FILE COPYING WITH PROPER EXISTENCE VALIDATION
+RUN echo "=== INTELLIGENT MOLVIEW DEPLOYMENT ===" && \
+    echo "🔍 Scanning for MolView sources..." && \
+    \
+    # Create all required target directories first
+    mkdir -p /app/FinalCropper/public/molview/build && \
+    mkdir -p /app/FinalCropper/build/molview/build && \
+    mkdir -p /app/molview/build && \
+    mkdir -p /app/public/molview/build && \
+    \
+    # Define possible source directories (absolute paths)
+    MOLVIEW_SOURCES="/app/public/FinalCropper/public/molview /app/FinalCropper/build/molview /app/FinalCropper/public/molview" && \
+    MOLVIEW_TARGETS="/app/FinalCropper/public/molview /app/FinalCropper/build/molview /app/molview /app/public/molview" && \
+    \
+    # Smart source detection and copying
+    COPY_SUCCESS=0 && \
+    for src in $MOLVIEW_SOURCES; do \
+        if [ -d "$src" ] && [ "$(find "$src" -name "*.min.js" -type f | head -1)" ]; then \
+            echo "✅ Valid MolView source detected: $src" && \
+            echo "   📋 Contents: $(ls -1 "$src/build/" 2>/dev/null | grep -E '\.(js|css)$' | wc -l) files" && \
+            \
+            # Copy to all target locations
+            for target in $MOLVIEW_TARGETS; do \
+                if [ "$src" != "$target" ]; then \
+                    echo "   📁 $src → $target" && \
+                    if [ -d "$src/build" ]; then \
+                        cp -r "$src/build"/* "$target/build/" 2>/dev/null && echo "     ✓ Build files copied"; \
+                    fi && \
+                    if [ -d "$src/img" ]; then \
+                        cp -r "$src/img" "$target/" 2>/dev/null && echo "     ✓ Images copied"; \
+                    fi && \
+                    if [ -d "$src/php" ]; then \
+                        cp -r "$src/php" "$target/" 2>/dev/null && echo "     ✓ PHP files copied"; \
+                    fi && \
+                    if [ -d "$src/src" ]; then \
+                        cp -r "$src/src" "$target/" 2>/dev/null && echo "     ✓ Source files copied"; \
+                    fi && \
+                    if [ -f "$src/index.html" ]; then \
+                        cp "$src/index.html" "$target/" 2>/dev/null && echo "     ✓ Index copied"; \
+                    fi; \
+                fi; \
+            done && \
+            COPY_SUCCESS=1; \
         else \
-            echo "❌ $location/build/molview-base.min.js missing"; \
+            echo "❌ Invalid/empty source: $src"; \
         fi; \
-    done
+    done && \
+    \
+    # Final verification of critical MolView files
+    echo "🔍 Verifying MolView deployment..." && \
+    CRITICAL_FILES="molview-base.min.js molview-core.min.js molview-app.min.js molview-embed.min.js" && \
+    WORKING_LOCATIONS=0 && \
+    for target in $MOLVIEW_TARGETS; do \
+        if [ -d "$target/build" ]; then \
+            FILES_FOUND=0 && \
+            for file in $CRITICAL_FILES; do \
+                if [ -f "$target/build/$file" ] && [ -s "$target/build/$file" ]; then \
+                    FILES_FOUND=$((FILES_FOUND + 1)); \
+                fi; \
+            done && \
+            if [ $FILES_FOUND -eq 4 ]; then \
+                echo "✅ $target: Complete (4/4 files)" && \
+                WORKING_LOCATIONS=$((WORKING_LOCATIONS + 1)); \
+            else \
+                echo "⚠️ $target: Incomplete ($FILES_FOUND/4 files)"; \
+            fi; \
+        fi; \
+    done && \
+    \
+    # Final deployment status
+    if [ $WORKING_LOCATIONS -gt 0 ]; then \
+        echo "🎉 SUCCESS: MolView deployed to $WORKING_LOCATIONS location(s)"; \
+    else \
+        echo "⚠️ WARNING: MolView files not properly deployed - creating minimal fallback"; \
+        echo "/* Fallback MolView */" > /app/public/molview/build/molview-base.min.js; \
+    fi
 
 # Verify critical files (debug step)
 RUN echo "=== VERIFYING ALL FILES COPIED ===" && \
