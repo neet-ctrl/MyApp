@@ -505,14 +505,21 @@ export class DatabaseLiveCloningStorage implements IStorage {
   async deleteLogCollection(id: number): Promise<boolean> {
     try {
       const { logCollections } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
       
       const result = await db.delete(logCollections)
         .where(eq(logCollections.id, id));
-      return (result.rowCount || 0) > 0;
+      
+      const success = (result.rowCount || 0) > 0;
+      console.log(`Database delete result for log collection ${id}:`, { rowCount: result.rowCount, success });
+      
+      return success;
     } catch (error) {
-      console.log('Database not available, using memory storage for log collection');
+      console.error('Database error in deleteLogCollection:', error);
       // Fallback to memory storage
-      return this.logCollections.delete(id);
+      const success = this.logCollections.delete(id);
+      console.log(`Memory storage delete result for log collection ${id}:`, success);
+      return success;
     }
   }
 }
