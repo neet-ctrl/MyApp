@@ -30,16 +30,16 @@ COPY . .
 # COMPREHENSIVE MOLVIEW BUILD VERIFICATION & REPAIR
 RUN echo "=== MOLVIEW FILE SETUP ===" && \
     echo "🔍 Checking primary MolView locations..." && \
-    ls -la /app/public/FinalCropper/public/molview/build/ 2>/dev/null && echo "✅ Primary source found" || echo "❌ Primary source missing" && \
-    ls -la /app/FinalCropper/build/molview/build/ 2>/dev/null && echo "✅ Build source found" || echo "❌ Build source missing" && \
+    ls -la public/FinalCropper/public/molview/build/ 2>/dev/null && echo "✅ Primary source found" || echo "❌ Primary source missing" && \
+    ls -la FinalCropper/build/molview/build/ 2>/dev/null && echo "✅ Build source found" || echo "❌ Build source missing" && \
     echo "🔧 Creating additional MolView directory copies for redundancy..." && \
     mkdir -p /app/FinalCropper/public/molview && \
     mkdir -p /app/molview && \
     mkdir -p /app/public/molview && \
-    if [ -d "/app/public/FinalCropper/public/molview" ]; then \
+    if [ -d "public/FinalCropper/public/molview/build/" ]; then \
         echo "📂 Copying from public/FinalCropper/public/molview to additional locations..." && \
-        cp -r /app/public/FinalCropper/public/molview/* /app/FinalCropper/public/molview/ 2>/dev/null && \
-        cp -r /app/public/FinalCropper/public/molview/* /app/molview/ 2>/dev/null && \
+        cp -r /app/public/FinalCropper/public/molview/build/* /app/FinalCropper/public/molview/build 2>/dev/null && \
+        cp -r /app/public/FinalCropper/public/molview/build* /app/molview/ 2>/dev/null && \
         cp -r /app/public/FinalCropper/public/molview/* /app/public/molview/ 2>/dev/null && \
         echo "✅ Copied to additional locations"; \
     fi && \
