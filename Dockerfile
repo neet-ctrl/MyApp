@@ -27,6 +27,11 @@ RUN pip3 install -r requirements.txt
 # Copy EVERYTHING from workspace exactly as it is
 COPY . .
 
+# Build the FinalCropper React app for production
+WORKDIR /app/FinalCropper
+RUN npm install && npm run build
+WORKDIR /app
+
 # Verify critical files (debug step)
 RUN echo "=== VERIFYING ALL FILES COPIED ===" && \
     ls -la /app/tmp/ && \
@@ -35,6 +40,9 @@ RUN echo "=== VERIFYING ALL FILES COPIED ===" && \
     echo "=== Config files ===" && \
     ls -la /app/config/ 2>/dev/null || echo "config missing" && \
     ls -la /app/bot_source/ 2>/dev/null || echo "bot_source missing" && \
+    echo "=== FinalCropper BUILD VERIFICATION ===" && \
+    ls -la /app/FinalCropper/build/ && \
+    ls -la /app/FinalCropper/build/index.html && \
     echo "=== END VERIFICATION ==="
 
 # Set production environment with all hardcoded values from workspace
