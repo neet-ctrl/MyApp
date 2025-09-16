@@ -1,0 +1,49 @@
+[ 3/15] WORKDIR /app cached
+0ms
+
+[ 2/15] RUN apt-get update && apt-get install -y     python3     python3-pip     python3-dev     build-essential     ffmpeg     && rm -rf /var/lib/apt/lists/* cached
+0ms
+
+[ 6/15] RUN npx update-browserslist-db@latest --force cached
+0ms
+
+[ 5/15] RUN npm install cached
+0ms
+
+[ 8/15] RUN pip3 install -r requirements.txt cached
+0ms
+
+[ 9/15] COPY . .
+886ms
+
+1
+RUN echo "=== COMPREHENSIVE MOLVIEW FILE VERIFICATION & FIX ===" &&     echo "🔍 Checking all MolView locations..." &&     echo "📁 Primary source check:" &&     ls -la /app/public/FinalCropper/public/molview/build/ 2>/dev/null || echo "❌ Primary source missing" &&     echo "📁 Build target check:" &&     ls -la /app/FinalCropper/build/molview/build/ 2>/dev/null || echo "❌ Build target missing" &&     echo "📁 Public target check:" &&     ls -la /app/FinalCropper/public/molview/build/ 2>/dev/null || echo "❌ Public target missing" &&     echo "🔧 Creating all required directories..." &&     mkdir -p /app/FinalCropper/build/molview/build &&     mkdir -p /app/FinalCropper/public/molview/build &&     mkdir -p /app/molview/build &&     mkdir -p /app/public/molview/build &&     echo "🔄 Copying MolView files to ALL possible locations..." &&     if [ -d "/app/public/FinalCropper/public/molview" ]; then         echo "✅ Copying to FinalCropper/build/molview..." &&         cp -r /app/public/FinalCropper/public/molview/* /app/FinalCropper/build/molview/ 2>/dev/null &&         echo "✅ Copying to FinalCropper/public/molview..." &&         cp -r /app/public/FinalCropper/public/molview/* /app/FinalCropper/public/molview/ 2>/dev/null &&         echo "✅ Copying to root molview..." &&         cp -r /app/public/FinalCropper/public/molview/* /app/molview/ 2>/dev/null &&         echo "✅ Copying to public/molview..." &&         cp -r /app/public/FinalCropper/public/molview/* /app/public/molview/ 2>/dev/null;     fi &&     echo "🔍 Final verification - checking critical MolView files:" &&     for location in "/app/public/FinalCropper/public/molview" "/app/FinalCropper/build/molview" "/app/FinalCropper/public/molview" "/app/molview" "/app/public/molview"; do         echo "📂 Checking $location:";         ls -la "$location/build/" 2>/dev/null | head -10 || echo "❌ No build directory";         if [ -f "$location/build/molview-app.min.js" ]; then echo "✅ molview-app.min.js found"; else echo "❌ molview-app.min.js missing"; fi;         if [ -f "$location/build/molview-app.min.css" ]; then echo "✅ molview-app.min.css found"; else echo "❌ molview-app.min.css missing"; fi;         if [ -f "$location/build/molview-base.min.js" ]; then echo "✅ molview-base.min.js found"; else echo "❌ molview-base.min.js missing"; fi;         if [ -f "$location/build/molview-datasets.min.js" ]; then echo "✅ molview-datasets.min.js found"; else echo "❌ molview-datasets.min.js missing"; fi;     done &&     echo "🔍 Verifying file sizes (should not be 0 bytes):" &&     for location in "/app/public/FinalCropper/public/molview" "/app/FinalCropper/build/molview" "/app/FinalCropper/public/molview"; do         if [ -d "$location/build" ]; then             echo "📏 Checking file sizes in $location/build/";             ls -lah "$location/build/"*.min.* 2>/dev/null || echo "No min files found";         fi;     done
+311ms
+No min files found
+
+1
+RUN echo "=== VERIFYING ALL FILES COPIED ===" &&     ls -la /app/tmp/ 2>/dev/null || echo "tmp missing" &&     echo "=== Settings file ===" &&     ls -la /app/config/live_cloning_persistent_settings.json 2>/dev/null || echo "settings missing" &&     echo "=== Config files ===" &&     ls -la /app/config/ 2>/dev/null || echo "config missing" &&     ls -la /app/bot_source/ 2>/dev/null || echo "bot_source missing" &&     echo "=== FinalCropper BUILD VERIFICATION ===" &&     ls -la /app/FinalCropper/build/ &&     cat /app/FinalCropper/build/index.html | head -20 &&     echo "=== FinalCropper DIRECTORY CHECK ===" &&     ls -la /app/FinalCropper/ 2>/dev/null || echo "FinalCropper missing" &&     echo "=== END VERIFICATION ==="
+189ms
+=== END VERIFICATION ===
+
+1
+RUN mkdir -p /app/downloads/completed              /app/downloads/youtube/audio              /app/downloads/youtube/videos              /app/downloads/tmp              /app/downloads/links              /app/sessions              /app/logs              /app/tmp/config              /app/tmp/downloads/tmp              /app/config              /app/config/locale              /app/bot_source/live-cloning              /app/bot_source/live-cloning/plugins              /app/bot_source/live-cloning/plugins/jsons              /app/bot_source/python-copier              /app/Zip     && chmod -R 777 /app/downloads     && chmod -R 777 /app/sessions     && chmod -R 777 /app/logs     && chmod -R 777 /app/tmp     && chmod -R 777 /app/config     && chmod -R 777 /app/bot_source     && chmod -R 777 /app/Zip
+193ms
+
+1
+RUN if [ -f /app/bot_source/live-cloning/requirements.txt ]; then pip3 install -r /app/bot_source/live-cloning/requirements.txt; fi
+1s
+Requirement already satisfied: pyasn1>=0.1.3 in /usr/local/lib/python3.9/dist-packages (from rsa->telethon>=1.41.0->-r /app/bot_source/live-cloning/requirements.txt (line 1)) (0.6.1)
+
+1
+RUN if [ -f /app/bot_source/python-copier/requirements.txt ]; then pip3 install -r /app/bot_source/python-copier/requirements.txt; fi
+5s
+Successfully installed Pillow-8.0.1 Telethon-1.17.5 cffi-1.14.4 cryptg-0.2.post2 pyasn1-0.4.8 pycparser-2.20 python-dotenv-0.15.0 rsa-4.6
+
+1
+RUN pip3 install "telethon>=1.41.0" --upgrade --no-cache-dir
+2s
+Successfully installed telethon-1.41.2
+
+auth
+sharing credentials for production-asia-southeast1-eqsg3a.railway-registry.com
