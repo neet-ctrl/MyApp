@@ -1,0 +1,490 @@
+[2025-09-16 03:36:42] INFO    ✅ Database connection verified
+[2025-09-16 03:36:42] INFO    🔧 Ensuring text_memos schema is up to date...
+[2025-09-16 03:36:43] INFO    ✅ text_memos schema is ready
+[2025-09-16 03:36:43] INFO    ✅ All directories created/verified
+[2025-09-16 03:36:43] INFO    ✅ All required packages are available
+[2025-09-16 03:36:43] DEBUG   ✅ Node.js version: OK
+[2025-09-16 03:36:43] DEBUG   ✅ File system write access: OK
+[2025-09-16 03:36:43] DEBUG   ✅ Downloads directory: OK
+[2025-09-16 03:36:43] INFO    ✅ Environment verification completed
+[2025-09-16 03:36:43] INFO    ✅ Automatic setup completed successfully
+📁 [RAILWAY_PRODUCTION] Setting up FinalCropper/build static serving:
+   📂 Resolved path: /app/FinalCropper/build
+   ✅ Directory exists: false
+📁 [RAILWAY_PRODUCTION] Setting up MolView static serving:
+   📂 Resolved path: /app/public/FinalCropper/public/molview
+   ✅ Directory exists: true
+
+📂 [RAILWAY_PRODUCTION] Static File Serving Configuration:
+   🔧 app.get("env"): development
+   🔧 NODE_ENV: development
+   📁 Public directory path: /app/public
+   ✅ Public directory exists: true
+   ✅ [RAILWAY_PRODUCTION] Public directory static serving enabled
+   🔧 [RAILWAY_PRODUCTION] Setting up Vite development server
+3:36:43 AM [express] serving on port 5000
+🚀 Starting Live Cloning service for 24/7 always-running architecture...
+📋 Loaded persistent settings for auto-start: {
+  botEnabled: true,
+  filterWords: true,
+  addSignature: true,
+  signature: 'Final testbbb',
+  sessionString: '1BVtsOMQBu6wplr-ZbfL7BQSkwtsPGOnN-Oqnyv6IjoOX5oAI2UKYcPenVulY5ZOXU68KgIit3nSz306ooXKlQsT_AmnaN5QOU1w0dNmAHqS_MZVmx-3e0KR88Gfh25GnLf60IVvYVcX2cwn8azW-6hvydVQ-IpZpRc8nT_i3N7PeS1YnI0wvYDT1L3TN8hYdI5-KmpBRARKbAAtRqHOcepoclRHn6CZnyfOoJ3-sGUZmHuduj3bbcdGTF-MtpMdpVek6HRr6Ije5AlSrmYyZvNXS4U9w_f2zwSHVEUNe1_Eet5inT9cQT_7EGXn45YKerl2KIXeKviE9juH-ZTVzjg3_M01DdmI='
+}
+🚂 Using Railway-specific session string (avoiding IP conflict)
+📎 Loaded 1 entity links from Python config.json
+📎 Total loaded for auto-start: 1 entity links and 0 word filters
+🔄 Starting Live Cloning Python process for 24/7 operation...
+✅ Live Cloning 24/7 service started successfully!
+📊 Running with 1 entity links and bot enabled: true
+🌟 Service will run continuously until server shutdown
+🔄 Live Cloning (24/7): [2025-09-16 03:36:45,998] DEBUG: Using selector: EpollSelector
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,002] INFO: 
+================================================================================
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,002] INFO:                               SYSTEM INFORMATION                              
+[2025-09-16 03:36:46,002] INFO: ================================================================================
+[2025-09-16 03:36:46,002] INFO: Python Version: 3.9.2
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,010] INFO: Platform: Linux-6.12.12+bpo-cloud-amd64-x86_64-with-glibc2.31
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,017] INFO: Architecture: ('64bit', '')
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,018] INFO: Machine: x86_64
+[2025-09-16 03:36:46,018] INFO: Node: a11f1ce9354f
+[2025-09-16 03:36:46,018] INFO: System: Linux
+[2025-09-16 03:36:46,018] INFO: Processor: 
+[2025-09-16 03:36:46,018] INFO: Current Working Directory: /app/bot_source/live-cloning
+[2025-09-16 03:36:46,018] INFO: Script Location: /app/bot_source/live-cloning/enhanced_logger.py
+[2025-09-16 03:36:46,018] INFO: Python Executable: /usr/bin/python3
+[2025-09-16 03:36:46,018] INFO: 
+================================================================================
+[2025-09-16 03:36:46,018] INFO:                             ENVIRONMENT VARIABLES                             
+[2025-09-16 03:36:46,018] INFO: ================================================================================
+[2025-09-16 03:36:46,018] INFO: TG_API_ID: 28403662
+[2025-09-16 03:36:46,018] INFO: TG_API_HASH: 079509d4...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,018] INFO: LIVE_CLONING_INSTANCE_ID: live_cloning_auto_1757993803364
+[2025-09-16 03:36:46,018] INFO: NODE_ENV: development
+[2025-09-16 03:36:46,018] INFO: PATH: /app/node_modules/.bin:/node_modules/.bin:/usr/local/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+[2025-09-16 03:36:46,018] INFO: 
+================================================================================
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,018] INFO:                             CONFIGURATION SOURCES                             
+[2025-09-16 03:36:46,018] INFO: ================================================================================
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,018] INFO: Config File: config.json
+[2025-09-16 03:36:46,018] INFO:   Full Path: /app/bot_source/live-cloning/config.json
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,018] INFO:   Exists: True
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,019] INFO:   Content Keys: ['api_id', 'api_hash', 'bot_enabled', 'sudo', 'filter_words', 'add_signature', 'signature', 'entities', 'filters']
+[2025-09-16 03:36:46,019] INFO:   API ID Source: 28403662
+[2025-09-16 03:36:46,019] INFO:   API Hash Source: 079509d4...
+[2025-09-16 03:36:46,019] INFO:   Entity Links Count: 1
+[2025-09-16 03:36:46,019] INFO:   Entity Links: [[4762322172, 4679407328]]
+[2025-09-16 03:36:46,019] INFO: 
+[2025-09-16 03:36:46,019] INFO: Config File: ../config/live_cloning_persistent_settings.json
+[2025-09-16 03:36:46,019] INFO:   Full Path: /app/bot_source/config/live_cloning_persistent_settings.json
+[2025-09-16 03:36:46,019] INFO:   Exists: False
+[2025-09-16 03:36:46,019] INFO: 
+[2025-09-16 03:36:46,019] INFO: Config File: ../config/bot-config.json
+[2025-09-16 03:36:46,019] INFO:   Full Path: /app/bot_source/config/bot-config.json
+[2025-09-16 03:36:46,019] INFO:   Exists: False
+[2025-09-16 03:36:46,019] INFO: 
+[2025-09-16 03:36:46,019] INFO: Config File: plugins/jsons/config.json
+[2025-09-16 03:36:46,019] INFO:   Full Path: /app/bot_source/live-cloning/plugins/jsons/config.json
+[2025-09-16 03:36:46,019] INFO:   Exists: True
+[2025-09-16 03:36:46,019] INFO:   Content Keys: ['api_id', 'api_hash', 'bot_enabled', 'sudo', 'filter_words', 'add_signature', 'signature']
+[2025-09-16 03:36:46,019] INFO:   API ID Source: 
+[2025-09-16 03:36:46,019] INFO:   API Hash Source: ...
+[2025-09-16 03:36:46,019] INFO: 
+[2025-09-16 03:36:46,019] INFO: Config File: plugins/jsons/entities.json
+[2025-09-16 03:36:46,019] INFO:   Full Path: /app/bot_source/live-cloning/plugins/jsons/entities.json
+[2025-09-16 03:36:46,019] INFO:   Exists: True
+[2025-09-16 03:36:46,019] INFO:   Content Keys: ['entities']
+[2025-09-16 03:36:46,019] INFO:   Entity Links Count: 0
+[2025-09-16 03:36:46,019] INFO:   Entity Links: []
+[2025-09-16 03:36:46,019] INFO: 
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,020] INFO: 🚀 DIRECT AUTO-START - NO VALIDATION REQUIRED!
+[2025-09-16 03:36:46,020] INFO: Connected Account: 28403662
+[2025-09-16 03:36:46,020] INFO: Entity Links: 1
+[2025-09-16 03:36:46,020] INFO: 🚀 STARTING LIVE CLONING - AUTO-START GUARANTEED!
+[2025-09-16 03:36:46,021] INFO: 
+================================================================================
+[2025-09-16 03:36:46,021] INFO:                                CLIENT CREATION                                
+[2025-09-16 03:36:46,021] INFO: ================================================================================
+[2025-09-16 03:36:46,021] INFO: Creating TelegramClient with API ID: 28403662
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,021] INFO: API Hash: 079509d4...
+[2025-09-16 03:36:46,021] INFO: Session String Length: 353
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,022] INFO: Connecting to 91.108.56.196:443/TcpFull...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,023] DEBUG: Connection attempt 1...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,025] DEBUG: Connection success!
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,025] DEBUG: Starting send loop
+[2025-09-16 03:36:46,025] DEBUG: Starting receive loop
+[2025-09-16 03:36:46,025] INFO: Connection to 91.108.56.196:443/TcpFull complete!
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,025] DEBUG: Waiting for messages to send...
+[2025-09-16 03:36:46,025] DEBUG: Assigned msg_id = 7550525903443068536 to InvokeWithLayerRequest (7f1b883211f0)
+[2025-09-16 03:36:46,025] DEBUG: Encrypting 1 message(s) in 84 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,025] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,025] DEBUG: Waiting for messages to send...
+[2025-09-16 03:36:46,025] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,029] DEBUG: Handling bad salt for message 7550525903443068536
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,029] DEBUG: 1 message(s) will be resent
+[2025-09-16 03:36:46,029] DEBUG: Receiving items from the network...
+[2025-09-16 03:36:46,029] DEBUG: Assigned msg_id = 7550525903458072692 to InvokeWithLayerRequest (7f1b883211f0)
+[2025-09-16 03:36:46,029] DEBUG: Encrypting 1 message(s) in 84 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,029] DEBUG: Encrypted messages put in a queue to be sent
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,029] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,029] DEBUG: Assigned msg_id = 7550525903459159884 to MsgsAck (7f1b88321730)
+[2025-09-16 03:36:46,029] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,029] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,029] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,032] DEBUG: Handling container
+[2025-09-16 03:36:46,032] DEBUG: Handling new session created
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,032] DEBUG: Handling acknowledge for [7550525903458072692]
+[2025-09-16 03:36:46,032] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,041] DEBUG: Handling RPC result for message 7550525903458072692
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,042] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,042] DEBUG: Assigned msg_id = 7550525903510078460 to GetUsersRequest (7f1b88321b50)
+[2025-09-16 03:36:46,042] DEBUG: Encrypting 1 message(s) in 32 bytes for sending
+[2025-09-16 03:36:46,042] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,042] DEBUG: Waiting for messages to send...
+[2025-09-16 03:36:46,042] DEBUG: Assigned msg_id = 7550525903510829956 to MsgsAck (7f1b88321250)
+[2025-09-16 03:36:46,042] DEBUG: Encrypting 1 message(s) in 60 bytes for sending
+[2025-09-16 03:36:46,042] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,042] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,076] DEBUG: Handling RPC result for message 7550525903510078460
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,076] DEBUG: Receiving items from the network...
+[2025-09-16 03:36:46,076] DEBUG: Assigned msg_id = 7550525903647588760 to GetStateRequest (7f1b88321b50)
+[2025-09-16 03:36:46,076] DEBUG: Encrypting 1 message(s) in 20 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,076] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,076] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,076] DEBUG: Assigned msg_id = 7550525903648372680 to MsgsAck (7f1b883ffd90)
+[2025-09-16 03:36:46,076] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,077] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,077] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,089] DEBUG: Handling RPC result for message 7550525903647588760
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,089] DEBUG: Receiving items from the network...
+[2025-09-16 03:36:46,089] DEBUG: Assigned msg_id = 7550525903698846848 to GetDifferenceRequest (7f1b88321b50)
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,089] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,089] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,089] DEBUG: Waiting for messages to send...
+[2025-09-16 03:36:46,089] DEBUG: Assigned msg_id = 7550525903700067552 to MsgsAck (7f1b883218b0)
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,089] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,090] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,090] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,103] DEBUG: Handling RPC result for message 7550525903698846848
+[2025-09-16 03:36:46,103] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,103] DEBUG: Assigned msg_id = 7550525903756003412 to GetUsersRequest (7f1b88321cd0)
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,103] DEBUG: Encrypting 1 message(s) in 32 bytes for sending
+[2025-09-16 03:36:46,104] DEBUG: Encrypted messages put in a queue to be sent
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,104] DEBUG: Waiting for messages to send...
+[2025-09-16 03:36:46,104] DEBUG: Assigned msg_id = 7550525903757021936 to MsgsAck (7f1b88321910)
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,104] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,104] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,104] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,157] DEBUG: Handling RPC result for message 7550525903756003412
+[2025-09-16 03:36:46,157] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,157] DEBUG: Assigned msg_id = 7550525903972103152 to GetUsersRequest (7f1b88321d00)
+[2025-09-16 03:36:46,157] DEBUG: Encrypting 1 message(s) in 32 bytes for sending
+[2025-09-16 03:36:46,158] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,158] DEBUG: Waiting for messages to send...
+[2025-09-16 03:36:46,158] DEBUG: Assigned msg_id = 7550525903973346740 to MsgsAck (7f1b88321d30)
+[2025-09-16 03:36:46,158] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,158] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,158] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,165] DEBUG: Handling RPC result for message 7550525903972103152
+[2025-09-16 03:36:46,165] DEBUG: Receiving items from the network...
+[2025-09-16 03:36:46,165] INFO: 
+================================================================================
+[2025-09-16 03:36:46,166] INFO:                           CLIENT CONNECTION DETAILS                           
+[2025-09-16 03:36:46,166] INFO: ================================================================================
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,188] INFO: Connected User ID: 6956029558
+[2025-09-16 03:36:46,188] INFO: Connected Username: Ashaktihvc
+[2025-09-16 03:36:46,188] INFO: Connected First Name: Shakti_Kumar''''00012905611''''
+[2025-09-16 03:36:46,188] INFO: Connected Last Name: 
+[2025-09-16 03:36:46,188] INFO: Client Connection State: True
+[2025-09-16 03:36:46,189] INFO: Client DC ID: Unknown
+[2025-09-16 03:36:46,189] INFO: Client Session: StringSession
+[2025-09-16 03:36:46,189] INFO: Connected as: Shakti_Kumar''''00012905611'''' (@Ashaktihvc) - ID: 6956029558
+[2025-09-16 03:36:46,189] INFO: 🔄 Syncing dialogs to load entities...
+[2025-09-16 03:36:46,189] DEBUG: Assigned msg_id = 7550525904098786384 to GetDialogsRequest (7f1b883212b0)
+[2025-09-16 03:36:46,189] DEBUG: Encrypting 1 message(s) in 48 bytes for sending
+[2025-09-16 03:36:46,189] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,189] DEBUG: Waiting for messages to send...
+[2025-09-16 03:36:46,189] DEBUG: Assigned msg_id = 7550525904100017580 to MsgsAck (7f1b88321700)
+[2025-09-16 03:36:46,190] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,257] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,257] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,409] DEBUG: Handling RPC result for message 7550525904098786384
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,461] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,463] INFO: ✅ Successfully synced 57 chats - entities are now available
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,463] INFO: 
+================================================================================
+[2025-09-16 03:36:46,463] INFO:                            DIALOGS SYNCHRONIZATION                            
+[2025-09-16 03:36:46,463] INFO: ================================================================================
+[2025-09-16 03:36:46,463] INFO: Total Dialogs Synced: 57
+[2025-09-16 03:36:46,463] INFO: Dialog Details:
+[2025-09-16 03:36:46,463] INFO:   1. 📽 HD Movies (ID: 2004217231, Type: Channel)
+[2025-09-16 03:36:46,463] INFO:   2. Pw Real Test Series 2026 (ID: 1992859101, Type: Channel)
+[2025-09-16 03:36:46,463] INFO:   3. PW AITS NEET TEST SERIES 2026 (ID: 2186541033, Type: Channel)
+[2025-09-16 03:36:46,463] INFO:   4. Testing (ID: 8154976061, Type: User)
+[2025-09-16 03:36:46,463] INFO:   5. Puppet 3 (ID: 4679407328, Type: Chat)
+[2025-09-16 03:36:46,463] INFO:   6. Tele (ID: 4762322172, Type: Chat)
+[2025-09-16 03:36:46,463] INFO:   7. Shakti_Kumar''''00012905611'''' (ID: 6956029558, Type: User)
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,463] INFO:   8. Telegram (ID: 777000, Type: User)
+[2025-09-16 03:36:46,463] INFO:   9. PBCF1_2025 (ID: 2526219042, Type: Channel)
+[2025-09-16 03:36:46,464] INFO:   10. 12th Zoology 🏋️‍♀️ (ID: 7634388518, Type: User)
+[2025-09-16 03:36:46,464] INFO:   ... and 47 more dialogs
+[2025-09-16 03:36:46,464] INFO: 
+================================================================================
+[2025-09-16 03:36:46,464] INFO:                           ENTITY RESOLUTION PROCESS                           
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,464] INFO: ================================================================================
+[2025-09-16 03:36:46,464] INFO: Total Entity Pairs to Process: 1
+[2025-09-16 03:36:46,464] INFO: Unique Entity IDs: [4679407328, 4762322172]
+[2025-09-16 03:36:46,464] INFO: Entity ID: 4679407328
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,464] INFO:   Type: <class 'int'>
+[2025-09-16 03:36:46,464] INFO:   Value Range Check: False
+[2025-09-16 03:36:46,464] INFO:   Is 32-bit safe: False
+[2025-09-16 03:36:46,464] INFO:   Is 64-bit: True
+[2025-09-16 03:36:46,464] INFO:   Binary: 0b100010110111010100001011011100000
+[2025-09-16 03:36:46,464] INFO:   Hex: 0x116ea16e0
+[2025-09-16 03:36:46,464] INFO: Entity ID: 4762322172
+[2025-09-16 03:36:46,464] INFO:   Type: <class 'int'>
+[2025-09-16 03:36:46,464] INFO:   Value Range Check: False
+[2025-09-16 03:36:46,464] INFO:   Is 32-bit safe: False
+[2025-09-16 03:36:46,464] INFO:   Is 64-bit: True
+[2025-09-16 03:36:46,464] INFO:   Binary: 0b100011011110110110100010011111100
+[2025-09-16 03:36:46,464] INFO:   Hex: 0x11bdb44fc
+[2025-09-16 03:36:46,464] INFO: 🔍 Pre-resolving 1 entity link pairs...
+[2025-09-16 03:36:46,464] DEBUG: Assigned msg_id = 7550525905199287448 to GetChatsRequest (7f1b88321d00)
+[2025-09-16 03:36:46,464] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 03:36:46,464] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,464] DEBUG: Waiting for messages to send...
+[2025-09-16 03:36:46,464] DEBUG: Assigned msg_id = 7550525905200185808 to MsgsAck (7f1b883411c0)
+[2025-09-16 03:36:46,464] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 03:36:46,465] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,465] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,475] DEBUG: Handling RPC result for message 7550525905199287448
+[2025-09-16 03:36:46,476] DEBUG: Receiving items from the network...
+[2025-09-16 03:36:46,476] INFO: ✅ Resolved entity: 4679407328 -> Puppet 3
+[2025-09-16 03:36:46,476] INFO: Resolving Entity 4679407328:
+[2025-09-16 03:36:46,476] INFO:   Success: True
+[2025-09-16 03:36:46,476] INFO:   Name: Puppet 3
+[2025-09-16 03:36:46,476] INFO:   Type: Chat
+[2025-09-16 03:36:46,476] INFO:   ID: 4679407328
+[2025-09-16 03:36:46,476] DEBUG: Assigned msg_id = 7550525905247015032 to GetChatsRequest (7f1b883413a0)
+[2025-09-16 03:36:46,476] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 03:36:46,476] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,476] DEBUG: Waiting for messages to send...
+[2025-09-16 03:36:46,476] DEBUG: Assigned msg_id = 7550525905247821840 to MsgsAck (7f1b882898e0)
+[2025-09-16 03:36:46,476] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 03:36:46,476] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,477] DEBUG: Waiting for messages to send...
+[2025-09-16 03:36:46,488] DEBUG: Handling RPC result for message 7550525905247015032
+[2025-09-16 03:36:46,489] DEBUG: Receiving items from the network...
+[2025-09-16 03:36:46,489] INFO: ✅ Resolved entity: 4762322172 -> Tele
+[2025-09-16 03:36:46,489] INFO: Resolving Entity 4762322172:
+[2025-09-16 03:36:46,489] INFO:   Success: True
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,489] INFO:   Name: Tele
+[2025-09-16 03:36:46,489] INFO:   Type: Chat
+[2025-09-16 03:36:46,489] INFO:   ID: 4762322172
+[2025-09-16 03:36:46,489] INFO: ✅ Pre-resolution complete: 2/2 entities resolved
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,490] INFO: LIVE CLONING BOT STARTED! 🚀
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,491] DEBUG: Assigned msg_id = 7550525905305836708 to GetStateRequest (7f1b882d50a0)
+[2025-09-16 03:36:46,491] DEBUG: Encrypting 1 message(s) in 20 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,491] DEBUG: Encrypted messages put in a queue to be sent
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,491] DEBUG: Waiting for messages to send...
+[2025-09-16 03:36:46,491] DEBUG: Assigned msg_id = 7550525905306705508 to MsgsAck (7f1b882d53d0)
+[2025-09-16 03:36:46,491] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,491] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:36:46,491] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,500] DEBUG: Handling RPC result for message 7550525905305836708
+
+🔄 Live Cloning (24/7): [2025-09-16 03:36:46,500] DEBUG: Receiving items from the network...
+
+3:36:52 AM [express] GET /api/live-cloning/status 200 in 5ms :: {"status":{"running":true,"instanceI…
+📖 Read 1 entity links directly from config.json: [ [ 4762322172, 4679407328 ] ]
+3:36:52 AM [express] GET /api/live-cloning/entity-links/live_cloning_auto_1757993803364 200 in 3ms :…
+3:36:52 AM [express] GET /api/live-cloning/word-filters/live_cloning_auto_1757993803364 200 in 182ms…
+3:37:21 AM [express] GET /api/console-logs/collections 304 in 747ms :: {"collections":[{"id":14,"nam…
+📥 [RAILWAY_PRODUCTION] Static request: /FinalCropper/build/service-worker.js
+   📍 Full path requested: /FinalCropper/build/service-worker.js
+   🎯 Resolving to: /app/FinalCropper/build/service-worker.js
+   ✅ File exists: false
+🔄 Live Cloning (24/7): [2025-09-16 03:37:46,160] DEBUG: Assigned msg_id = 7550526161679237056 to PingRequest (7f1b882d5820)
+[2025-09-16 03:37:46,160] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:37:46,160] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:37:46,160] DEBUG: Waiting for messages to send...
+[2025-09-16 03:37:46,160] DEBUG: Assigned msg_id = 7550526161681405712 to MsgsAck (7f1b882d5a30)
+[2025-09-16 03:37:46,160] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 03:37:46,160] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:37:46,161] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:37:46,163] DEBUG: Handling pong for message 7550526161679237056
+[2025-09-16 03:37:46,163] DEBUG: Receiving items from the network...
+
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/index.html
+   📍 Full path requested: /FinalCropper/public/molview/index.html
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/index.html
+   ✅ File exists: true
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/index.html
+   📍 Full path requested: /FinalCropper/public/molview/index.html
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/index.html
+   ✅ File exists: true
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-app.min.css
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-app.min.css
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-app.min.css
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-base.min.js
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-base.min.js
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-base.min.js
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-desktop.min.css
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-desktop.min.css
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-desktop.min.css
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-molpad.min.js
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-molpad.min.js
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-molpad.min.js
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-applib.min.js
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-applib.min.js
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-applib.min.js
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-app.min.js
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-app.min.js
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-app.min.js
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-datasets.min.js
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-datasets.min.js
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-datasets.min.js
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-core.min.js
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-core.min.js
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-core.min.js
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/molview-logo.png
+   📍 Full path requested: /FinalCropper/public/molview/img/molview-logo.png
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/img/molview-logo.png
+   ✅ File exists: true
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+   📍 Full path requested: /FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+   ✅ File exists: true
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+   📍 Full path requested: /FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+   ✅ File exists: true
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+   📍 Full path requested: /FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+   ✅ File exists: true
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SearchBar.jpg
+   📍 Full path requested: /FinalCropper/public/molview/img/help/SearchBar.jpg
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/img/help/SearchBar.jpg
+   ✅ File exists: true
+🔄 Live Cloning (24/7): [2025-09-16 03:38:46,218] DEBUG: Assigned msg_id = 7550526419611142460 to PingRequest (7f1b882d5910)
+[2025-09-16 03:38:46,218] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:38:46,218] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:38:46,218] DEBUG: Waiting for messages to send...
+[2025-09-16 03:38:46,219] DEBUG: Assigned msg_id = 7550526419612684552 to MsgsAck (7f1b882d5760)
+[2025-09-16 03:38:46,219] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 03:38:46,219] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:38:46,219] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:38:46,224] DEBUG: Handling pong for message 7550526419611142460
+
+🔄 Live Cloning (24/7): [2025-09-16 03:38:46,224] DEBUG: Receiving items from the network...
+
+📥 [RAILWAY_PRODUCTION] Static request: /FinalCropper/build/service-worker.js
+   📍 Full path requested: /FinalCropper/build/service-worker.js
+   🎯 Resolving to: /app/FinalCropper/build/service-worker.js
+   ✅ File exists: false
+3:39:13 AM [express] GET /api/python-copier/config 200 in 1ms :: {"configContent":"; Telegram Chat D…
+3:39:13 AM [express] GET /api/python-copier/status 304 in 1ms :: {"status":{"running":false,"lastAct…
+3:39:13 AM [express] GET /api/python-copier/last-log 304 in 1ms :: {"hasLog":false,"message":"No pre…
+3:39:14 AM [express] GET /api/js-copier/config 200 in 2ms :: {"pairs":[{"id":"17579939545860.2588155…
+3:39:14 AM [express] GET /api/js-copier/last-log 304 in 1ms :: {"hasLog":false,"message":"No previou…
+3:39:14 AM [express] GET /api/js-copier/status 304 in 2ms :: {"status":{"running":false,"lastActivit…
+3:39:16 AM [express] GET /api/live-cloning/status 200 in 1ms :: {"status":{"running":true,"instanceI…
+3:39:16 AM [express] GET /api/live-cloning/settings 304 in 1ms :: {"settings":{"botEnabled":true,"fi…
+📖 Read 1 entity links directly from config.json: [ [ 4762322172, 4679407328 ] ]
+3:39:16 AM [express] GET /api/live-cloning/entity-links/live_cloning_auto_1757993803364 304 in 3ms :…
+3:39:16 AM [express] GET /api/live-cloning/word-filters/live_cloning_auto_1757993803364 304 in 187ms…
+🔄 Live Cloning (24/7): [2025-09-16 03:39:46,270] DEBUG: Assigned msg_id = 7550526677517609556 to PingRequest (7f1b882d5700)
+[2025-09-16 03:39:46,271] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+
+🔄 Live Cloning (24/7): [2025-09-16 03:39:46,271] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:39:46,271] DEBUG: Waiting for messages to send...
+[2025-09-16 03:39:46,271] DEBUG: Assigned msg_id = 7550526677519964180 to MsgsAck (7f1b882d5970)
+[2025-09-16 03:39:46,271] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 03:39:46,271] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:39:46,271] DEBUG: Waiting for messages to send...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:39:46,274] DEBUG: Handling pong for message 7550526677517609556
+[2025-09-16 03:39:46,275] DEBUG: Receiving items from the network...
+
+🔄 Live Cloning (24/7): [2025-09-16 03:40:46,330] DEBUG: Assigned msg_id = 7550526935455814936 to PingRequest (7f1b882d58b0)
+[2025-09-16

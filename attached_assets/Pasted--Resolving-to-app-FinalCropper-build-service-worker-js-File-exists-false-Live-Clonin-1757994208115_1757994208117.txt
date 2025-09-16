@@ -1,0 +1,137 @@
+   🎯 Resolving to: /app/FinalCropper/build/service-worker.js
+   ✅ File exists: false
+🔄 Live Cloning (24/7): [2025-09-16 03:37:46,160] DEBUG: Assigned msg_id = 7550526161679237056 to PingRequest (7f1b882d5820)
+[2025-09-16 03:37:46,160] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+🔄 Live Cloning (24/7): [2025-09-16 03:37:46,160] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:37:46,160] DEBUG: Waiting for messages to send...
+[2025-09-16 03:37:46,160] DEBUG: Assigned msg_id = 7550526161681405712 to MsgsAck (7f1b882d5a30)
+[2025-09-16 03:37:46,160] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 03:37:46,160] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:37:46,161] DEBUG: Waiting for messages to send...
+🔄 Live Cloning (24/7): [2025-09-16 03:37:46,163] DEBUG: Handling pong for message 7550526161679237056
+[2025-09-16 03:37:46,163] DEBUG: Receiving items from the network...
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/index.html
+   📍 Full path requested: /FinalCropper/public/molview/index.html
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/index.html
+   ✅ File exists: true
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/index.html
+   📍 Full path requested: /FinalCropper/public/molview/index.html
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/index.html
+   ✅ File exists: true
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-app.min.css
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-app.min.css
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-app.min.css
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-base.min.js
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-base.min.js
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-base.min.js
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-desktop.min.css
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-desktop.min.css
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-desktop.min.css
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-molpad.min.js
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-molpad.min.js
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-molpad.min.js
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-applib.min.js
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-applib.min.js
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-applib.min.js
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-app.min.js
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-app.min.js
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-app.min.js
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-datasets.min.js
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-datasets.min.js
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-datasets.min.js
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/build/molview-core.min.js
+   📍 Full path requested: /FinalCropper/public/molview/build/molview-core.min.js
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/build/molview-core.min.js
+   ✅ File exists: false
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/molview-logo.png
+   📍 Full path requested: /FinalCropper/public/molview/img/molview-logo.png
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/img/molview-logo.png
+   ✅ File exists: true
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+   📍 Full path requested: /FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+   ✅ File exists: true
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+   📍 Full path requested: /FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+   ✅ File exists: true
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+   📍 Full path requested: /FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+   ✅ File exists: true
+📥 [RAILWAY_PRODUCTION] MolView static request: /FinalCropper/public/molview/img/help/SearchBar.jpg
+   📍 Full path requested: /FinalCropper/public/molview/img/help/SearchBar.jpg
+   🎯 Resolving to: /app/public/FinalCropper/public/molview/img/help/SearchBar.jpg
+   ✅ File exists: true
+🔄 Live Cloning (24/7): [2025-09-16 03:38:46,218] DEBUG: Assigned msg_id = 7550526419611142460 to PingRequest (7f1b882d5910)
+[2025-09-16 03:38:46,218] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+🔄 Live Cloning (24/7): [2025-09-16 03:38:46,218] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:38:46,218] DEBUG: Waiting for messages to send...
+[2025-09-16 03:38:46,219] DEBUG: Assigned msg_id = 7550526419612684552 to MsgsAck (7f1b882d5760)
+[2025-09-16 03:38:46,219] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 03:38:46,219] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:38:46,219] DEBUG: Waiting for messages to send...
+🔄 Live Cloning (24/7): [2025-09-16 03:38:46,224] DEBUG: Handling pong for message 7550526419611142460
+🔄 Live Cloning (24/7): [2025-09-16 03:38:46,224] DEBUG: Receiving items from the network...
+📥 [RAILWAY_PRODUCTION] Static request: /FinalCropper/build/service-worker.js
+   📍 Full path requested: /FinalCropper/build/service-worker.js
+   🎯 Resolving to: /app/FinalCropper/build/service-worker.js
+   ✅ File exists: false
+3:39:13 AM [express] GET /api/python-copier/config 200 in 1ms :: {"configContent":"; Telegram Chat D…
+3:39:13 AM [express] GET /api/python-copier/status 304 in 1ms :: {"status":{"running":false,"lastAct…
+3:39:13 AM [express] GET /api/python-copier/last-log 304 in 1ms :: {"hasLog":false,"message":"No pre…
+3:39:14 AM [express] GET /api/js-copier/config 200 in 2ms :: {"pairs":[{"id":"17579939545860.2588155…
+3:39:14 AM [express] GET /api/js-copier/last-log 304 in 1ms :: {"hasLog":false,"message":"No previou…
+3:39:14 AM [express] GET /api/js-copier/status 304 in 2ms :: {"status":{"running":false,"lastActivit…
+3:39:16 AM [express] GET /api/live-cloning/status 200 in 1ms :: {"status":{"running":true,"instanceI…
+3:39:16 AM [express] GET /api/live-cloning/settings 304 in 1ms :: {"settings":{"botEnabled":true,"fi…
+📖 Read 1 entity links directly from config.json: [ [ 4762322172, 4679407328 ] ]
+3:39:16 AM [express] GET /api/live-cloning/entity-links/live_cloning_auto_1757993803364 304 in 3ms :…
+3:39:16 AM [express] GET /api/live-cloning/word-filters/live_cloning_auto_1757993803364 304 in 187ms…
+🔄 Live Cloning (24/7): [2025-09-16 03:39:46,270] DEBUG: Assigned msg_id = 7550526677517609556 to PingRequest (7f1b882d5700)
+[2025-09-16 03:39:46,271] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+🔄 Live Cloning (24/7): [2025-09-16 03:39:46,271] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:39:46,271] DEBUG: Waiting for messages to send...
+[2025-09-16 03:39:46,271] DEBUG: Assigned msg_id = 7550526677519964180 to MsgsAck (7f1b882d5970)
+[2025-09-16 03:39:46,271] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 03:39:46,271] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:39:46,271] DEBUG: Waiting for messages to send...
+🔄 Live Cloning (24/7): [2025-09-16 03:39:46,274] DEBUG: Handling pong for message 7550526677517609556
+[2025-09-16 03:39:46,275] DEBUG: Receiving items from the network...
+🔄 Live Cloning (24/7): [2025-09-16 03:40:46,330] DEBUG: Assigned msg_id = 7550526935455814936 to PingRequest (7f1b882d58b0)
+[2025-09-16 03:40:46,331] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+🔄 Live Cloning (24/7): [2025-09-16 03:40:46,331] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:40:46,331] DEBUG: Waiting for messages to send...
+[2025-09-16 03:40:46,331] DEBUG: Assigned msg_id = 7550526935457776644 to MsgsAck (7f1b882d5040)
+[2025-09-16 03:40:46,331] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 03:40:46,331] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:40:46,331] DEBUG: Waiting for messages to send...
+🔄 Live Cloning (24/7): [2025-09-16 03:40:46,334] DEBUG: Handling pong for message 7550526935455814936
+[2025-09-16 03:40:46,334] DEBUG: Receiving items from the network...
+🔄 Live Cloning (24/7): [2025-09-16 03:41:46,384] DEBUG: Assigned msg_id = 7550527193367140048 to PingRequest (7f1b882d5820)
+[2025-09-16 03:41:46,384] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+[2025-09-16 03:41:46,384] DEBUG: Encrypted messages put in a queue to be sent
+🔄 Live Cloning (24/7): [2025-09-16 03:41:46,384] DEBUG: Waiting for messages to send...
+[2025-09-16 03:41:46,384] DEBUG: Assigned msg_id = 7550527193368973012 to MsgsAck (7f1b882d5910)
+[2025-09-16 03:41:46,384] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 03:41:46,384] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:41:46,384] DEBUG: Waiting for messages to send...
+🔄 Live Cloning (24/7): [2025-09-16 03:41:46,388] DEBUG: Handling pong for message 7550527193367140048
+[2025-09-16 03:41:46,388] DEBUG: Receiving items from the network...
+🔄 Live Cloning (24/7): [2025-09-16 03:42:46,434] DEBUG: Assigned msg_id = 7550527451268469704 to PingRequest (7f1b882d5940)
+[2025-09-16 03:42:46,435] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+🔄 Live Cloning (24/7): [2025-09-16 03:42:46,435] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:42:46,435] DEBUG: Waiting for messages to send...
+[2025-09-16 03:42:46,435] DEBUG: Assigned msg_id = 7550527451270216832 to MsgsAck (7f1b882d5700)
+[2025-09-16 03:42:46,435] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 03:42:46,435] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 03:42:46,435] DEBUG: Waiting for messages to send...
+🔄 Live Cloning (24/7): [2025-09-16 03:42:46,438] DEBUG: Handling pong for message 7550527451268469704
+[2025-09-16 03:42:46,438] DEBUG: Receiving items from the network...

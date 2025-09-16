@@ -1,0 +1,76 @@
+ev     build-essential     ffmpeg     && rm -rf /var/lib/apt/lists/*
+40s
+Processing triggers for libgdk-pixbuf-2.0-0:amd64 (2.42.2+dfsg-1+deb11u3) ...
+
+[ 3/17] WORKDIR /app
+60ms
+
+[ 4/17] COPY package*.json ./
+15ms
+
+[ 5/17] RUN npm install
+13s
+npm notice
+
+[ 6/17] RUN npx update-browserslist-db@latest --force
+2s
+No target browser changes
+
+[ 7/17] COPY requirements.txt ./
+18ms
+
+[ 8/17] RUN pip3 install -r requirements.txt
+6s
+Successfully installed certifi-2025.8.3 charset-normalizer-3.4.3 configparser-7.2.0 cryptg-0.5.1 idna-3.10 pillow-11.3.0 pyaes-1.6.1 pyasn1-0.6.1 python-dotenv-1.1.1 requests-2.32.5 rsa-4.9.1 telethon-1.41.2 tgcrypto-1.2.5 urllib3-2.5.0 youtube-dl-2021.12.17
+
+[ 9/17] COPY . .
+92ms
+
+1
+WORKDIR /app/FinalCropper
+14ms
+
+1
+RUN npm install && npm run build
+56s
+npm warn deprecated source-map-resolve@0.6.0: See https://github.com/lydell/source-map-resolve#deprecated
+npm warn deprecated workbox-cacheable-response@6.6.1: workbox-background-sync@6.6.1
+npm warn deprecated workbox-google-analytics@6.6.1: It is not compatible with newer versions of GA starting with v4, as long as you are using GAv3 it should be ok, but the package is not longer being maintained
+npm warn deprecated workbox-background-sync@6.6.1: this package has been deprecated
+npm warn deprecated svgo@1.3.2: This SVGO version is no longer supported. Upgrade to v2.x.x.
+npm warn deprecated workbox-google-analytics@6.5.3: It is not compatible with newer versions of GA starting with v4, as long as you are using GAv3 it should be ok, but the package is not longer being maintained
+npm warn deprecated workbox-routing@6.6.1: this package has been deprecated
+npm warn deprecated workbox-strategies@6.6.1: this package has been deprecated
+npm warn deprecated workbox-core@6.6.1: this package has been deprecated
+npm warn deprecated workbox-core@6.6.1: this package has been deprecated
+npm warn deprecated workbox-core@6.6.1: this package has been deprecated
+added 1625 packages, and audited 1626 packages in 17s
+205 packages are looking for funding
+  run `npm fund` for details
+45 vulnerabilities (6 low, 13 moderate, 22 high, 4 critical)
+To address issues that do not require attention, run:
+  npm audit fix
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+Run `npm audit` for details.
+> batch-images-cropper@0.1.0 build
+> react-scripts build
+Creating an optimized production build...
+Failed to compile.
+TS2304: Cannot find name 'SplitLine'.
+    178 |   width: number;
+    179 |   height: number;
+  > 180 |   splitLines?: SplitLine[];
+        |                ^^^^^^^^^
+    181 |   originalImageData?: string;
+    182 |   isOriginal?: boolean;
+    183 |   parentPageId?: string;
+Dockerfile:32
+-------------------
+30 |     # Build the FinalCropper React app for production
+31 |     WORKDIR /app/FinalCropper
+32 | >>> RUN npm install && npm run build
+33 |     WORKDIR /app
+34 |
+-------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c npm install && npm run build" did not complete successfully: exit code: 1

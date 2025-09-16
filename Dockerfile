@@ -24,36 +24,26 @@ RUN npx update-browserslist-db@latest --force
 COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
 
-# Copy EVERYTHING from workspace exactly as it is
+# Copy everything from workspace (including FinalCropper/build)
 COPY . .
-
-# Build the FinalCropper React app for production
-WORKDIR /app/FinalCropper
-RUN npm install && npm run build
-WORKDIR /app
 
 # Verify critical files (debug step)
 RUN echo "=== VERIFYING ALL FILES COPIED ===" && \
-    ls -la /app/tmp/ && \
+    ls -la /app/tmp/ 2>/dev/null || echo "tmp missing" && \
     echo "=== Settings file ===" && \
-    ls -la /app/config/live_cloning_persistent_settings.json && \
+    ls -la /app/config/live_cloning_persistent_settings.json 2>/dev/null || echo "settings missing" && \
     echo "=== Config files ===" && \
     ls -la /app/config/ 2>/dev/null || echo "config missing" && \
     ls -la /app/bot_source/ 2>/dev/null || echo "bot_source missing" && \
     echo "=== FinalCropper BUILD VERIFICATION ===" && \
     ls -la /app/FinalCropper/build/ && \
-    ls -la /app/FinalCropper/build/index.html && \
+    cat /app/FinalCropper/build/index.html | head -20 && \
+    echo "=== FinalCropper DIRECTORY CHECK ===" && \
+    ls -la /app/FinalCropper/ 2>/dev/null || echo "FinalCropper missing" && \
     echo "=== END VERIFICATION ==="
 
-# Set production environment with all hardcoded values from workspace
+# Set production environment (secrets provided via Railway environment variables)
 ENV NODE_ENV=production
-ENV TG_API_ID=28403662
-ENV TG_API_HASH=079509d4ac7f209a1a58facd00d6ff5a
-ENV TG_BOT_TOKEN=8154976061:AAGrNr6OcdMhFNhV5bCkpGfQAh0FYeJO1gE
-ENV TG_AUTHORIZED_USER_ID=6956029558
-ENV API_ID=28403662
-ENV API_HASH=079509d4ac7f209a1a58facd00d6ff5a
-ENV BOT_TOKEN=8154976061:AAGrNr6OcdMhFNhV5bCkpGfQAh0FYeJO1gE
 ENV SESSION=/app/bottorrent.session
 ENV TG_SESSION=/app/bottorrent.session
 ENV BOT_SESSION=/app/bottorrent.session
@@ -98,16 +88,15 @@ RUN mkdir -p /app/downloads/completed \
     && chmod -R 777 /app/bot_source \
     && chmod -R 777 /app/Zip
 
-# Install Python dependencies for bot_source components
+# Install Python dependencies for bot_source components (if they exist)
 RUN if [ -f /app/bot_source/live-cloning/requirements.txt ]; then pip3 install -r /app/bot_source/live-cloning/requirements.txt; fi
 RUN if [ -f /app/bot_source/python-copier/requirements.txt ]; then pip3 install -r /app/bot_source/python-copier/requirements.txt; fi
 
 # CRITICAL FIX: Force upgrade Telethon to latest version to support 64-bit user IDs
-# This ensures the correct version is installed last, overriding any older versions
 RUN pip3 install "telethon>=1.41.0" --upgrade --no-cache-dir
 
 # Expose the app port
 EXPOSE 5000
 
-# Start the app exactly like workspace
+# Start the app
 CMD ["npm", "run", "dev"]

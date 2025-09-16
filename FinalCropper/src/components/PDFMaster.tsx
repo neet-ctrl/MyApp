@@ -134,7 +134,7 @@ const StatusBarBuffer = () => {
     // Try to detect if we're running in the main app or standalone FinalCropper
     const isMainApp = window.location.pathname.includes('FinalCropper') === false;
 
-    let workerPath;
+    let workerPath: string;
     if (isMainApp) {
       // Running in main application context - point to FinalCropper's public folder
       workerPath = '/FinalCropper/public/pdf.worker.js';
@@ -160,6 +160,12 @@ const StatusBarBuffer = () => {
       }
       originalConsoleError.apply(console, args);
     };
+}
+
+interface SplitLine {
+  id: string;
+  points: { x: number; y: number }[];
+  isDrawing: boolean;
 }
 
 interface PDFPage {
