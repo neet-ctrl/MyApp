@@ -130,8 +130,8 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
         // Call original method to preserve native console behavior
         original.apply(console, args);
         
-        // Capture log if not paused and in browser mode
-        if (!isPaused && logViewMode === 'browser') {
+        // Always capture browser logs (regardless of current view mode) but respect pause state
+        if (!isPausedRef.current) {
           const logEntry = createBrowserLogEntry(level, args);
           setBrowserLogs(prev => [logEntry, ...prev].slice(0, 1000)); // Keep last 1000
         }
@@ -178,6 +178,12 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   } | null>(null);
   const browserLogIdRef = useRef(0);
   const isConsoleInterceptedRef = useRef(false);
+  const isPausedRef = useRef(isPaused);
+  
+  // Keep refs updated with current state
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
 
   // Load saved log collections from database and localStorage on mount
   useEffect(() => {
@@ -215,28 +221,18 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     localStorage.setItem('console-saved-logs', JSON.stringify(savedLogCollections));
   }, [savedLogCollections]);
   
-  // Handle console interception based on log view mode
+  // Handle console interception - always intercept when console is open
   useEffect(() => {
-    if (logViewMode === 'browser') {
+    if (isOpen) {
       setupBrowserConsoleCapture();
-    } else {
-      restoreOriginalConsole();
     }
     
-    // Cleanup on unmount or mode change
-    return () => {
-      if (logViewMode === 'browser') {
-        restoreOriginalConsole();
-      }
-    };
-  }, [logViewMode]);
-  
-  // Cleanup console interception on component unmount
-  useEffect(() => {
+    // Cleanup on unmount or when console closes
     return () => {
       restoreOriginalConsole();
     };
-  }, []);
+  }, [isOpen]);
+  
 
   // Fetch ALL logs from API (no limit, from deployment start)
   const fetchLogs = async (offset = 0) => {
@@ -1116,35 +1112,27 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
               <span className="text-sm font-medium">Enhanced Console</span>
             </div>
             
-            {/* Server/Browser Toggle */}
-            <div className="flex items-center bg-muted rounded-md p-1 space-x-0">
-              <Button
-                size="sm"
-                variant={logViewMode === 'server' ? 'secondary' : 'ghost'}
-                className="h-6 px-2 text-xs"
-                onClick={() => setLogViewMode('server')}
-                data-testid="button-log-source-server"
-                title="Show server logs"
-              >
-                <Server className="h-3 w-3 mr-1" />
-                Server
-              </Button>
-              <Button
-                size="sm"
-                variant={logViewMode === 'browser' ? 'secondary' : 'ghost'}
-                className="h-6 px-2 text-xs"
-                onClick={() => setLogViewMode('browser')}
-                data-testid="button-log-source-browser"
-                title="Show browser console logs"
-              >
-                <Monitor className="h-3 w-3 mr-1" />
-                Browser
-              </Button>
-            </div>
-            
-            <Badge variant="outline" className="text-xs">
-              {logViewMode === 'server' ? 'Server Logs' : 'Browser Logs'}
-            </Badge>
+            {/* Single Server/Browser Toggle */}
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-6 px-3 text-xs transition-all duration-200 hover:scale-105"
+              onClick={() => setLogViewMode(logViewMode === 'server' ? 'browser' : 'server')}
+              data-testid="button-log-source-toggle"
+              title={`Switch to ${logViewMode === 'server' ? 'browser' : 'server'} logs`}
+            >
+              {logViewMode === 'server' ? (
+                <>
+                  <Server className="h-3 w-3 mr-1" />
+                  Server
+                </>
+              ) : (
+                <>
+                  <Monitor className="h-3 w-3 mr-1" />
+                  Browser
+                </>
+              )}
+            </Button>
             
             <span className="text-xs text-muted-foreground">
               {currentLogs.length} logs • {isPaused ? 'Paused' : (logViewMode === 'server' ? (isConnected ? 'Live' : 'Disconnected') : 'Capturing')}
