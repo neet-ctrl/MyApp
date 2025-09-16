@@ -79,16 +79,8 @@ class Logger {
       });
       return savedLog;
     } catch (error) {
-      // Silent fail for logging persistence - don't break the application
-      // Database might be unavailable (Neon endpoint disabled, etc.)
-      return {
-        id: Date.now(),
-        level,
-        message,
-        source,
-        metadata: metadata ? JSON.stringify(metadata) : null,
-        timestamp: new Date().toISOString(),
-      };
+      // Silent fail for logging persistence
+      return null;
     }
   }
 

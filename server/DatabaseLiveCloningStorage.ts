@@ -380,28 +380,8 @@ export class DatabaseLiveCloningStorage implements IStorage {
         .returning();
       return savedLog;
     } catch (error) {
-      // Graceful fallback when database is unavailable (e.g., Neon endpoint disabled)
-      if (error.code === 'XX000' || error.message?.includes('endpoint has been disabled')) {
-        // Return a mock log entry to prevent application crashes
-        return {
-          id: Date.now(), // Use timestamp as fallback ID
-          level: log.level,
-          message: log.message,
-          source: log.source || 'application',
-          metadata: log.metadata || null,
-          timestamp: new Date().toISOString(),
-        };
-      }
-      // For other database errors, still return a fallback but log the error
-      console.error('Database unavailable for console log storage:', error.message);
-      return {
-        id: Date.now(),
-        level: log.level,
-        message: log.message,
-        source: log.source || 'application',
-        metadata: log.metadata || null,
-        timestamp: new Date().toISOString(),
-      };
+      console.error('Failed to save console log to database:', error);
+      throw error;
     }
   }
 
@@ -414,9 +394,8 @@ export class DatabaseLiveCloningStorage implements IStorage {
         .offset(offset);
       return logs;
     } catch (error) {
-      console.error('Database unavailable for console log retrieval:', error.message);
-      // Return empty array when database is unavailable
-      return [];
+      console.error('Failed to get console logs from database:', error);
+      throw error;
     }
   }
 
@@ -429,9 +408,8 @@ export class DatabaseLiveCloningStorage implements IStorage {
         .limit(limit);
       return logs;
     } catch (error) {
-      console.error('Database unavailable for console log retrieval by level:', error.message);
-      // Return empty array when database is unavailable
-      return [];
+      console.error('Failed to get console logs by level from database:', error);
+      throw error;
     }
   }
 
@@ -445,9 +423,8 @@ export class DatabaseLiveCloningStorage implements IStorage {
 
       return result.rowCount || 0;
     } catch (error) {
-      console.error('Database unavailable for clearing old console logs:', error.message);
-      // Return 0 when database is unavailable
-      return 0;
+      console.error('Failed to clear old console logs from database:', error);
+      throw error;
     }
   }
 
