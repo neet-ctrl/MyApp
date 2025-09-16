@@ -26,14 +26,17 @@ import type { TelegramSession } from '@shared/schema';
 import TextMemoPage from "@/pages/TextMemoPage";
 import Console from "@/components/Console";
 import PdfImg from "@/components/PdfImg";
+import { WindowManagerProvider, useWindowManager } from '@/contexts/WindowManagerContext';
+import FloatingWindow from '@/components/FloatingWindow';
 
-export default function Home() {
+function HomeContent() {
   const [currentView, setCurrentView] = useState('python-script');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentSession, setCurrentSession] = useState<TelegramSession | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
   const [isPdfImgOpen, setIsPdfImgOpen] = useState(false);
+  const { windows, openWindow, closeWindow, focusWindow } = useWindowManager();
 
   const { toast } = useToast();
 
@@ -195,8 +198,15 @@ export default function Home() {
     console.log("Message from settings:", message);
   };
 
-  const renderCurrentView = () => {
-    switch (currentView) {
+  // Handle opening floating windows
+  const handleOpenFloatingWindow = (viewId: string, title: string, icon?: React.ReactNode) => {
+    const component = renderComponent(viewId);
+    openWindow(viewId, title, component, icon);
+  };
+
+  // Separate function to render components for both main view and floating windows
+  const renderComponent = (viewId: string) => {
+    switch (viewId) {
       case 'python-script':
         return <PythonScriptMain />;
       case 'python-copier':
@@ -218,7 +228,6 @@ export default function Home() {
       case 'downloads':
         return <VideoDownloads />;
       case 'file-manager':
-        // Navigate to the downloads page
         return (
           <div className="p-6 h-full flex items-center justify-center">
             <div className="text-center">
@@ -247,6 +256,10 @@ export default function Home() {
     }
   };
 
+  const renderCurrentView = () => {
+    return renderComponent(currentView);
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
       <Sidebar
@@ -258,10 +271,28 @@ export default function Home() {
         isDownloadDirectorySelected={downloadManager.isDownloadDirectorySelected()}
         onOpenConsole={() => setIsConsoleOpen(true)}
         onOpenPdfImg={() => setIsPdfImgOpen(true)}
+        onOpenFloatingWindow={handleOpenFloatingWindow}
       />
 
       <main className="flex-1 overflow-y-auto relative">
         {renderCurrentView()}
+        
+        {/* Render all floating windows */}
+        {windows.map((window) => (
+          <FloatingWindow
+            key={window.id}
+            isOpen={window.isOpen}
+            onClose={() => closeWindow(window.id)}
+            title={window.title}
+            icon={window.icon}
+            zIndex={window.zIndex}
+            onFocus={() => focusWindow(window.id)}
+          >
+            <div className="h-full overflow-auto">
+              {window.component}
+            </div>
+          </FloatingWindow>
+        ))}
 
         {/* Floating Dark/Light Mode Toggle */}
         <Button
@@ -302,5 +333,13 @@ export default function Home() {
         onClose={() => setIsPdfImgOpen(false)}
       />
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <WindowManagerProvider>
+      <HomeContent />
+    </WindowManagerProvider>
   );
 }

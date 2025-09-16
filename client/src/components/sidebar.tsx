@@ -22,6 +22,7 @@ import {
   FileText,
   Terminal,
   ImageIcon,
+  Monitor,
 } from 'lucide-react';
 import type { TelegramSession } from '@shared/schema';
 
@@ -34,6 +35,7 @@ interface SidebarProps {
   isDownloadDirectorySelected: boolean;
   onOpenConsole: () => void;
   onOpenPdfImg: () => void;
+  onOpenFloatingWindow: (viewId: string, title: string, icon?: React.ReactNode) => void;
 }
 
 const navigationItems = [
@@ -63,6 +65,7 @@ export function Sidebar({
   isDownloadDirectorySelected,
   onOpenConsole,
   onOpenPdfImg,
+  onOpenFloatingWindow,
 }: SidebarProps) {
   const userInitials = session?.firstName && session?.lastName
     ? `${session.firstName[0]}${session.lastName[0]}`
@@ -110,17 +113,30 @@ export function Sidebar({
           const isActive = currentView === item.id;
 
           return (
-            <button
-              key={item.id}
-              onClick={() => onViewChange(item.id)}
-              className={`sidebar-item w-full px-3 py-2 rounded-md text-left flex items-center space-x-3 transition-all duration-200 hover:bg-muted hover:translate-x-1 ${
-                isActive ? 'bg-primary text-primary-foreground' : 'text-foreground'
-              }`}
-              data-testid={`nav-${item.id}`}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="font-medium">{item.label}</span>
-            </button>
+            <div key={item.id} className="flex items-center space-x-1">
+              <button
+                onClick={() => onViewChange(item.id)}
+                className={`sidebar-item flex-1 px-3 py-2 rounded-md text-left flex items-center space-x-3 transition-all duration-200 hover:bg-muted hover:translate-x-1 ${
+                  isActive ? 'bg-primary text-primary-foreground' : 'text-foreground'
+                }`}
+                data-testid={`nav-${item.id}`}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
+              </button>
+              
+              {/* Desktop floating window icon */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-muted-foreground/10 transition-colors"
+                onClick={() => onOpenFloatingWindow(item.id, item.label, <Icon className="w-4 h-4" />)}
+                title={`Open ${item.label} in floating window`}
+                data-testid={`floating-${item.id}`}
+              >
+                <Monitor className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+              </Button>
+            </div>
           );
         })}
       </nav>
