@@ -1,0 +1,117 @@
+-09-16 04:22:13,788] INFO:   Success: True
+[2025-09-16 04:22:13,788] INFO:   Name: Tele
+[2025-09-16 04:22:13,788] INFO:   Type: Chat
+[2025-09-16 04:22:13,788] INFO:   ID: 4762322172
+[2025-09-16 04:22:13,789] INFO: ✅ Pre-resolution complete: 2/2 entities resolved
+[2025-09-16 04:22:13,790] INFO: LIVE CLONING BOT STARTED! 🚀
+[2025-09-16 04:22:13,791] DEBUG: Assigned msg_id = 7550537618880708572 to GetStateRequest (7f7a680f60a0)
+[2025-09-16 04:22:13,791] DEBUG: Encrypting 1 message(s) in 20 bytes for sending
+[2025-09-16 04:22:13,791] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:22:13,791] DEBUG: Waiting for messages to send...
+[2025-09-16 04:22:13,791] DEBUG: Assigned msg_id = 7550537618881899712 to MsgsAck (7f7a680f63d0)
+[2025-09-16 04:22:13,791] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 04:22:13,791] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:22:13,791] DEBUG: Waiting for messages to send...
+🔄 Live Cloning (24/7): [2025-09-16 04:22:13,802] DEBUG: Handling RPC result for message 7550537618880708572
+[2025-09-16 04:22:13,802] DEBUG: Receiving items from the network...
+4:22:48 AM [express] GET /api/console-logs/collections 304 in 741ms :: {"collections":[{"id":14,"nam…
+📥 [RAILWAY_PRODUCTION] Static request: /FinalCropper/build/service-worker.js
+   🎯 Trying primary: /app/FinalCropper/build/service-worker.js
+   ✅ Primary exists: false
+   🔄 Trying fallback: /app/public/FinalCropper/public/service-worker.js
+   ✅ Fallback exists: false
+   ❌ File not found in any location
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/index.html
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/index.html
+   ✅ FOUND in Primary: /app/public/FinalCropper/public/molview/index.html
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/index.html
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/index.html
+   ✅ FOUND in Primary: /app/public/FinalCropper/public/molview/index.html
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/build/molview-app.min.css
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/build/molview-app.min.css
+   🔍 Checking Build_V1: /app/FinalCropper/build/molview/build/molview-app.min.css
+   🔍 Checking Build_V2: /app/FinalCropper/public/molview/build/molview-app.min.css
+   🔍 Checking Public_Alt: /app/public/molview/build/molview-app.min.css
+   🔍 Checking Root_Alt: /app/molview/build/molview-app.min.css
+   ❌ FILE NOT FOUND: /build/molview-app.min.css
+   🔍 Available files in primary directory:
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/build/molview-desktop.min.css
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/build/molview-desktop.min.css
+   🔍 Checking Build_V1: /app/FinalCropper/build/molview/build/molview-desktop.min.css
+   🔍 Checking Build_V2: /app/FinalCropper/public/molview/build/molview-desktop.min.css
+   🔍 Checking Public_Alt: /app/public/molview/build/molview-desktop.min.css
+   🔍 Checking Root_Alt: /app/molview/build/molview-desktop.min.css
+   ❌ FILE NOT FOUND: /build/molview-desktop.min.css
+   🔍 Available files in primary directory:
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/build/molview-base.min.js
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/build/molview-base.min.js
+   🔍 Checking Build_V1: /app/FinalCropper/build/molview/build/molview-base.min.js
+   🔍 Checking Build_V2: /app/FinalCropper/public/molview/build/molview-base.min.js
+   🔍 Checking Public_Alt: /app/public/molview/build/molview-base.min.js
+   🔍 Checking Root_Alt: /app/molview/build/molview-base.min.js
+   ❌ FILE NOT FOUND: /build/molview-base.min.js
+   🔍 Available files in primary directory:
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/build/molview-applib.min.js
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/build/molview-applib.min.js
+   🔍 Checking Build_V1: /app/FinalCropper/build/molview/build/molview-applib.min.js
+   🔍 Checking Build_V2: /app/FinalCropper/public/molview/build/molview-applib.min.js
+   🔍 Checking Public_Alt: /app/public/molview/build/molview-applib.min.js
+   🔍 Checking Root_Alt: /app/molview/build/molview-applib.min.js
+   ❌ FILE NOT FOUND: /build/molview-applib.min.js
+   🔍 Available files in primary directory:
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/build/molview-datasets.min.js
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/build/molview-datasets.min.js
+   🔍 Checking Build_V1: /app/FinalCropper/build/molview/build/molview-datasets.min.js
+   🔍 Checking Build_V2: /app/FinalCropper/public/molview/build/molview-datasets.min.js
+   🔍 Checking Public_Alt: /app/public/molview/build/molview-datasets.min.js
+   🔍 Checking Root_Alt: /app/molview/build/molview-datasets.min.js
+   ❌ FILE NOT FOUND: /build/molview-datasets.min.js
+   🔍 Available files in primary directory:
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/build/molview-app.min.js
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/build/molview-app.min.js
+   🔍 Checking Build_V1: /app/FinalCropper/build/molview/build/molview-app.min.js
+   🔍 Checking Build_V2: /app/FinalCropper/public/molview/build/molview-app.min.js
+   🔍 Checking Public_Alt: /app/public/molview/build/molview-app.min.js
+   🔍 Checking Root_Alt: /app/molview/build/molview-app.min.js
+   ❌ FILE NOT FOUND: /build/molview-app.min.js
+   🔍 Available files in primary directory:
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/build/molview-molpad.min.js
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/build/molview-molpad.min.js
+   🔍 Checking Build_V1: /app/FinalCropper/build/molview/build/molview-molpad.min.js
+   🔍 Checking Build_V2: /app/FinalCropper/public/molview/build/molview-molpad.min.js
+   🔍 Checking Public_Alt: /app/public/molview/build/molview-molpad.min.js
+   🔍 Checking Root_Alt: /app/molview/build/molview-molpad.min.js
+   ❌ FILE NOT FOUND: /build/molview-molpad.min.js
+   🔍 Available files in primary directory:
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/build/molview-core.min.js
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/build/molview-core.min.js
+   🔍 Checking Build_V1: /app/FinalCropper/build/molview/build/molview-core.min.js
+   🔍 Checking Build_V2: /app/FinalCropper/public/molview/build/molview-core.min.js
+   🔍 Checking Public_Alt: /app/public/molview/build/molview-core.min.js
+   🔍 Checking Root_Alt: /app/molview/build/molview-core.min.js
+   ❌ FILE NOT FOUND: /build/molview-core.min.js
+   🔍 Available files in primary directory:
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/img/molview-logo.png
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/img/molview-logo.png
+   ✅ FOUND in Primary: /app/public/FinalCropper/public/molview/img/molview-logo.png
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+   ✅ FOUND in Primary: /app/public/FinalCropper/public/molview/img/help/SketcherTopToolbar.jpg
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+   ✅ FOUND in Primary: /app/public/FinalCropper/public/molview/img/help/SketcherLeftToolbar.jpg
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/img/help/SearchBar.jpg
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/img/help/SearchBar.jpg
+   ✅ FOUND in Primary: /app/public/FinalCropper/public/molview/img/help/SearchBar.jpg
+📥 [RAILWAY_PRODUCTION] MolView request: /FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+   🔍 Checking Primary: /app/public/FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+   ✅ FOUND in Primary: /app/public/FinalCropper/public/molview/img/help/SketcherRightToolbar.jpg
+🔄 Live Cloning (24/7): [2025-09-16 04:23:13,649] DEBUG: Assigned msg_id = 7550537876013620868 to PingRequest (7f7a680f6820)
+[2025-09-16 04:23:13,649] DEBUG: Encrypting 1 message(s) in 28 bytes for sending
+🔄 Live Cloning (24/7): [2025-09-16 04:23:13,650] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:23:13,650] DEBUG: Waiting for messages to send...
+[2025-09-16 04:23:13,650] DEBUG: Assigned msg_id = 7550537876015252604 to MsgsAck (7f7a680f6a30)
+[2025-09-16 04:23:13,650] DEBUG: Encrypting 1 message(s) in 36 bytes for sending
+[2025-09-16 04:23:13,650] DEBUG: Encrypted messages put in a queue to be sent
+[2025-09-16 04:23:13,650] DEBUG: Waiting for messages to send...
+🔄 Live Cloning (24/7): [2025-09-16 04:23:13,653] DEBUG: Handling pong for message 7550537876013620868
