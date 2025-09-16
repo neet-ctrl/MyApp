@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Plus, MoreVertical, Edit3, Copy, Download, X, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +7,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import type { TextMemo, InsertTextMemo } from "@shared/schema";
 
 interface CreateMemoDialogProps {
@@ -325,66 +323,53 @@ export default function TextMemoPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedMemo, setSelectedMemo] = useState<TextMemo | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [memos, setMemos] = useState<TextMemo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  // Fetch all memos with proper loading behavior
-  const { data: memos = [], isLoading } = useQuery({
-    queryKey: ['/api/text-memos'],
-    queryFn: async () => {
-      const response = await fetch('/api/text-memos');
-      if (!response.ok) {
-        throw new Error('Failed to fetch memos');
+  // Load memos on mount - exactly like log collections
+  useEffect(() => {
+    const loadMemos = async () => {
+      try {
+        const response = await fetch('/api/text-memos');
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            setMemos(data);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load memos:', error);
+        toast({ title: "Failed to load memos", variant: "destructive" });
+      } finally {
+        setIsLoading(false);
       }
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
-    },
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-  });
+    };
 
-  // Create memo mutation
-  const createMemoMutation = useMutation({
-    mutationFn: (memo: InsertTextMemo) => apiRequest('POST', '/api/text-memos', memo),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/text-memos'] });
-      toast({ title: "Memo created successfully" });
-    },
-    onError: () => {
+    loadMemos();
+  }, []);
+
+  const handleCreateMemo = async (memo: InsertTextMemo) => {
+    try {
+      const response = await fetch('/api/text-memos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(memo),
+      });
+
+      if (response.ok) {
+        const newMemo = await response.json();
+        setMemos(prev => [newMemo, ...prev]);
+        toast({ title: "Memo created successfully" });
+      } else {
+        throw new Error('Failed to create memo');
+      }
+    } catch (error) {
+      console.error('Error creating memo:', error);
       toast({ title: "Failed to create memo", variant: "destructive" });
-    },
-  });
-
-  // Update memo mutation
-  const updateMemoMutation = useMutation({
-    mutationFn: ({ id, content }: { id: number; content: string }) =>
-      apiRequest('PUT', `/api/text-memos/${id}`, { content }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/text-memos'] });
-      toast({ title: "Memo updated successfully" });
-    },
-    onError: () => {
-      toast({ title: "Failed to update memo", variant: "destructive" });
-    },
-  });
-
-  // Delete memo mutation
-  const deleteMemoMutation = useMutation({
-    mutationFn: (id: number) => apiRequest('DELETE', `/api/text-memos/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/text-memos'] });
-      toast({ title: "Memo deleted successfully" });
-    },
-    onError: () => {
-      toast({ title: "Failed to delete memo", variant: "destructive" });
-    },
-  });
-
-  const handleCreateMemo = (memo: InsertTextMemo) => {
-    createMemoMutation.mutate(memo);
+    }
   };
 
   const handleEditMemo = (memo: TextMemo) => {
@@ -392,13 +377,47 @@ export default function TextMemoPage() {
     setEditorOpen(true);
   };
 
-  const handleSaveMemo = (id: number, content: string) => {
-    updateMemoMutation.mutate({ id, content });
+  const handleSaveMemo = async (id: number, content: string) => {
+    try {
+      const response = await fetch(`/api/text-memos/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content }),
+      });
+
+      if (response.ok) {
+        const updatedMemo = await response.json();
+        setMemos(prev => prev.map(m => m.id === id ? updatedMemo : m));
+        setSelectedMemo(updatedMemo);
+        toast({ title: "Memo updated successfully" });
+      } else {
+        throw new Error('Failed to update memo');
+      }
+    } catch (error) {
+      console.error('Error updating memo:', error);
+      toast({ title: "Failed to update memo", variant: "destructive" });
+    }
   };
 
-  const handleDeleteMemo = (id: number) => {
+  const handleDeleteMemo = async (id: number) => {
     if (confirm("Are you sure you want to delete this memo?")) {
-      deleteMemoMutation.mutate(id);
+      try {
+        const response = await fetch(`/api/text-memos/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          setMemos(prev => prev.filter(m => m.id !== id));
+          toast({ title: "Memo deleted successfully" });
+        } else {
+          throw new Error('Failed to delete memo');
+        }
+      } catch (error) {
+        console.error('Error deleting memo:', error);
+        toast({ title: "Failed to delete memo", variant: "destructive" });
+      }
     }
   };
 
