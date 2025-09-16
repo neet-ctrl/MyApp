@@ -53,11 +53,20 @@ RUN echo "=== COMPREHENSIVE MOLVIEW FILE VERIFICATION & FIX ===" && \
         cp -r /app/public/FinalCropper/public/molview/* /app/public/molview/ 2>/dev/null; \
     fi && \
     echo "🔍 Final verification - checking critical MolView files:" && \
-    for location in "/app/FinalCropper/build/molview" "/app/FinalCropper/public/molview" "/app/molview" "/app/public/molview"; do \
+    for location in "/app/public/FinalCropper/public/molview" "/app/FinalCropper/build/molview" "/app/FinalCropper/public/molview" "/app/molview" "/app/public/molview"; do \
         echo "📂 Checking $location:"; \
-        ls -la "$location/build/" 2>/dev/null | head -5 || echo "❌ No build directory"; \
+        ls -la "$location/build/" 2>/dev/null | head -10 || echo "❌ No build directory"; \
         if [ -f "$location/build/molview-app.min.js" ]; then echo "✅ molview-app.min.js found"; else echo "❌ molview-app.min.js missing"; fi; \
         if [ -f "$location/build/molview-app.min.css" ]; then echo "✅ molview-app.min.css found"; else echo "❌ molview-app.min.css missing"; fi; \
+        if [ -f "$location/build/molview-base.min.js" ]; then echo "✅ molview-base.min.js found"; else echo "❌ molview-base.min.js missing"; fi; \
+        if [ -f "$location/build/molview-datasets.min.js" ]; then echo "✅ molview-datasets.min.js found"; else echo "❌ molview-datasets.min.js missing"; fi; \
+    done && \
+    echo "🔍 Verifying file sizes (should not be 0 bytes):" && \
+    for location in "/app/public/FinalCropper/public/molview" "/app/FinalCropper/build/molview" "/app/FinalCropper/public/molview"; do \
+        if [ -d "$location/build" ]; then \
+            echo "📏 Checking file sizes in $location/build/"; \
+            ls -lah "$location/build/"*.min.* 2>/dev/null || echo "No min files found"; \
+        fi; \
     done
 
 # Verify critical files (debug step)

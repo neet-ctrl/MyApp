@@ -212,6 +212,12 @@ app.use((req, res, next) => {
       console.log(`   ✅ Added static middleware for ${name}`);
     }
   });
+  
+  // CRITICAL FIX: Add specific routes for MolView files that exist in workspace
+  app.use('/FinalCropper/public/molview/build', express.static(path.resolve('public/FinalCropper/public/molview/build')));
+  app.use('/FinalCropper/public/molview/build', express.static(path.resolve('FinalCropper/build/molview/build')));
+  app.use('/FinalCropper/public/molview/build', express.static(path.resolve('FinalCropper/public/molview/build')));
+  console.log(`   ✅ Added dedicated build directory routes`);
 
   // MolView PHP endpoint replacements
   app.get('/FinalCropper/public/molview/php/download_db.php', (req, res) => {
