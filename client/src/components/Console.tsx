@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Maximize2, Minimize2, Copy, RotateCcw, GripVertical, Archive, Clock, Download, Trash2, Pause, Play } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useWindowManager } from '@/contexts/WindowManagerContext';
 
 interface ConsoleLog {
   id: number;
@@ -55,8 +56,10 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   
   // Pause/Resume functionality
   const [isPaused, setIsPaused] = useState(false);
+  const [currentZIndex, setCurrentZIndex] = useState(1000);
   
   const { toast } = useToast();
+  const { registerSystemWindow, updateSystemWindow, getWindowZIndex, bringToFront } = useWindowManager();
   
   const consoleRef = useRef<HTMLDivElement>(null);
   const logsContainerRef = useRef<HTMLDivElement>(null);

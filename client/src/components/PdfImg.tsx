@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Maximize2, Minimize2, GripVertical } from 'lucide-react';
+import { useWindowManager } from '@/contexts/WindowManagerContext';
 
 interface PdfImgProps {
   isOpen: boolean;
@@ -17,18 +18,42 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [isMolViewActive, setIsMolViewActive] = useState(false);
+  const [currentZIndex, setCurrentZIndex] = useState(1000);
 
   const pdfImgRef = useRef<HTMLDivElement>(null);
+  const { registerSystemWindow, updateSystemWindow, getWindowZIndex, bringToFront } = useWindowManager();
 
   // Handle maximize/minimize toggle
   const toggleMaximize = () => {
     setIsMaximized(!isMaximized);
   };
 
+  // Register with WindowManager and handle focus
+  useEffect(() => {
+    const zIndex = registerSystemWindow('pdfimg', isMolViewActive ? '🧬 MolView Editor' : '🎨 Advanced Image Cropper');
+    setCurrentZIndex(zIndex);
+  }, []);
+
+  useEffect(() => {
+    updateSystemWindow('pdfimg', isOpen);
+  }, [isOpen]);
+
+  useEffect(() => {
+    const zIndex = getWindowZIndex('pdfimg');
+    setCurrentZIndex(zIndex);
+  }, [getWindowZIndex('pdfimg')]);
+
+  const handleFocus = () => {
+    bringToFront('pdfimg');
+    const newZIndex = getWindowZIndex('pdfimg');
+    setCurrentZIndex(newZIndex);
+  };
+
   // Handle mouse down for dragging
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isMaximized || (e.target as HTMLElement).closest('.no-drag')) return;
     
+    handleFocus();
     setIsDragging(true);
     setDragStart({
       x: e.clientX - position.x,
@@ -40,6 +65,7 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
   const handleTouchStart = (e: React.TouchEvent) => {
     if (isMaximized || (e.target as HTMLElement).closest('.no-drag')) return;
     
+    handleFocus();
     const touch = e.touches[0];
     setIsDragging(true);
     setDragStart({
@@ -157,19 +183,21 @@ export default function PdfImg({ isOpen, onClose }: PdfImgProps) {
   return (
     <div
       ref={pdfImgRef}
-      className={`fixed bg-background border border-border rounded-lg shadow-2xl z-50 flex flex-col ${
+      className={`fixed bg-background border border-border rounded-lg shadow-2xl flex flex-col ${
         isMaximized ? 'inset-0 rounded-none' : ''
       }`}
       style={
         isMaximized
-          ? {}
+          ? { zIndex: currentZIndex }
           : {
               left: position.x,
               top: position.y,
               width: size.width,
               height: size.height,
+              zIndex: currentZIndex,
             }
       }
+      onClick={handleFocus}
       data-testid="pdfimg-window"
     >
       {/* Header with drag handle and controls */}

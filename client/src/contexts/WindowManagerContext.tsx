@@ -7,6 +7,7 @@ interface FloatingWindow {
   isOpen: boolean;
   zIndex: number;
   icon?: ReactNode;
+  type?: 'floating' | 'system'; // system windows like PdfImg, Console
 }
 
 interface WindowManagerContextType {
@@ -15,6 +16,11 @@ interface WindowManagerContextType {
   closeWindow: (id: string) => void;
   focusWindow: (id: string) => void;
   getTopZIndex: () => number;
+  registerSystemWindow: (id: string, title: string, icon?: ReactNode) => number; // returns z-index
+  updateSystemWindow: (id: string, isOpen: boolean) => void;
+  bringToFront: (id: string) => void;
+  sendToBack: (id: string) => void;
+  getWindowZIndex: (id: string) => number;
 }
 
 const WindowManagerContext = createContext<WindowManagerContextType | undefined>(undefined);
@@ -77,13 +83,76 @@ export function WindowManagerProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const registerSystemWindow = (id: string, title: string, icon?: ReactNode): number => {
+    const zIndex = getTopZIndex();
+    setWindows(prev => {
+      // Check if already registered
+      const existing = prev.find(w => w.id === id);
+      if (existing) {
+        return prev.map(w => 
+          w.id === id ? { ...w, zIndex, isOpen: false } : w
+        );
+      }
+      
+      // Register new system window
+      const systemWindow: FloatingWindow = {
+        id,
+        title,
+        component: null, // System windows manage their own content
+        isOpen: false,
+        zIndex,
+        icon,
+        type: 'system'
+      };
+      return [...prev, systemWindow];
+    });
+    return zIndex;
+  };
+
+  const updateSystemWindow = (id: string, isOpen: boolean) => {
+    setWindows(prev => 
+      prev.map(w => 
+        w.id === id ? { ...w, isOpen, zIndex: isOpen ? getTopZIndex() : w.zIndex } : w
+      )
+    );
+  };
+
+  const bringToFront = (id: string) => {
+    setWindows(prev => {
+      const newZIndex = getTopZIndex();
+      return prev.map(w => 
+        w.id === id ? { ...w, zIndex: newZIndex } : w
+      );
+    });
+  };
+
+  const sendToBack = (id: string) => {
+    setWindows(prev => {
+      const minZIndex = Math.min(...prev.map(w => w.zIndex));
+      const newZIndex = Math.max(BASE_Z_INDEX, minZIndex - 1);
+      return prev.map(w => 
+        w.id === id ? { ...w, zIndex: newZIndex } : w
+      );
+    });
+  };
+
+  const getWindowZIndex = (id: string): number => {
+    const window = windows.find(w => w.id === id);
+    return window?.zIndex || BASE_Z_INDEX;
+  };
+
   return (
     <WindowManagerContext.Provider value={{
       windows,
       openWindow,
       closeWindow,
       focusWindow,
-      getTopZIndex
+      getTopZIndex,
+      registerSystemWindow,
+      updateSystemWindow,
+      bringToFront,
+      sendToBack,
+      getWindowZIndex
     }}>
       {children}
     </WindowManagerContext.Provider>
