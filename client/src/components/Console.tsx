@@ -55,6 +55,64 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   
   // Pause/Resume functionality
   const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
+  const wsGenerationRef = useRef(0);
+  
+  // Enhanced pause/resume handlers
+  const handlePause = () => {
+    console.log('🔇 Console: Pausing all real-time updates');
+    setIsPaused(true);
+    isPausedRef.current = true;
+    
+    // Invalidate in-flight sockets by incrementing generation
+    ++wsGenerationRef.current;
+    
+    // Robust socket shutdown - close regardless of readyState
+    if (wsRef.current) {
+      try {
+        // Clear all event handlers to prevent state mutations after pause
+        wsRef.current.onopen = null;
+        wsRef.current.onmessage = null;
+        wsRef.current.onclose = null;
+        wsRef.current.onerror = null;
+        wsRef.current.close(1000, 'paused');
+      } catch (error) {
+        console.log('Console: Error closing WebSocket during pause:', error);
+      } finally {
+        wsRef.current = null;
+      }
+    }
+    
+    // Clear auto-refresh interval
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
+    }
+    
+    setIsConnected(false);
+    toast({
+      title: 'Console Paused',
+      description: 'All real-time log updates have been stopped',
+    });
+  };
+  
+  const handleResume = () => {
+    console.log('🔊 Console: Resuming real-time updates');
+    setIsPaused(false);
+    isPausedRef.current = false;
+    
+    // Restart WebSocket and auto-refresh
+    setTimeout(() => {
+      setupWebSocket();
+      setupAutoRefresh();
+      fetchLogs(); // Fetch any missed logs
+    }, 100);
+    
+    toast({
+      title: 'Console Resumed',
+      description: 'Real-time log updates have been restarted',
+    });
+  };
   
   const { toast } = useToast();
   
@@ -99,6 +157,13 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     localStorage.setItem('console-saved-logs', JSON.stringify(savedLogCollections));
   }, [savedLogCollections]);
 
+  // Cleanup on unmount to prevent resource leaks
+  useEffect(() => {
+    return () => {
+      handlePause(); // This closes WebSocket and clears intervals
+    };
+  }, []);
+
   // Fetch ALL logs from API (no limit, from deployment start)
   const fetchLogs = async (offset = 0) => {
     try {
@@ -130,12 +195,23 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
 
   // Setup WebSocket connection for real-time logs
   const setupWebSocket = () => {
-    if (isPaused) return; // Don't setup WebSocket if paused
+    if (isPausedRef.current) return; // Don't setup WebSocket if paused
     
     // Close existing WebSocket first to avoid multiple connections
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.close();
+    if (wsRef.current) {
+      try {
+        wsRef.current.onopen = null;
+        wsRef.current.onmessage = null;
+        wsRef.current.onclose = null;
+        wsRef.current.onerror = null;
+        wsRef.current.close(1000, 'replaced');
+      } catch (error) {
+        console.log('Console: Error closing existing WebSocket:', error);
+      }
     }
+    
+    // Increment generation to invalidate any stale socket handlers
+    const currentGeneration = ++wsGenerationRef.current;
     
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/console`;
@@ -143,13 +219,24 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
     try {
       const ws = new WebSocket(wsUrl);
       
+      // Assign to ref immediately to eliminate race condition
+      wsRef.current = ws;
+      
       ws.onopen = () => {
-        setIsConnected(true);
-        console.log('Console WebSocket connected');
+        // Only update state if this is the current generation and not paused
+        if (currentGeneration === wsGenerationRef.current && !isPausedRef.current) {
+          setIsConnected(true);
+          console.log('Console WebSocket connected');
+        } else {
+          // Close stale or paused connection
+          ws.close(1000, 'stale');
+        }
       };
       
       ws.onmessage = (event) => {
-        if (isPaused) return; // Don't process messages if paused
+        // Guard against stale connections and pause state
+        if (currentGeneration !== wsGenerationRef.current || isPausedRef.current) return;
+        
         try {
           const logEntry = JSON.parse(event.data);
           setLogs(prev => [logEntry, ...prev].slice(0, 1000)); // Keep last 1000 logs
@@ -160,24 +247,29 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
       };
       
       ws.onclose = () => {
-        setIsConnected(false);
-        console.log('Console WebSocket disconnected');
-        // Only reconnect if not paused and component is still mounted
-        if (!isPaused && wsRef.current === ws) {
-          setTimeout(() => {
-            if (!isPaused && wsRef.current === ws) {
-              setupWebSocket();
-            }
-          }, 3000);
+        // Only update state if this is the current generation
+        if (currentGeneration === wsGenerationRef.current) {
+          setIsConnected(false);
+          console.log('Console WebSocket disconnected');
+          
+          // Only reconnect if not paused and still current generation
+          if (!isPausedRef.current && wsRef.current === ws) {
+            setTimeout(() => {
+              if (!isPausedRef.current && currentGeneration === wsGenerationRef.current) {
+                setupWebSocket();
+              }
+            }, 3000);
+          }
         }
       };
       
       ws.onerror = (error) => {
-        console.error('Console WebSocket error:', error);
-        setIsConnected(false);
+        // Only update state if this is the current generation
+        if (currentGeneration === wsGenerationRef.current) {
+          console.error('Console WebSocket error:', error);
+          setIsConnected(false);
+        }
       };
-      
-      wsRef.current = ws;
     } catch (error) {
       console.error('Failed to create WebSocket:', error);
       setIsConnected(false);
@@ -186,10 +278,16 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
 
   // Setup auto-refresh every 15 seconds
   const setupAutoRefresh = () => {
-    if (isPaused) return; // Don't setup auto-refresh if paused
+    if (isPausedRef.current) return; // Don't setup auto-refresh if paused
+    
+    // Defensive: clear any existing interval before creating new one
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
+    }
     
     refreshIntervalRef.current = setInterval(() => {
-      if (!isPaused) { // Only fetch logs if not paused
+      if (!isPausedRef.current) { // Only fetch logs if not paused
         fetchLogs();
       }
     }, 15000);
@@ -373,18 +471,7 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   // Load saved log collection from database or localStorage
   const loadSavedLogs = async (collection: SavedLogCollection) => {
     // Auto-pause when loading a collection to prevent immediate overwrite
-    setIsPaused(true);
-    
-    // Stop WebSocket and auto-refresh immediately
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-    if (refreshIntervalRef.current) {
-      clearInterval(refreshIntervalRef.current);
-      refreshIntervalRef.current = null;
-    }
-    setIsConnected(false);
+    handlePause();
     
     try {
       // Try to load from database first
@@ -654,39 +741,9 @@ export default function Console({ isOpen, onClose }: ConsoleProps) {
   // Handle pause/resume functionality
   const handlePauseResume = () => {
     if (isPaused) {
-      // Resume: restart WebSocket and auto-refresh
-      setIsPaused(false);
-      // Wait a bit for state to update, then setup connections
-      setTimeout(() => {
-        setupWebSocket();
-        setupAutoRefresh();
-        fetchLogs(); // Get latest logs
-      }, 100);
-      toast({
-        title: 'Console Resumed',
-        description: 'Live log streaming resumed',
-      });
+      handleResume();
     } else {
-      // Pause: stop WebSocket and auto-refresh immediately
-      setIsPaused(true);
-      
-      // Cleanup WebSocket
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
-      
-      // Cleanup auto-refresh interval
-      if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current);
-        refreshIntervalRef.current = null;
-      }
-      
-      setIsConnected(false);
-      toast({
-        title: 'Console Paused',
-        description: 'Live log streaming paused',
-      });
+      handlePause();
     }
   };
 
